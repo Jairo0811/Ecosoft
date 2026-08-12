@@ -1,0 +1,120 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id             String   @id @default(uuid()) @db.UniqueIdentifier
+  rnc            String?  @unique @db.VarChar(11)
+  legalName      String   @db.NVarChar(200)
+  commercialName String?  @db.NVarChar(200)
+  type           String   @db.VarChar(40)
+  status         String   @default("PENDING") @db.VarChar(30)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  users          User[]
+
+  @@index([type, status])
+}
+
+model User {
+  id                  String         @id @default(uuid()) @db.UniqueIdentifier
+  email               String         @unique @db.NVarChar(320)
+  passwordHash        String         @db.VarChar(100)
+  firstName           String         @db.NVarChar(100)
+  lastName            String         @db.NVarChar(100)
+  status              String         @default("PENDING_CONFIRMATION") @db.VarChar(30)
+  emailConfirmedAt    DateTime?
+  failedLoginAttempts Int            @default(0)
+  lockedUntil         DateTime?
+  lastLoginAt         DateTime?
+  organizationId      String?        @db.UniqueIdentifier
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  organization        Organization?  @relation(fields: [organizationId], references: [id])
+  roles               UserRole[]
+  refreshTokens       RefreshToken[]
+  auditLogs           AuditLog[]
+
+  @@index([organizationId, status])
+}
+
+model Role {
+  id          String           @id @default(uuid()) @db.UniqueIdentifier
+  code        String           @unique @db.VarChar(60)
+  name        String           @db.NVarChar(120)
+  description String?          @db.NVarChar(500)
+  isSystem    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  users       UserRole[]
+  permissions RolePermission[]
+}
+
+model Permission {
+  id          String           @id @default(uuid()) @db.UniqueIdentifier
+  code        String           @unique @db.VarChar(100)
+  description String?          @db.NVarChar(500)
+  roles       RolePermission[]
+}
+
+model UserRole {
+  userId    String   @db.UniqueIdentifier
+  roleId    String   @db.UniqueIdentifier
+  assignedAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+}
+
+model RolePermission {
+  roleId      String     @db.UniqueIdentifier
+  permissionId String     @db.UniqueIdentifier
+  role        Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission  Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+}
+
+model RefreshToken {
+  id          String    @id @default(uuid()) @db.UniqueIdentifier
+  userId      String    @db.UniqueIdentifier
+  familyId    String    @db.UniqueIdentifier
+  jti         String    @unique @db.UniqueIdentifier
+  tokenHash   String    @unique @db.Char(64)
+  expiresAt   DateTime
+  revokedAt   DateTime?
+  ipAddress   String?   @db.VarChar(64)
+  userAgent   String?   @db.NVarChar(500)
+  createdAt   DateTime  @default(now())
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, familyId])
+  @@index([expiresAt, revokedAt])
+}
+
+model AuditLog {
+  id             String   @id @default(uuid()) @db.UniqueIdentifier
+  userId         String?  @db.UniqueIdentifier
+  organizationId String?  @db.UniqueIdentifier
+  action         String   @db.VarChar(40)
+  module         String   @db.VarChar(60)
+  entity         String?  @db.VarChar(100)
+  entityId       String?  @db.VarChar(100)
+  result         String   @db.VarChar(30)
+  ipAddress      String?  @db.VarChar(64)
+  userAgent      String?  @db.NVarChar(500)
+  correlationId  String   @db.UniqueIdentifier
+  previousValues String?  @db.NVarChar(Max)
+  newValues      String?  @db.NVarChar(Max)
+  createdAt      DateTime @default(now())
+  user           User?    @relation(fields: [userId], references: [id], onDelete: NoAction)
+
+  @@index([createdAt])
+  @@index([userId, action])
+  @@index([module, entity, entityId])
+}

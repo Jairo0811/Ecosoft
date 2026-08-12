@@ -1,0 +1,30 @@
+{
+  "name": "ecosoft",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Plataforma de gestión de subastas energéticas y contratos PPA para la CNE.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "engines": {
+    "node": ">=20.19.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "postinstall": "npm run db:generate",
+    "dev": "npm run dev --workspace @ecosoft/api & npm run dev --workspace @ecosoft/web",
+    "build": "npm run build --workspace @ecosoft/shared && npm run build --workspace @ecosoft/api && npm run build --workspace @ecosoft/web",
+    "lint": "npm run lint --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "db:generate": "npm run db:generate --workspace @ecosoft/api",
+    "db:migrate": "npm run db:migrate --workspace @ecosoft/api",
+    "db:seed": "npm run db:seed --workspace @ecosoft/api"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2"
+  }
+}

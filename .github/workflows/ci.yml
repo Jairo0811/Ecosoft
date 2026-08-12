@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run format:check
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - run: npm audit --omit=dev --audit-level=high
+
+  sqlserver-integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      DATABASE_URL: sqlserver://localhost:1433;database=EcoSoftDb;user=sa;password=EcoSoft!CI2026_Strong;encrypt=true;trustServerCertificate=true
+      SEED_ADMIN_PASSWORD: EcoSoft!Admin2026_CI
+      JWT_ACCESS_SECRET: ecosoft-ci-access-secret-with-at-least-32-characters
+      JWT_REFRESH_SECRET: ecosoft-ci-refresh-secret-with-at-least-32-characters
+      WEB_ORIGIN: http://localhost:5173
+      NODE_ENV: test
+    services:
+      sqlserver:
+        image: mcr.microsoft.com/mssql/server:2022-CU20-ubuntu-22.04
+        env:
+          ACCEPT_EULA: Y
+          MSSQL_PID: Developer
+          MSSQL_SA_PASSWORD: EcoSoft!CI2026_Strong
+        ports:
+          - 1433:1433
+        options: >-
+          --health-cmd "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'EcoSoft!CI2026_Strong' -C -Q 'SELECT 1'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 15
+          --health-start-period 30s
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Create application database
+        env:
+          SQLSERVER_CONTAINER: ${{ job.services.sqlserver.id }}
+        run: >-
+          docker exec "$SQLSERVER_CONTAINER"
+          /opt/mssql-tools18/bin/sqlcmd
+          -S localhost -U sa -P 'EcoSoft!CI2026_Strong' -C
+          -Q "IF DB_ID(N'EcoSoftDb') IS NULL CREATE DATABASE [EcoSoftDb]"
+      - name: Deploy migrations
+        run: |
+          set +e
+          OUTPUT=$(npm run db:deploy --workspace @ecosoft/api 2>&1)
+          STATUS=$?
+          printf '%s\n' "$OUTPUT"
+          if [ "$STATUS" -ne 0 ]; then
+            ESCAPED=${OUTPUT//'%'/'%25'}
+            ESCAPED=${ESCAPED//$'\r'/'%0D'}
+            ESCAPED=${ESCAPED//$'\n'/'%0A'}
+            echo "::error title=Prisma migrate deploy::$ESCAPED"
+          fi
+          exit "$STATUS"
+      - name: Seed initial data
+        run: npm run db:seed
+      - name: Verify API readiness against SQL Server
+        run: |
+          npm run build --workspace @ecosoft/shared
+          npm run build --workspace @ecosoft/api
+          npm start --workspace @ecosoft/api > /tmp/ecosoft-api.log 2>&1 &
+          API_PID=$!
+          trap 'kill "$API_PID"' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://localhost:4000/api/v1/health/ready; then
+              exit 0
+            fi
+            sleep 2
+          done
+          cat /tmp/ecosoft-api.log
+          exit 1
