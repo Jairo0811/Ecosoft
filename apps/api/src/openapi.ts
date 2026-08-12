@@ -2,7 +2,7 @@ export const openApiDocument = {
   openapi: '3.0.3',
   info: {
     title: 'EcoSoft API',
-    version: '0.3.0',
+    version: '0.4.0',
     description:
       'API para subastas energéticas y contratos PPA. Fase 2: organizaciones, catálogos y usuarios.',
   },
@@ -195,6 +195,66 @@ export const openApiDocument = {
           { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
         ],
         responses: { '200': { description: 'Estado actualizado' } },
+      },
+    },
+    '/auctions': {
+      get: {
+        summary: 'Listar subastas visibles según rol y organización',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Listado paginado' } },
+      },
+      post: {
+        summary: 'Crear una subasta en estado borrador',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Subasta creada y auditada' } },
+      },
+    },
+    '/auctions/{id}': {
+      get: {
+        summary: 'Consultar configuración, requisitos y participantes',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Detalle visible' } },
+      },
+      patch: {
+        summary: 'Actualizar una subasta editable',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Configuración actualizada' } },
+      },
+    },
+    '/auctions/{id}/requirements': {
+      put: {
+        summary: 'Reemplazar requisitos antes de la apertura',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Requisitos actualizados' } },
+      },
+    },
+    '/auctions/{id}/participants': {
+      put: {
+        summary: 'Configurar organizaciones participantes aprobadas',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Participantes actualizados' } },
+      },
+    },
+    '/auctions/{id}/status': {
+      patch: {
+        summary: 'Ejecutar una transición válida del ciclo de subasta',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '200': { description: 'Transición registrada y auditada' },
+          '409': { description: 'Transición inválida o configuración incompleta' },
+        },
+      },
+    },
+    '/calendar': {
+      get: {
+        summary: 'Consultar hitos y eventos por rango',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Eventos visibles ordenados' } },
+      },
+      post: {
+        summary: 'Crear un evento institucional manual',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Evento creado y auditado' } },
       },
     },
   },

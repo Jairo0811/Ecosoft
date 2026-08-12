@@ -17,6 +17,11 @@ erDiagram
     User ||--o{ Organization : reviews
     CatalogItem }o--|| CatalogType : grouped_by
     Organization ||--o{ Auction : manages
+    Organization ||--o{ AuctionParticipant : participates
+    Auction ||--o{ AuctionRequirement : requires
+    Auction ||--o{ AuctionParticipant : enables
+    Auction ||--o{ AuctionEvent : records
+    Auction ||--o{ CalendarEvent : schedules
     Auction ||--o{ Bid : receives
     Bid ||--o{ Evaluation : assessed_by
     Bid ||--o| Award : wins
@@ -32,6 +37,11 @@ invariantes en sus respectivas fases para no congelar reglas aún no definidas.
 
 La ampliación de usuarios agrega `authVersion`, usada para invalidación inmediata de sesiones, y
 `UserInvitation`, que conserva el hash del token, emisor, vencimiento, aceptación y revocación.
+
+La Fase 3 incorpora `Auction`, requisitos configurables, participantes autorizados, eventos de
+dominio de solo anexado y eventos de calendario. Los hitos automáticos de apertura, cierre,
+evaluación y adjudicación se sincronizan con el cronograma. Restricciones SQL Server protegen
+capacidad/precio positivos y el orden básico de fechas.
 
 ## Convenciones
 

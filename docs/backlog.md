@@ -5,7 +5,7 @@
 |        P0 | Foundation    | Completada | monorepo, SQL Server, CI, logging, health y documentación      |
 |        P0 | Identity      | Completada | login, refresh rotativo, logout, RBAC, bloqueo y auditoría     |
 |        P0 | Organizations | Completada | CNE, empresas, aprobación y usuarios de organización           |
-|        P0 | Auctions      | Pendiente  | ciclo de vida, requisitos, participantes, cronograma y eventos |
+|        P0 | Auctions      | Completada | ciclo de vida, requisitos, participantes, cronograma y eventos |
 |        P0 | Bids          | Pendiente  | borrador, envío inmutable, hash, versiones y confidencialidad  |
 |        P0 | Evaluations   | Pendiente  | matrices configurables, doble evaluación y resultado trazable  |
 |        P0 | Awards        | Pendiente  | resolución, aprobaciones y no eliminación física               |

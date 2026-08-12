@@ -18,7 +18,7 @@
 
 <p align="center">
   <a href="https://github.com/Jairo0811/Ecosoft/actions/workflows/ci.yml"><img src="https://github.com/Jairo0811/Ecosoft/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/fases_completadas-0_a_2-18A96F" alt="Fases 0 a 2 completadas">
+  <img src="https://img.shields.io/badge/fases_completadas-0_a_3-18A96F" alt="Fases 0 a 3 completadas">
   <img src="https://img.shields.io/badge/arquitectura-Monolito_modular-0F172A" alt="Monolito modular">
   <img src="https://img.shields.io/badge/base_de_datos-SQL_Server_2022-CC2927?logo=microsoftsqlserver&logoColor=white" alt="SQL Server 2022">
   <img src="https://img.shields.io/badge/licencia-MIT-2EA44F" alt="Licencia MIT">
@@ -84,7 +84,7 @@ analítica.
 
 ## ✅ Estado actual
 
-Las **Fases 0, 1 y 2** están implementadas e integradas en `main`.
+Las **Fases 0, 1, 2 y 3** están implementadas e integradas en `main`.
 
 ### 🔐 Identidad y seguridad
 
@@ -117,24 +117,35 @@ Las **Fases 0, 1 y 2** están implementadas e integradas en `main`.
 - Docker Compose con SQL Server 2022.
 - Pruebas automatizadas y GitHub Actions con integración real contra SQL Server.
 
+### ⚡ Licitaciones, subastas y calendario
+
+- Creación y configuración por tecnología, moneda, capacidad y precio máximo.
+- Ciclo de estados controlado desde borrador hasta adjudicación, finalización o cancelación.
+- Requisitos legales, técnicos, financieros y regulatorios configurables.
+- Participantes limitados a organizaciones aprobadas.
+- Historial inmutable de eventos y auditoría de cada operación sensible.
+- Aislamiento de borradores y visibilidad empresarial por participación habilitada.
+- Hitos automáticos de apertura, cierre, evaluación y adjudicación.
+- Calendario mensual, semanal y en lista con eventos institucionales manuales.
+
 > Los enlaces de activación se devuelven únicamente en desarrollo. En producción no se expone el token y queda pendiente conectar un proveedor transaccional de correo.
 
 ---
 
 ## 🧩 Módulos del producto
 
-| Módulo                            | Responsabilidad                                           |        Fase | Estado          |
-| --------------------------------- | --------------------------------------------------------- | ----------: | --------------- |
-| Auth, Users, Roles y Permissions  | Identidad, sesiones, RBAC y administración                |         1–2 | ✅ Implementado |
-| Organizations y Participants      | CNE, empresas y participantes autorizados                 |           2 | ✅ Implementado |
-| Auctions y Calendar               | Licitaciones, reglas, cronograma y eventos en tiempo real |           3 | ⏳ Planificado  |
-| Bids y Documents                  | Ofertas, versiones, confidencialidad y documentos         |           4 | ⏳ Planificado  |
-| Evaluations y Awards              | Matrices configurables, puntuación y adjudicación         |           5 | ⏳ Planificado  |
-| PPAContracts y EnergyProjects     | Contratos, anexos, renovaciones y proyectos renovables    |           6 | ⏳ Planificado  |
-| Reports y Analytics               | KPIs, tendencias, filtros y exportaciones                 |           7 | ⏳ Planificado  |
-| Audit, Regulatory y Notifications | Gobierno, normativa, trazabilidad y alertas               |           8 | 🟡 Base inicial |
-| AI y OCR                          | Análisis consultivo, anomalías, resumen y extracción      |           9 | ⏳ Planificado  |
-| Administration                    | Configuración operativa y catálogos                       | Transversal | 🟡 Parcial      |
+| Módulo                            | Responsabilidad                                        |        Fase | Estado          |
+| --------------------------------- | ------------------------------------------------------ | ----------: | --------------- |
+| Auth, Users, Roles y Permissions  | Identidad, sesiones, RBAC y administración             |         1–2 | ✅ Implementado |
+| Organizations y Participants      | CNE, empresas y participantes autorizados              |           2 | ✅ Implementado |
+| Auctions y Calendar               | Licitaciones, reglas, cronograma y eventos auditados   |           3 | ✅ Implementado |
+| Bids y Documents                  | Ofertas, versiones, confidencialidad y documentos      |           4 | ⏳ Planificado  |
+| Evaluations y Awards              | Matrices configurables, puntuación y adjudicación      |           5 | ⏳ Planificado  |
+| PPAContracts y EnergyProjects     | Contratos, anexos, renovaciones y proyectos renovables |           6 | ⏳ Planificado  |
+| Reports y Analytics               | KPIs, tendencias, filtros y exportaciones              |           7 | ⏳ Planificado  |
+| Audit, Regulatory y Notifications | Gobierno, normativa, trazabilidad y alertas            |           8 | 🟡 Base inicial |
+| AI y OCR                          | Análisis consultivo, anomalías, resumen y extracción   |           9 | ⏳ Planificado  |
+| Administration                    | Configuración operativa y catálogos                    | Transversal | 🟡 Parcial      |
 
 ## 👥 Roles iniciales
 
@@ -431,8 +442,8 @@ privacidad.
 |    0 | Análisis, arquitectura, ERD, riesgos y ADRs         | ✅ Completada |
 |    1 | Foundation, Authentication y RBAC                   | ✅ Completada |
 |    2 | Organizaciones, participantes y usuarios            | ✅ Completada |
-|    3 | Licitaciones, subastas y calendario                 | ▶️ Siguiente  |
-|    4 | Ofertas inmutables y documentos                     | ⏳ Pendiente  |
+|    3 | Licitaciones, subastas y calendario                 | ✅ Completada |
+|    4 | Ofertas inmutables y documentos                     | ▶️ Siguiente  |
 |    5 | Evaluaciones configurables y adjudicaciones         | ⏳ Pendiente  |
 |    6 | Contratos PPA y proyectos energéticos               | ⏳ Pendiente  |
 |    7 | Dashboard, analítica y reportes                     | ⏳ Pendiente  |

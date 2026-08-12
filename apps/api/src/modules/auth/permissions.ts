@@ -5,5 +5,9 @@ export const permissions = {
   organizationsApprove: 'organizations.approve',
   catalogsRead: 'catalogs.read',
   catalogsManage: 'catalogs.manage',
+  auctionsRead: 'auctions.read',
+  auctionsCreate: 'auctions.create',
+  auctionsUpdate: 'auctions.update',
+  auctionsPublish: 'auctions.publish',
   auditRead: 'audit.read',
 } as const;
