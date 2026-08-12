@@ -25,6 +25,8 @@ model Organization {
   updatedAt        DateTime  @updatedAt
   users            User[]    @relation("OrganizationMembers")
   reviewedBy       User?     @relation("OrganizationReviews", fields: [reviewedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  managedAuctions  Auction[] @relation("AuctionManager")
+  auctionParticipations AuctionParticipant[]
 
   @@index([type, status])
   @@index([rnc])
@@ -53,6 +55,9 @@ model User {
   auditLogs           AuditLog[]
   invitations         UserInvitation[] @relation("InvitedUser")
   sentInvitations     UserInvitation[] @relation("InvitationSender")
+  createdAuctions     Auction[]         @relation("AuctionCreator")
+  auctionEvents       AuctionEvent[]
+  createdCalendarEvents CalendarEvent[]
 
   @@index([organizationId, status])
 }
@@ -89,6 +94,111 @@ model CatalogItem {
 
   @@unique([type, code])
   @@index([type, isActive, sortOrder])
+}
+
+model Auction {
+  id                      String    @id @default(uuid()) @db.UniqueIdentifier
+  code                    String    @unique @db.VarChar(40)
+  title                   String    @db.NVarChar(240)
+  description             String?   @db.NVarChar(Max)
+  status                  String    @default("BORRADOR") @db.VarChar(30)
+  managingOrganizationId  String    @db.UniqueIdentifier
+  createdByUserId         String    @db.UniqueIdentifier
+  renewableTechnologyCode String    @db.VarChar(60)
+  currencyCode            String    @db.VarChar(10)
+  capacityMw              Decimal   @db.Decimal(18, 3)
+  maximumPrice            Decimal?  @db.Decimal(18, 4)
+  timezone                String    @default("America/Santo_Domingo") @db.VarChar(80)
+  openAt                  DateTime
+  closeAt                 DateTime
+  evaluationStartAt       DateTime?
+  awardPlannedAt          DateTime?
+  publishedAt             DateTime?
+  closedAt                DateTime?
+  cancelledAt             DateTime?
+  finalizedAt             DateTime?
+  cancellationReason      String?   @db.NVarChar(1000)
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  managingOrganization    Organization @relation("AuctionManager", fields: [managingOrganizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy               User      @relation("AuctionCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  requirements            AuctionRequirement[]
+  participants            AuctionParticipant[]
+  events                  AuctionEvent[]
+  calendarEvents          CalendarEvent[]
+
+  @@index([status, openAt])
+  @@index([managingOrganizationId, status])
+  @@index([renewableTechnologyCode, status])
+}
+
+model AuctionRequirement {
+  id          String   @id @default(uuid()) @db.UniqueIdentifier
+  auctionId   String   @db.UniqueIdentifier
+  code        String   @db.VarChar(60)
+  title       String   @db.NVarChar(200)
+  description String?  @db.NVarChar(1000)
+  category    String   @db.VarChar(40)
+  isMandatory Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  auction     Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([auctionId, code])
+  @@index([auctionId, category, sortOrder])
+}
+
+model AuctionParticipant {
+  id             String       @id @default(uuid()) @db.UniqueIdentifier
+  auctionId      String       @db.UniqueIdentifier
+  organizationId String       @db.UniqueIdentifier
+  status         String       @default("HABILITADO") @db.VarChar(30)
+  notes          String?      @db.NVarChar(1000)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  auction        Auction      @relation(fields: [auctionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([auctionId, organizationId])
+  @@index([organizationId, status])
+}
+
+model AuctionEvent {
+  id              String   @id @default(uuid()) @db.UniqueIdentifier
+  auctionId       String   @db.UniqueIdentifier
+  createdByUserId String   @db.UniqueIdentifier
+  type            String   @db.VarChar(40)
+  previousStatus  String?  @db.VarChar(30)
+  newStatus       String?  @db.VarChar(30)
+  message         String?  @db.NVarChar(1000)
+  metadataJson    String?  @db.NVarChar(Max)
+  createdAt       DateTime @default(now())
+  auction         Auction  @relation(fields: [auctionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdBy       User     @relation(fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([auctionId, createdAt])
+}
+
+model CalendarEvent {
+  id              String   @id @default(uuid()) @db.UniqueIdentifier
+  auctionId       String?  @db.UniqueIdentifier
+  createdByUserId String   @db.UniqueIdentifier
+  type            String   @db.VarChar(40)
+  source          String   @default("MANUAL") @db.VarChar(20)
+  title           String   @db.NVarChar(240)
+  description     String?  @db.NVarChar(1000)
+  startsAt        DateTime
+  endsAt          DateTime?
+  allDay          Boolean  @default(false)
+  location        String?  @db.NVarChar(300)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  auction         Auction? @relation(fields: [auctionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdBy       User     @relation(fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([startsAt, type])
+  @@index([auctionId, source])
 }
 
 model Role {

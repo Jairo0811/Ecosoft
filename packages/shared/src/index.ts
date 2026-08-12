@@ -7,6 +7,7 @@ export const permissions = {
   catalogsManage: 'catalogs.manage',
   auctionsRead: 'auctions.read',
   auctionsCreate: 'auctions.create',
+  auctionsUpdate: 'auctions.update',
   auctionsPublish: 'auctions.publish',
   bidsRead: 'bids.read',
   bidsSubmit: 'bids.submit',
@@ -70,3 +71,31 @@ export const catalogTypes = [
 ] as const;
 
 export type CatalogType = (typeof catalogTypes)[number];
+
+export const auctionStatuses = [
+  'BORRADOR',
+  'PROGRAMADA',
+  'PUBLICADA',
+  'ABIERTA',
+  'CERRADA',
+  'EN_EVALUACION',
+  'ADJUDICADA',
+  'CANCELADA',
+  'FINALIZADA',
+] as const;
+
+export type AuctionStatus = (typeof auctionStatuses)[number];
+
+export const calendarEventTypes = [
+  'APERTURA',
+  'CIERRE',
+  'EVALUACION',
+  'REUNION',
+  'ADJUDICACION',
+  'VENCIMIENTO',
+  'FIRMA',
+  'RENOVACION',
+  'HITO',
+] as const;
+
+export type CalendarEventType = (typeof calendarEventTypes)[number];

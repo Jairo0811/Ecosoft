@@ -58,5 +58,26 @@ mayúscula, minúscula, número y símbolo. Los cambios de estado o roles revoca
 las sesiones del usuario. CNE administra roles institucionales y empresariales; los administradores
 de empresa quedan limitados a su propia organización y a roles empresariales.
 
-Los contratos de Auctions, Bids, Evaluations, Awards y PPAContracts se agregarán con su fase. El
-versionado evita romper clientes cuando el producto evolucione.
+## Fase 3
+
+| Método | Ruta                         | Acceso                    |
+| ------ | ---------------------------- | ------------------------- |
+| GET    | `/auctions`                  | `auctions.read` + alcance |
+| GET    | `/auctions/:id`              | `auctions.read` + alcance |
+| POST   | `/auctions`                  | `auctions.create`         |
+| PATCH  | `/auctions/:id`              | `auctions.update`         |
+| PUT    | `/auctions/:id/requirements` | `auctions.update`         |
+| PUT    | `/auctions/:id/participants` | `auctions.update`         |
+| PATCH  | `/auctions/:id/status`       | `auctions.publish`        |
+| GET    | `/auctions/:id/events`       | `auctions.read` + alcance |
+| GET    | `/calendar`                  | `auctions.read` + alcance |
+| POST   | `/calendar`                  | `auctions.update`         |
+| DELETE | `/calendar/:id`              | `auctions.update`         |
+
+Los borradores son visibles únicamente para roles institucionales. Las empresas acceden a procesos
+publicados donde su organización figure como participante habilitado. Las transiciones de estado,
+cambios de requisitos/participantes y eventos manuales generan auditoría; el historial propio de
+la subasta es de solo anexado desde la aplicación.
+
+Los contratos de Bids, Evaluations, Awards y PPAContracts se agregarán con su fase. El versionado
+evita romper clientes cuando el producto evolucione.

@@ -15,6 +15,8 @@ import { healthRouter } from './modules/health/health.routes';
 import { organizationsRouter } from './modules/organizations/organizations.routes';
 import { rolesRouter } from './modules/roles/roles.routes';
 import { usersRouter } from './modules/users/users.routes';
+import { auctionsRouter } from './modules/auctions/auctions.routes';
+import { calendarRouter } from './modules/calendar/calendar.routes';
 import { openApiDocument } from './openapi';
 
 export const createApp = () => {
@@ -44,6 +46,8 @@ export const createApp = () => {
   app.use('/api/v1/roles', rolesRouter);
   app.use('/api/v1/audit', auditRouter);
   app.use('/api/v1/catalogs', catalogsRouter);
+  app.use('/api/v1/auctions', auctionsRouter);
+  app.use('/api/v1/calendar', calendarRouter);
 
   app.use(notFound);
   app.use(errorHandler);

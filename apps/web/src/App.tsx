@@ -8,6 +8,8 @@ import { ModulePlaceholderPage } from './pages/ModulePlaceholderPage';
 import { OrganizationsPage } from './pages/OrganizationsPage';
 import { ActivateAccountPage } from './pages/ActivateAccountPage';
 import { UsersPage } from './pages/UsersPage';
+import { AuctionsPage } from './pages/AuctionsPage';
+import { CalendarPage } from './pages/CalendarPage';
 
 export function App() {
   return (
@@ -17,7 +19,7 @@ export function App() {
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
-          <Route path="subastas" element={<ModulePlaceholderPage title="Subastas" phase={3} />} />
+          <Route path="subastas" element={<AuctionsPage />} />
           <Route
             path="contratos"
             element={<ModulePlaceholderPage title="Contratos PPA" phase={6} />}
@@ -28,10 +30,7 @@ export function App() {
             path="reportes"
             element={<ModulePlaceholderPage title="Reportes y analítica" phase={7} />}
           />
-          <Route
-            path="calendario"
-            element={<ModulePlaceholderPage title="Calendario y eventos" phase={3} />}
-          />
+          <Route path="calendario" element={<CalendarPage />} />
           <Route path="usuarios" element={<UsersPage />} />
           <Route path="auditoria" element={<ModulePlaceholderPage title="Auditoría" phase={8} />} />
         </Route>

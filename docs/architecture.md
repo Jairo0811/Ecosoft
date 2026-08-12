@@ -35,9 +35,10 @@ flowchart TD
     API --> Audit["Auditoría inmutable"]
 ```
 
-El acceso al servicio de IA y al almacenamiento se realizará mediante puertos e interfaces. Ningún
-proveedor se filtra al dominio. Socket.IO se añadirá en Auctions cuando existan subastas en tiempo
-real; no se introducirá en la base antes de necesitarlo.
+El acceso al servicio de IA, almacenamiento y tiempo real se realizará mediante puertos e
+interfaces. Ningún proveedor se filtra al dominio. Auctions ya publica al puerto
+`AuctionRealtimePublisher`; el adaptador Socket.IO se añadirá con la recepción de ofertas, cuando
+existan consumidores en vivo y reglas formales de confidencialidad.
 
 ## Flujo de una solicitud protegida
 
