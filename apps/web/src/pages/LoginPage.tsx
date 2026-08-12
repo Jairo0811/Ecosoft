@@ -17,6 +17,7 @@ import { useForm } from 'react-hook-form';
 import { Navigate, useLocation, useNavigate } from 'react-router';
 import { z } from 'zod';
 import { useAuth } from '../auth/AuthContext';
+import { BrandLogo } from '../branding/BrandLogo';
 
 const schema = z.object({
   email: z.email('Ingrese un correo válido.'),
@@ -79,12 +80,7 @@ export function LoginPage() {
         }}
       >
         <Box>
-          <Typography variant="h4" fontWeight={850}>
-            EcoSoft
-          </Typography>
-          <Typography letterSpacing=".12em" variant="caption" sx={{ color: '#72DDA5' }}>
-            SOLUCIONES PARA ENERGÍA LIMPIA
-          </Typography>
+          <BrandLogo maxWidth={430} />
         </Box>
         <Box zIndex={1} maxWidth={580}>
           <BoltOutlined sx={{ color: '#72DDA5', fontSize: 52, mb: 2 }} />

@@ -8,17 +8,27 @@ datasource db {
 }
 
 model Organization {
-  id             String   @id @default(uuid()) @db.UniqueIdentifier
-  rnc            String?  @unique @db.VarChar(11)
-  legalName      String   @db.NVarChar(200)
-  commercialName String?  @db.NVarChar(200)
-  type           String   @db.VarChar(40)
-  status         String   @default("PENDING") @db.VarChar(30)
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  users          User[]
+  id               String    @id @default(uuid()) @db.UniqueIdentifier
+  rnc              String?   @db.VarChar(11)
+  legalName        String    @db.NVarChar(200)
+  commercialName   String?   @db.NVarChar(200)
+  type             String    @db.VarChar(40)
+  status           String    @default("PENDING") @db.VarChar(30)
+  contactName      String?   @db.NVarChar(200)
+  contactEmail     String?   @db.NVarChar(320)
+  contactPhone     String?   @db.VarChar(30)
+  website          String?   @db.NVarChar(500)
+  rejectionReason  String?   @db.NVarChar(1000)
+  reviewedAt       DateTime?
+  reviewedByUserId String?   @db.UniqueIdentifier
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  users            User[]    @relation("OrganizationMembers")
+  reviewedBy       User?     @relation("OrganizationReviews", fields: [reviewedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([type, status])
+  @@index([rnc])
+  @@index([reviewedByUserId])
 }
 
 model User {
@@ -35,12 +45,29 @@ model User {
   organizationId      String?        @db.UniqueIdentifier
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
-  organization        Organization?  @relation(fields: [organizationId], references: [id])
+  organization        Organization?  @relation("OrganizationMembers", fields: [organizationId], references: [id])
+  reviewedOrganizations Organization[] @relation("OrganizationReviews")
   roles               UserRole[]
   refreshTokens       RefreshToken[]
   auditLogs           AuditLog[]
 
   @@index([organizationId, status])
+}
+
+model CatalogItem {
+  id           String   @id @default(uuid()) @db.UniqueIdentifier
+  type         String   @db.VarChar(40)
+  code         String   @db.VarChar(60)
+  name         String   @db.NVarChar(160)
+  description  String?  @db.NVarChar(500)
+  isActive     Boolean  @default(true)
+  sortOrder    Int      @default(0)
+  metadataJson String?  @db.NVarChar(Max)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([type, code])
+  @@index([type, isActive, sortOrder])
 }
 
 model Role {

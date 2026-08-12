@@ -8,7 +8,7 @@ Base URL: `/api/v1`. La documentación navegable se sirve en `/api/docs`.
 - `Authorization: Bearer <access-token>` para recursos protegidos.
 - `X-Correlation-Id` aceptado y devuelto por la API.
 - errores con `{ code, message, correlationId, details? }`.
-- paginación futura: `page`, `pageSize`, `sort`, `order`, `search`.
+- paginación: `page` y `pageSize`; filtros específicos por recurso.
 
 ## Fase 1
 
@@ -24,6 +24,24 @@ Base URL: `/api/v1`. La documentación navegable se sirve en `/api/docs`.
 | GET    | `/roles`         | `users.manage`       |
 | GET    | `/organizations` | `organizations.read` |
 | GET    | `/audit`         | `audit.read`         |
+
+## Fase 2
+
+| Método | Ruta                        | Acceso                  |
+| ------ | --------------------------- | ----------------------- |
+| GET    | `/organizations`            | `organizations.read`    |
+| GET    | `/organizations/:id`        | `organizations.read`    |
+| POST   | `/organizations`            | `organizations.manage`  |
+| PATCH  | `/organizations/:id`        | `organizations.manage`  |
+| PATCH  | `/organizations/:id/status` | `organizations.approve` |
+| GET    | `/catalogs`                 | `catalogs.read`         |
+| POST   | `/catalogs`                 | `catalogs.manage`       |
+| PATCH  | `/catalogs/:id`             | `catalogs.manage`       |
+| PATCH  | `/catalogs/:id/status`      | `catalogs.manage`       |
+
+Las organizaciones se filtran por texto, tipo y estado. Las decisiones de aprobación, rechazo y
+suspensión exigen permisos separados y generan eventos de auditoría. Los catálogos usan códigos
+únicos por tipo y se desactivan sin eliminación física.
 
 Los contratos de Auctions, Bids, Evaluations, Awards y PPAContracts se agregarán con su fase. El
 versionado evita romper clientes cuando el producto evolucione.

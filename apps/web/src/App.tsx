@@ -2,8 +2,10 @@ import { Navigate, Route, Routes } from 'react-router';
 import { ProtectedRoute } from './auth/ProtectedRoute';
 import { AppLayout } from './layout/AppLayout';
 import { DashboardPage } from './pages/DashboardPage';
+import { CatalogsPage } from './pages/CatalogsPage';
 import { LoginPage } from './pages/LoginPage';
 import { ModulePlaceholderPage } from './pages/ModulePlaceholderPage';
+import { OrganizationsPage } from './pages/OrganizationsPage';
 
 export function App() {
   return (
@@ -17,10 +19,8 @@ export function App() {
             path="contratos"
             element={<ModulePlaceholderPage title="Contratos PPA" phase={6} />}
           />
-          <Route
-            path="participantes"
-            element={<ModulePlaceholderPage title="Participantes" phase={2} />}
-          />
+          <Route path="participantes" element={<OrganizationsPage />} />
+          <Route path="catalogos" element={<CatalogsPage />} />
           <Route
             path="reportes"
             element={<ModulePlaceholderPage title="Reportes y analítica" phase={7} />}

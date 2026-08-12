@@ -19,6 +19,7 @@ import {
   AssessmentOutlined,
   BusinessOutlined,
   CalendarMonthOutlined,
+  CategoryOutlined,
   DashboardOutlined,
   DarkModeOutlined,
   DescriptionOutlined,
@@ -31,6 +32,7 @@ import {
 } from '@mui/icons-material';
 import { NavLink, Outlet } from 'react-router';
 import { useAuth } from '../auth/AuthContext';
+import { BrandLogo } from '../branding/BrandLogo';
 import { useThemeMode } from '../theme/ThemeContext';
 
 const drawerWidth = 272;
@@ -39,6 +41,7 @@ const navigation = [
   { label: 'Subastas', path: '/subastas', icon: <GavelOutlined /> },
   { label: 'Contratos PPA', path: '/contratos', icon: <DescriptionOutlined /> },
   { label: 'Participantes', path: '/participantes', icon: <BusinessOutlined /> },
+  { label: 'Catálogos', path: '/catalogos', icon: <CategoryOutlined /> },
   { label: 'Reportes', path: '/reportes', icon: <AssessmentOutlined /> },
   { label: 'Calendario', path: '/calendario', icon: <CalendarMonthOutlined /> },
   { label: 'Usuarios', path: '/usuarios', icon: <PeopleAltOutlined /> },
@@ -60,13 +63,8 @@ export function AppLayout() {
         flexDirection: 'column',
       }}
     >
-      <Box px={3} py={3.25}>
-        <Typography variant="h5" fontWeight={800} letterSpacing="-.03em">
-          EcoSoft
-        </Typography>
-        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,.68)' }}>
-          ENERGÍA · TRANSPARENCIA · FUTURO
-        </Typography>
+      <Box px={3} py={2.25}>
+        <BrandLogo maxWidth={224} />
       </Box>
       <Divider sx={{ borderColor: 'rgba(255,255,255,.1)' }} />
       <List sx={{ px: 1.5, py: 2 }} aria-label="Navegación principal">
