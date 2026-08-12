@@ -2,9 +2,9 @@ export const openApiDocument = {
   openapi: '3.0.3',
   info: {
     title: 'EcoSoft API',
-    version: '0.2.0',
+    version: '0.3.0',
     description:
-      'API para subastas energéticas y contratos PPA. Fase 2: organizaciones y catálogos.',
+      'API para subastas energéticas y contratos PPA. Fase 2: organizaciones, catálogos y usuarios.',
   },
   servers: [{ url: '/api/v1' }],
   components: {
@@ -67,6 +67,66 @@ export const openApiDocument = {
         summary: 'Identidad actual',
         security: [{ bearerAuth: [] }],
         responses: { '200': { description: 'Usuario autenticado' } },
+      },
+    },
+    '/auth/invitations/validate': {
+      post: {
+        summary: 'Validar una invitación de cuenta',
+        responses: {
+          '200': { description: 'Invitación vigente' },
+          '410': { description: 'Invitación inválida, vencida o utilizada' },
+        },
+      },
+    },
+    '/auth/invitations/accept': {
+      post: {
+        summary: 'Activar una cuenta invitada y definir su contraseña',
+        responses: {
+          '204': { description: 'Cuenta activada' },
+          '410': { description: 'Invitación inválida, vencida o utilizada' },
+        },
+      },
+    },
+    '/users': {
+      get: {
+        summary: 'Listar usuarios dentro del ámbito administrativo',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Listado paginado' } },
+      },
+    },
+    '/users/invitations': {
+      get: {
+        summary: 'Listar invitaciones dentro del ámbito administrativo',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Listado paginado' } },
+      },
+      post: {
+        summary: 'Invitar o reinvitar un usuario',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '201': { description: 'Invitación creada' },
+          '403': { description: 'Organización o rol fuera del ámbito' },
+        },
+      },
+    },
+    '/users/{id}/status': {
+      patch: {
+        summary: 'Suspender o reactivar una cuenta y revocar sus sesiones',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': { description: 'Estado actualizado' } },
+      },
+    },
+    '/users/{id}/roles': {
+      put: {
+        summary: 'Reemplazar roles y revocar sesiones activas',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': { description: 'Roles actualizados' } },
       },
     },
     '/organizations': {

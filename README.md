@@ -8,7 +8,7 @@ subastas de energía renovable, además del ciclo de vida de contratos Power Pur
 El producto prioriza transparencia, seguridad, auditoría y decisiones humanas verificables. No es
 un ERP y no incluye nómina, inventario, contabilidad, facturación ni pagos.
 
-> Estado: Fases 0 y 1 completadas; Fase 2 en revisión. El logo horizontal oficial está integrado;
+> Estado: Fases 0, 1 y 2 completadas. El logo horizontal oficial está integrado;
 > el isotipo, favicon y variante para fondos claros se incorporarán cuando sean entregados.
 
 ## Alcance inicial
@@ -18,6 +18,7 @@ un ERP y no incluye nómina, inventario, contabilidad, facturación ni pagos.
 - Login, logout, refresh token rotativo y sesiones revocables.
 - RBAC con roles y permisos granulares validados en backend.
 - Organizaciones, aprobación de participantes, catálogos, usuarios y auditoría.
+- Invitaciones de un solo uso, activación segura y administración de usuarios por organización.
 - Dashboard corporativo accesible con modo claro/oscuro.
 - OpenAPI, logging estructurado, correlation IDs y health checks.
 - Docker Compose, pruebas y GitHub Actions.

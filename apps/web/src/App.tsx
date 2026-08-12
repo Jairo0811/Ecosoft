@@ -6,11 +6,14 @@ import { CatalogsPage } from './pages/CatalogsPage';
 import { LoginPage } from './pages/LoginPage';
 import { ModulePlaceholderPage } from './pages/ModulePlaceholderPage';
 import { OrganizationsPage } from './pages/OrganizationsPage';
+import { ActivateAccountPage } from './pages/ActivateAccountPage';
+import { UsersPage } from './pages/UsersPage';
 
 export function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/activar-cuenta" element={<ActivateAccountPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
@@ -29,10 +32,7 @@ export function App() {
             path="calendario"
             element={<ModulePlaceholderPage title="Calendario y eventos" phase={3} />}
           />
-          <Route
-            path="usuarios"
-            element={<ModulePlaceholderPage title="Administración de usuarios" phase={2} />}
-          />
+          <Route path="usuarios" element={<UsersPage />} />
           <Route path="auditoria" element={<ModulePlaceholderPage title="Auditoría" phase={8} />} />
         </Route>
       </Route>

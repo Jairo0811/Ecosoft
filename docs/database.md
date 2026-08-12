@@ -11,6 +11,8 @@ erDiagram
     User }o--o{ Role : has
     Role }o--o{ Permission : grants
     User ||--o{ RefreshToken : owns
+    User ||--o{ UserInvitation : receives
+    User ||--o{ UserInvitation : sends
     User ||--o{ AuditLog : performs
     User ||--o{ Organization : reviews
     CatalogItem }o--|| CatalogType : grouped_by
@@ -28,6 +30,9 @@ organización con contactos y decisiones de revisión, agrega un índice único 
 RNC nulo y crea catálogos controlados. Las entidades de subastas y contratos se agregarán con sus
 invariantes en sus respectivas fases para no congelar reglas aún no definidas.
 
+La ampliación de usuarios agrega `authVersion`, usada para invalidación inmediata de sesiones, y
+`UserInvitation`, que conserva el hash del token, emisor, vencimiento, aceptación y revocación.
+
 ## Convenciones
 
 - UUID (`uniqueidentifier`) como clave primaria.
@@ -35,4 +40,5 @@ invariantes en sus respectivas fases para no congelar reglas aún no definidas.
 - índices únicos en email, RNC no nulo, códigos de rol, permisos y códigos por tipo de catálogo.
 - `rowVersion` se agregará a agregados con edición concurrente (ofertas, evaluaciones y contratos).
 - datos críticos no se eliminan físicamente desde la aplicación.
-- los hashes de refresh tokens y documentos se almacenan, nunca los valores sensibles originales.
+- los hashes de refresh tokens, invitaciones y documentos se almacenan, nunca los valores
+  sensibles originales.

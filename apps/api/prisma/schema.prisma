@@ -43,6 +43,7 @@ model User {
   lockedUntil         DateTime?
   lastLoginAt         DateTime?
   organizationId      String?        @db.UniqueIdentifier
+  authVersion         Int            @default(0)
   createdAt           DateTime       @default(now())
   updatedAt           DateTime       @updatedAt
   organization        Organization?  @relation("OrganizationMembers", fields: [organizationId], references: [id])
@@ -50,8 +51,28 @@ model User {
   roles               UserRole[]
   refreshTokens       RefreshToken[]
   auditLogs           AuditLog[]
+  invitations         UserInvitation[] @relation("InvitedUser")
+  sentInvitations     UserInvitation[] @relation("InvitationSender")
 
   @@index([organizationId, status])
+}
+
+model UserInvitation {
+  id              String    @id @default(uuid()) @db.UniqueIdentifier
+  email           String    @db.NVarChar(320)
+  tokenHash       String    @unique @db.Char(64)
+  userId          String    @db.UniqueIdentifier
+  invitedByUserId String    @db.UniqueIdentifier
+  expiresAt       DateTime
+  acceptedAt      DateTime?
+  revokedAt       DateTime?
+  createdAt       DateTime  @default(now())
+  user            User      @relation("InvitedUser", fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  invitedBy       User      @relation("InvitationSender", fields: [invitedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([userId, expiresAt])
+  @@index([invitedByUserId, createdAt])
+  @@index([email, createdAt])
 }
 
 model CatalogItem {

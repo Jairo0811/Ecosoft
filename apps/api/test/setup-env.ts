@@ -7,3 +7,4 @@ process.env.JWT_ACCESS_SECRET = 'test-access-secret-with-at-least-32-chars';
 process.env.JWT_REFRESH_SECRET = 'test-refresh-secret-with-at-least-32-chars';
 process.env.ACCESS_TOKEN_TTL_SECONDS = '900';
 process.env.REFRESH_TOKEN_TTL_DAYS = '7';
+process.env.INVITATION_TTL_HOURS = '48';

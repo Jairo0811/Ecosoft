@@ -1,14 +1,24 @@
 import type { RequestHandler } from 'express';
 import { AppError } from '../../common/app-error';
+import { prisma } from '../../config/prisma';
 import { tokenService } from './token.service';
 
-export const authenticate: RequestHandler = (request, _response, next) => {
+export const authenticate: RequestHandler = async (request, _response, next) => {
   const authorization = request.header('authorization');
   if (!authorization?.startsWith('Bearer ')) {
     next(new AppError(401, 'AUTHENTICATION_REQUIRED', 'Debe iniciar sesión.'));
     return;
   }
-  request.auth = tokenService.verifyAccessToken(authorization.slice(7));
+  const claims = tokenService.verifyAccessToken(authorization.slice(7));
+  const current = await prisma.user.findUnique({
+    where: { id: claims.id },
+    select: { status: true, authVersion: true },
+  });
+  if (!current || current.status !== 'ACTIVE' || current.authVersion !== claims.authVersion) {
+    next(new AppError(401, 'SESSION_REVOKED', 'La sesión fue revocada. Inicie sesión nuevamente.'));
+    return;
+  }
+  request.auth = claims;
   next();
 };
 

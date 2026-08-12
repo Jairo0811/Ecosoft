@@ -38,6 +38,84 @@ const roles = [
   'READ_ONLY',
 ] as const;
 
+const rolePermissionCodes: Record<
+  (typeof roles)[number],
+  readonly (typeof permissionCodes)[number][]
+> = {
+  SUPER_ADMIN: permissionCodes,
+  CNE_ADMIN: permissionCodes,
+  AUCTION_MANAGER: [
+    'organizations.read',
+    'catalogs.read',
+    'auctions.read',
+    'auctions.create',
+    'auctions.update',
+    'auctions.publish',
+    'reports.read',
+  ],
+  TECHNICAL_EVALUATOR: [
+    'organizations.read',
+    'catalogs.read',
+    'auctions.read',
+    'bids.read',
+    'bids.evaluate',
+    'reports.read',
+  ],
+  FINANCIAL_EVALUATOR: [
+    'organizations.read',
+    'catalogs.read',
+    'auctions.read',
+    'bids.read',
+    'bids.evaluate',
+    'reports.read',
+  ],
+  REGULATORY_SUPERVISOR: [
+    'organizations.read',
+    'organizations.approve',
+    'catalogs.read',
+    'auctions.read',
+    'bids.read',
+    'contracts.read',
+    'reports.read',
+    'audit.read',
+  ],
+  AUDITOR: [
+    'organizations.read',
+    'catalogs.read',
+    'auctions.read',
+    'bids.read',
+    'contracts.read',
+    'reports.read',
+    'audit.read',
+  ],
+  COMPANY_ADMIN: [
+    'users.manage',
+    'organizations.read',
+    'catalogs.read',
+    'auctions.read',
+    'bids.read',
+    'bids.submit',
+    'contracts.read',
+    'reports.read',
+  ],
+  COMPANY_REPRESENTATIVE: [
+    'organizations.read',
+    'catalogs.read',
+    'auctions.read',
+    'bids.read',
+    'bids.submit',
+    'contracts.read',
+    'reports.read',
+  ],
+  READ_ONLY: [
+    'organizations.read',
+    'catalogs.read',
+    'auctions.read',
+    'contracts.read',
+    'reports.read',
+  ],
+};
+
 const catalogItems = [
   { type: 'ENERGY_TECHNOLOGY', code: 'SOLAR', name: 'Solar fotovoltaica', sortOrder: 10 },
   { type: 'ENERGY_TECHNOLOGY', code: 'WIND', name: 'Eólica', sortOrder: 20 },
@@ -82,14 +160,19 @@ async function main(): Promise<void> {
   const superAdmin = createdRoles.find((role) => role.code === 'SUPER_ADMIN');
   if (!superAdmin) throw new Error('No se pudo crear el rol SUPER_ADMIN.');
 
+  const permissionByCode = new Map(
+    createdPermissions.map((permission) => [permission.code, permission]),
+  );
   await Promise.all(
-    createdPermissions.map((permission) =>
-      prisma.rolePermission.upsert({
-        where: {
-          roleId_permissionId: { roleId: superAdmin.id, permissionId: permission.id },
-        },
-        update: {},
-        create: { roleId: superAdmin.id, permissionId: permission.id },
+    createdRoles.flatMap((role) =>
+      rolePermissionCodes[role.code as (typeof roles)[number]].map((permissionCode) => {
+        const permission = permissionByCode.get(permissionCode);
+        if (!permission) throw new Error(`No se pudo crear el permiso ${permissionCode}.`);
+        return prisma.rolePermission.upsert({
+          where: { roleId_permissionId: { roleId: role.id, permissionId: permission.id } },
+          update: {},
+          create: { roleId: role.id, permissionId: permission.id },
+        });
       }),
     ),
   );

@@ -21,6 +21,7 @@ const toSessionUser = (user: UserWithRoles): SessionUser => ({
   firstName: user.firstName,
   lastName: user.lastName,
   organizationId: user.organizationId,
+  authVersion: user.authVersion,
   roles: user.roles.map(({ role }) => role.code),
   permissions: [
     ...new Set(
