@@ -1,6 +1,6 @@
 # Estrategia de seguridad
 
-## Controles de Fase 1
+## Controles de identidad
 
 - Access token JWT de corta duración y refresh token rotativo.
 - Refresh tokens almacenados únicamente como SHA-256 y revocación por sesión/familia.
@@ -10,6 +10,11 @@
 - Correlation ID, logs estructurados y auditoría de acciones sensibles.
 - mensajes de error controlados sin stack traces en producción.
 - seed sin contraseña predeterminada: exige `SEED_ADMIN_PASSWORD`.
+- Invitaciones de un solo uso: token aleatorio almacenado solo como hash, expiración y revocación.
+- Contraseña de activación fuerte y enlace temporal sin credenciales predefinidas.
+- `authVersion` comprobada en cada solicitud para invalidar access tokens tras suspensión o cambio
+  de roles; los refresh tokens también se revocan.
+- Alcance por organización y allowlist de roles para administradores empresariales.
 
 ## Modelo de amenazas resumido
 

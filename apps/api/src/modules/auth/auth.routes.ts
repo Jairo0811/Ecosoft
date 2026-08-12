@@ -5,6 +5,8 @@ import { asyncHandler } from '../../common/async-handler';
 import { env } from '../../config/env';
 import { authenticate, requireTrustedWebRequest } from './auth.middleware';
 import { authService } from './auth.service';
+import { invitationService } from '../users/invitations.service';
+import { acceptInvitationSchema, invitationTokenSchema } from '../users/users.schemas';
 
 const router = Router();
 const credentialsSchema = z.object({
@@ -41,6 +43,25 @@ router.post(
     const result = await authService.login(input.email, input.password, metadata(request));
     response.cookie('ecosoft_refresh', result.refreshToken, cookieOptions);
     response.json({ accessToken: result.accessToken, user: result.user });
+  }),
+);
+
+router.post(
+  '/invitations/validate',
+  authLimiter,
+  asyncHandler(async (request, response) => {
+    const { token } = invitationTokenSchema.parse(request.body);
+    response.json({ data: await invitationService.validate(token) });
+  }),
+);
+
+router.post(
+  '/invitations/accept',
+  authLimiter,
+  asyncHandler(async (request, response) => {
+    const input = acceptInvitationSchema.parse(request.body);
+    await invitationService.accept(input.token, input.password, metadata(request));
+    response.status(204).send();
   }),
 );
 

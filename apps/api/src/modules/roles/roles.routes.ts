@@ -3,6 +3,7 @@ import { asyncHandler } from '../../common/async-handler';
 import { prisma } from '../../config/prisma';
 import { authenticate, requirePermission } from '../auth/auth.middleware';
 import { permissions } from '../auth/permissions';
+import { allowedRoleCodes } from '../users/user-access';
 
 const router = Router();
 
@@ -12,6 +13,7 @@ router.get(
   requirePermission(permissions.usersManage),
   asyncHandler(async (_request, response) => {
     const roles = await prisma.role.findMany({
+      where: { code: { in: allowedRoleCodes(_request.auth!) } },
       select: {
         id: true,
         code: true,

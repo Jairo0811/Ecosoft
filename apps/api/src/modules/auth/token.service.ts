@@ -10,6 +10,7 @@ interface AccessClaims extends JwtPayload {
   firstName: string;
   lastName: string;
   organizationId: string | null;
+  authVersion: number;
   roles: string[];
   permissions: string[];
 }
@@ -30,6 +31,7 @@ export const tokenService = {
         firstName: user.firstName,
         lastName: user.lastName,
         organizationId: user.organizationId,
+        authVersion: user.authVersion,
         roles: user.roles,
         permissions: user.permissions,
       } satisfies Omit<AccessClaims, keyof JwtPayload>,
@@ -68,6 +70,7 @@ export const tokenService = {
         firstName: payload.firstName,
         lastName: payload.lastName,
         organizationId: payload.organizationId,
+        authVersion: payload.authVersion,
         roles: payload.roles,
         permissions: payload.permissions,
       };

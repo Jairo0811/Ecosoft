@@ -34,6 +34,7 @@ export interface SessionUser {
   firstName: string;
   lastName: string;
   organizationId: string | null;
+  authVersion: number;
   roles: string[];
   permissions: string[];
 }

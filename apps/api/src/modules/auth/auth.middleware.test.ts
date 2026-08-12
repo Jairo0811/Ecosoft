@@ -13,6 +13,7 @@ describe('requirePermission', () => {
         firstName: 'Test',
         lastName: 'User',
         organizationId: null,
+        authVersion: 0,
         roles: ['SUPER_ADMIN'],
         permissions: [permissions.usersManage],
       },

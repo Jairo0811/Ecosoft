@@ -27,21 +27,36 @@ Base URL: `/api/v1`. La documentación navegable se sirve en `/api/docs`.
 
 ## Fase 2
 
-| Método | Ruta                        | Acceso                  |
-| ------ | --------------------------- | ----------------------- |
-| GET    | `/organizations`            | `organizations.read`    |
-| GET    | `/organizations/:id`        | `organizations.read`    |
-| POST   | `/organizations`            | `organizations.manage`  |
-| PATCH  | `/organizations/:id`        | `organizations.manage`  |
-| PATCH  | `/organizations/:id/status` | `organizations.approve` |
-| GET    | `/catalogs`                 | `catalogs.read`         |
-| POST   | `/catalogs`                 | `catalogs.manage`       |
-| PATCH  | `/catalogs/:id`             | `catalogs.manage`       |
-| PATCH  | `/catalogs/:id/status`      | `catalogs.manage`       |
+| Método | Ruta                            | Acceso                  |
+| ------ | ------------------------------- | ----------------------- |
+| GET    | `/organizations`                | `organizations.read`    |
+| GET    | `/organizations/:id`            | `organizations.read`    |
+| POST   | `/organizations`                | `organizations.manage`  |
+| PATCH  | `/organizations/:id`            | `organizations.manage`  |
+| PATCH  | `/organizations/:id/status`     | `organizations.approve` |
+| GET    | `/catalogs`                     | `catalogs.read`         |
+| POST   | `/catalogs`                     | `catalogs.manage`       |
+| PATCH  | `/catalogs/:id`                 | `catalogs.manage`       |
+| PATCH  | `/catalogs/:id/status`          | `catalogs.manage`       |
+| GET    | `/users`                        | `users.manage`          |
+| GET    | `/users/invitations`            | `users.manage`          |
+| POST   | `/users/invitations`            | `users.manage`          |
+| PATCH  | `/users/invitations/:id/revoke` | `users.manage`          |
+| PATCH  | `/users/:id/status`             | `users.manage`          |
+| PUT    | `/users/:id/roles`              | `users.manage`          |
+| PATCH  | `/users/:id/unlock`             | `users.manage`          |
+| POST   | `/auth/invitations/validate`    | público limitado        |
+| POST   | `/auth/invitations/accept`      | público limitado        |
 
 Las organizaciones se filtran por texto, tipo y estado. Las decisiones de aprobación, rechazo y
 suspensión exigen permisos separados y generan eventos de auditoría. Los catálogos usan códigos
 únicos por tipo y se desactivan sin eliminación física.
+
+Las invitaciones almacenan únicamente el hash SHA-256 del token, vencen según
+`INVITATION_TTL_HOURS` y se consumen una sola vez. La contraseña de activación exige 12 caracteres,
+mayúscula, minúscula, número y símbolo. Los cambios de estado o roles revocan de inmediato todas
+las sesiones del usuario. CNE administra roles institucionales y empresariales; los administradores
+de empresa quedan limitados a su propia organización y a roles empresariales.
 
 Los contratos de Auctions, Bids, Evaluations, Awards y PPAContracts se agregarán con su fase. El
 versionado evita romper clientes cuando el producto evolucione.
