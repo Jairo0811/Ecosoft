@@ -8,8 +8,8 @@ subastas de energía renovable, además del ciclo de vida de contratos Power Pur
 El producto prioriza transparencia, seguridad, auditoría y decisiones humanas verificables. No es
 un ERP y no incluye nómina, inventario, contabilidad, facturación ni pagos.
 
-> Estado: Fases 0 y 1 completadas; Fase 2 en revisión. Los recursos gráficos oficiales se incorporarán
-> en `apps/web/public/branding/` cuando sean entregados; el logo no se recreará con CSS.
+> Estado: Fases 0 y 1 completadas; Fase 2 en revisión. El logo horizontal oficial está integrado;
+> el isotipo, favicon y variante para fondos claros se incorporarán cuando sean entregados.
 
 ## Alcance inicial
 

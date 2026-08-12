@@ -16,6 +16,7 @@ describe('LoginPage', () => {
       </EcoSoftThemeProvider>,
     );
     expect(screen.getByRole('heading', { name: 'Bienvenido' })).toBeInTheDocument();
+    expect(screen.getByRole('img', { name: 'EcoSoft Solutions S.R.L.' })).toBeInTheDocument();
     expect(screen.getByLabelText('Correo electrónico')).toBeInTheDocument();
     expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument();
