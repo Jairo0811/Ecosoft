@@ -9,6 +9,7 @@ import { errorHandler, notFound } from './common/error-handler';
 import { env } from './config/env';
 import { logger } from './config/logger';
 import { auditRouter } from './modules/audit/audit.routes';
+import { catalogsRouter } from './modules/catalogs/catalogs.routes';
 import { authRouter } from './modules/auth/auth.routes';
 import { healthRouter } from './modules/health/health.routes';
 import { organizationsRouter } from './modules/organizations/organizations.routes';
@@ -42,6 +43,7 @@ export const createApp = () => {
   app.use('/api/v1/organizations', organizationsRouter);
   app.use('/api/v1/roles', rolesRouter);
   app.use('/api/v1/audit', auditRouter);
+  app.use('/api/v1/catalogs', catalogsRouter);
 
   app.use(notFound);
   app.use(errorHandler);

@@ -7,6 +7,9 @@ const permissionCodes = [
   'users.manage',
   'organizations.read',
   'organizations.manage',
+  'organizations.approve',
+  'catalogs.read',
+  'catalogs.manage',
   'auctions.read',
   'auctions.create',
   'auctions.update',
@@ -33,6 +36,21 @@ const roles = [
   'COMPANY_ADMIN',
   'COMPANY_REPRESENTATIVE',
   'READ_ONLY',
+] as const;
+
+const catalogItems = [
+  { type: 'ENERGY_TECHNOLOGY', code: 'SOLAR', name: 'Solar fotovoltaica', sortOrder: 10 },
+  { type: 'ENERGY_TECHNOLOGY', code: 'WIND', name: 'Eólica', sortOrder: 20 },
+  { type: 'ENERGY_TECHNOLOGY', code: 'HYDRO', name: 'Hidroeléctrica', sortOrder: 30 },
+  { type: 'ENERGY_TECHNOLOGY', code: 'BIOMASS', name: 'Biomasa', sortOrder: 40 },
+  { type: 'CURRENCY', code: 'DOP', name: 'Peso dominicano', sortOrder: 10 },
+  { type: 'CURRENCY', code: 'USD', name: 'Dólar estadounidense', sortOrder: 20 },
+  {
+    type: 'TIME_ZONE',
+    code: 'AMERICA_SANTO_DOMINGO',
+    name: 'America/Santo_Domingo',
+    sortOrder: 10,
+  },
 ] as const;
 
 async function main(): Promise<void> {
@@ -109,6 +127,16 @@ async function main(): Promise<void> {
     update: {},
     create: { userId: admin.id, roleId: superAdmin.id },
   });
+
+  await Promise.all(
+    catalogItems.map((item) =>
+      prisma.catalogItem.upsert({
+        where: { type_code: { type: item.type, code: item.code } },
+        update: { name: item.name, sortOrder: item.sortOrder },
+        create: item,
+      }),
+    ),
+  );
 }
 
 main()

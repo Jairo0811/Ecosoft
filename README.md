@@ -8,7 +8,7 @@ subastas de energía renovable, además del ciclo de vida de contratos Power Pur
 El producto prioriza transparencia, seguridad, auditoría y decisiones humanas verificables. No es
 un ERP y no incluye nómina, inventario, contabilidad, facturación ni pagos.
 
-> Estado: Fase 0 completada y Fase 1 en desarrollo. Los recursos gráficos oficiales se incorporarán
+> Estado: Fases 0 y 1 completadas; Fase 2 en revisión. Los recursos gráficos oficiales se incorporarán
 > en `apps/web/public/branding/` cuando sean entregados; el logo no se recreará con CSS.
 
 ## Alcance inicial
@@ -17,7 +17,7 @@ un ERP y no incluye nómina, inventario, contabilidad, facturación ni pagos.
 - SQL Server y Prisma ORM.
 - Login, logout, refresh token rotativo y sesiones revocables.
 - RBAC con roles y permisos granulares validados en backend.
-- Organizaciones, usuarios y auditoría inicial.
+- Organizaciones, aprobación de participantes, catálogos, usuarios y auditoría.
 - Dashboard corporativo accesible con modo claro/oscuro.
 - OpenAPI, logging estructurado, correlation IDs y health checks.
 - Docker Compose, pruebas y GitHub Actions.

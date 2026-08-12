@@ -2,6 +2,9 @@ export const permissions = {
   usersManage: 'users.manage',
   organizationsRead: 'organizations.read',
   organizationsManage: 'organizations.manage',
+  organizationsApprove: 'organizations.approve',
+  catalogsRead: 'catalogs.read',
+  catalogsManage: 'catalogs.manage',
   auctionsRead: 'auctions.read',
   auctionsCreate: 'auctions.create',
   auctionsPublish: 'auctions.publish',
@@ -34,3 +37,35 @@ export interface SessionUser {
   roles: string[];
   permissions: string[];
 }
+
+export const organizationTypes = [
+  'REGULATORY_AUTHORITY',
+  'GENERATION_COMPANY',
+  'DISTRIBUTION_COMPANY',
+  'ENERGY_MARKETER',
+  'FINANCIAL_INSTITUTION',
+  'CONSULTING_FIRM',
+  'OTHER',
+] as const;
+
+export type OrganizationType = (typeof organizationTypes)[number];
+
+export const organizationStatuses = [
+  'PENDING',
+  'UNDER_REVIEW',
+  'APPROVED',
+  'REJECTED',
+  'SUSPENDED',
+] as const;
+
+export type OrganizationStatus = (typeof organizationStatuses)[number];
+
+export const catalogTypes = [
+  'ENERGY_TECHNOLOGY',
+  'CURRENCY',
+  'TIME_ZONE',
+  'PROJECT_STATUS',
+  'DOCUMENT_TYPE',
+] as const;
+
+export type CatalogType = (typeof catalogTypes)[number];
