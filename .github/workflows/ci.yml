@@ -67,7 +67,18 @@ jobs:
           -S localhost -U sa -P 'EcoSoft!CI2026_Strong' -C
           -Q "IF DB_ID(N'EcoSoftDb') IS NULL CREATE DATABASE [EcoSoftDb]"
       - name: Deploy migrations
-        run: npm run db:deploy --workspace @ecosoft/api
+        run: |
+          set +e
+          OUTPUT=$(npm run db:deploy --workspace @ecosoft/api 2>&1)
+          STATUS=$?
+          printf '%s\n' "$OUTPUT"
+          if [ "$STATUS" -ne 0 ]; then
+            ESCAPED=${OUTPUT//'%'/'%25'}
+            ESCAPED=${ESCAPED//$'\r'/'%0D'}
+            ESCAPED=${ESCAPED//$'\n'/'%0A'}
+            echo "::error title=Prisma migrate deploy::$ESCAPED"
+          fi
+          exit "$STATUS"
       - name: Seed initial data
         run: npm run db:seed
       - name: Verify API readiness against SQL Server
