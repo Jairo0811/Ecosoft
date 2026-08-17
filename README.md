@@ -522,6 +522,17 @@ multi-tenancy complejo en el MVP.
 
 Los integrantes se presentan en orden ascendente de matrícula.
 
+## 🔗 Continuidad académica
+
+EcoSoft se desarrolló durante un período de alta continuidad académica dentro del portafolio de proyectos de UNAPEC.
+
+| Tipo de continuidad | Coincidencia | Proyectos relacionados |
+|---|---|---|
+| 📅 Período académico compartido | **Mayo - Agosto 2026** | [RentCarRD](https://github.com/Jairo0811/RentCarRD) (ISO-715) y [Digital Sanctuary](https://github.com/Jairo0811/DigitalSanctuary) (ISO-710) |
+| 👨‍🏫 Profesor de EcoSoft | **Ing. Santo Rafael Navarro** | No se ha identificado otra asignatura de esta colección con el mismo profesor |
+
+En los proyectos comparados tampoco se ha confirmado un compañero recurrente de EcoSoft mediante coincidencia inequívoca de **nombre y matrícula**. La documentación evita asociar personas únicamente por nombres similares o por matrículas inconsistentes.
+
 ## 👨‍💻 Repositorio
 
 **Francis Jairo Matías Rosario**
