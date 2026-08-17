@@ -1,0 +1,65 @@
+name: Fix Emely academic continuity
+
+on:
+  push:
+    branches:
+      - agent/fix-emely-continuity
+
+permissions:
+  contents: write
+
+jobs:
+  update-readme:
+    if: github.event.head_commit.message != 'docs: correct Emely academic continuity'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/fix-emely-continuity
+          fetch-depth: 0
+
+      - name: Update README
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path('README.md')
+          text = path.read_text(encoding='utf-8')
+
+          old = '''## 🔗 Continuidad académica
+
+EcoSoft se desarrolló durante un período de alta continuidad académica dentro del portafolio de proyectos de UNAPEC.
+
+| Tipo de continuidad | Coincidencia | Proyectos relacionados |
+|---|---|---|
+| 📅 Período académico compartido | **Mayo - Agosto 2026** | [RentCarRD](https://github.com/Jairo0811/RentCarRD) (ISO-715) y [Digital Sanctuary](https://github.com/Jairo0811/DigitalSanctuary) (ISO-710) |
+| 👨‍🏫 Profesor de EcoSoft | **Ing. Santo Rafael Navarro** | No se ha identificado otra asignatura de esta colección con el mismo profesor |
+
+En los proyectos comparados tampoco se ha confirmado un compañero recurrente de EcoSoft mediante coincidencia inequívoca de **nombre y matrícula**. La documentación evita asociar personas únicamente por nombres similares o por matrículas inconsistentes.
+'''
+
+          new = '''## 🔗 Continuidad académica
+
+EcoSoft se desarrolló durante un período de alta continuidad académica dentro del portafolio de proyectos de UNAPEC.
+
+| Tipo de continuidad | Coincidencia | Proyectos relacionados |
+|---|---|---|
+| 📅 Período académico compartido | **Mayo - Agosto 2026** | [RentCarRD](https://github.com/Jairo0811/RentCarRD) (ISO-715) y [Digital Sanctuary](https://github.com/Jairo0811/DigitalSanctuary) (ISO-710) |
+| 👨‍🏫 Profesor de EcoSoft | **Ing. Santo Rafael Navarro** | No se ha identificado otra asignatura de esta colección con el mismo profesor |
+| 👥 Compañera recurrente | **Emely Marie Castillo Rivera (A00110380)** | [MediCore](https://github.com/Jairo0811/MediCore) — Desarrollo de Software con Tecnología Propietaria 1 (ISO-605) |
+
+**Emely Marie Castillo Rivera** coincidió con Francis Jairo Matías Rosario primero en **MediCore (ISO-605)** durante **Enero - Abril de 2026** y posteriormente en **EcoSoft (ISO-705)** durante **Mayo - Agosto de 2026**. Esta relación se considera continuidad académica verificada porque coincide tanto el **nombre completo** como la **matrícula A00110380**.
+'''
+
+          if old not in text:
+              raise SystemExit('Expected continuity block not found')
+
+          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+
+      - name: Commit correction
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "docs: correct Emely academic continuity"
+          git push origin agent/fix-emely-continuity
