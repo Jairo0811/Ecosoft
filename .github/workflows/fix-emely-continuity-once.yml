@@ -10,7 +10,6 @@ permissions:
 
 jobs:
   update-readme:
-    if: github.event.head_commit.message != 'docs: correct Emely academic continuity'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -27,41 +26,31 @@ jobs:
           path = Path('README.md')
           text = path.read_text(encoding='utf-8')
 
-          old = '''## 🔗 Continuidad académica
+          professor_row = '| 👨‍🏫 Profesor de EcoSoft | **Ing. Santo Rafael Navarro** | No se ha identificado otra asignatura de esta colección con el mismo profesor |'
+          teammate_row = '| 👥 Compañera recurrente | **Emely Marie Castillo Rivera (A00110380)** | [MediCore](https://github.com/Jairo0811/MediCore) — Desarrollo de Software con Tecnología Propietaria 1 (ISO-605) |'
+          old_note = 'En los proyectos comparados tampoco se ha confirmado un compañero recurrente de EcoSoft mediante coincidencia inequívoca de **nombre y matrícula**. La documentación evita asociar personas únicamente por nombres similares o por matrículas inconsistentes.'
+          new_note = '**Emely Marie Castillo Rivera** coincidió con Francis Jairo Matías Rosario primero en **MediCore (ISO-605)** durante **Enero - Abril de 2026** y posteriormente en **EcoSoft (ISO-705)** durante **Mayo - Agosto de 2026**. Esta relación se considera continuidad académica verificada porque coincide tanto el **nombre completo** como la **matrícula A00110380**.'
 
-EcoSoft se desarrolló durante un período de alta continuidad académica dentro del portafolio de proyectos de UNAPEC.
+          if teammate_row not in text:
+              if professor_row not in text:
+                  raise SystemExit('Professor row not found')
+              text = text.replace(professor_row, professor_row + '\n' + teammate_row, 1)
 
-| Tipo de continuidad | Coincidencia | Proyectos relacionados |
-|---|---|---|
-| 📅 Período académico compartido | **Mayo - Agosto 2026** | [RentCarRD](https://github.com/Jairo0811/RentCarRD) (ISO-715) y [Digital Sanctuary](https://github.com/Jairo0811/DigitalSanctuary) (ISO-710) |
-| 👨‍🏫 Profesor de EcoSoft | **Ing. Santo Rafael Navarro** | No se ha identificado otra asignatura de esta colección con el mismo profesor |
+          if old_note in text:
+              text = text.replace(old_note, new_note, 1)
 
-En los proyectos comparados tampoco se ha confirmado un compañero recurrente de EcoSoft mediante coincidencia inequívoca de **nombre y matrícula**. La documentación evita asociar personas únicamente por nombres similares o por matrículas inconsistentes.
-'''
-
-          new = '''## 🔗 Continuidad académica
-
-EcoSoft se desarrolló durante un período de alta continuidad académica dentro del portafolio de proyectos de UNAPEC.
-
-| Tipo de continuidad | Coincidencia | Proyectos relacionados |
-|---|---|---|
-| 📅 Período académico compartido | **Mayo - Agosto 2026** | [RentCarRD](https://github.com/Jairo0811/RentCarRD) (ISO-715) y [Digital Sanctuary](https://github.com/Jairo0811/DigitalSanctuary) (ISO-710) |
-| 👨‍🏫 Profesor de EcoSoft | **Ing. Santo Rafael Navarro** | No se ha identificado otra asignatura de esta colección con el mismo profesor |
-| 👥 Compañera recurrente | **Emely Marie Castillo Rivera (A00110380)** | [MediCore](https://github.com/Jairo0811/MediCore) — Desarrollo de Software con Tecnología Propietaria 1 (ISO-605) |
-
-**Emely Marie Castillo Rivera** coincidió con Francis Jairo Matías Rosario primero en **MediCore (ISO-605)** durante **Enero - Abril de 2026** y posteriormente en **EcoSoft (ISO-705)** durante **Mayo - Agosto de 2026**. Esta relación se considera continuidad académica verificada porque coincide tanto el **nombre completo** como la **matrícula A00110380**.
-'''
-
-          if old not in text:
-              raise SystemExit('Expected continuity block not found')
-
-          path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          path.write_text(text, encoding='utf-8')
           PY
 
-      - name: Commit correction
+      - name: Commit correction when needed
+        shell: bash
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add README.md
+          if git diff --cached --quiet; then
+            echo "README already corrected"
+            exit 0
+          fi
           git commit -m "docs: correct Emely academic continuity"
           git push origin agent/fix-emely-continuity
