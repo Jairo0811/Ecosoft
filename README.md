@@ -530,8 +530,9 @@ EcoSoft se desarrolló durante un período de alta continuidad académica dentro
 |---|---|---|
 | 📅 Período académico compartido | **Mayo - Agosto 2026** | [RentCarRD](https://github.com/Jairo0811/RentCarRD) (ISO-715) y [Digital Sanctuary](https://github.com/Jairo0811/DigitalSanctuary) (ISO-710) |
 | 👨‍🏫 Profesor de EcoSoft | **Ing. Santo Rafael Navarro** | No se ha identificado otra asignatura de esta colección con el mismo profesor |
+| 👥 Compañera recurrente | **Emely Marie Castillo Rivera (A00110380)** | [MediCore](https://github.com/Jairo0811/MediCore) — Desarrollo de Software con Tecnología Propietaria 1 (ISO-605) |
 
-En los proyectos comparados tampoco se ha confirmado un compañero recurrente de EcoSoft mediante coincidencia inequívoca de **nombre y matrícula**. La documentación evita asociar personas únicamente por nombres similares o por matrículas inconsistentes.
+**Emely Marie Castillo Rivera** coincidió con Francis Jairo Matías Rosario primero en **MediCore (ISO-605)** durante **Enero - Abril de 2026** y posteriormente en **EcoSoft (ISO-705)** durante **Mayo - Agosto de 2026**. Esta relación se considera continuidad académica verificada porque coincide tanto el **nombre completo** como la **matrícula A00110380**.
 
 ## 👨‍💻 Repositorio
 
