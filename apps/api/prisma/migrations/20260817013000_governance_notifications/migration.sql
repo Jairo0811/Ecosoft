@@ -110,7 +110,7 @@ FOREIGN KEY ([organizationId]) REFERENCES [dbo].[Organization]([id]) ON DELETE N
 
 EXEC('CREATE TRIGGER [dbo].[TR_AuditLog_Immutable]
 ON [dbo].[AuditLog]
-INSTEAD OF UPDATE, DELETE
+AFTER UPDATE, DELETE
 AS
 BEGIN
     SET NOCOUNT ON;
