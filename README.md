@@ -511,7 +511,7 @@ Los integrantes se presentan en orden ascendente de matrícula.
 
 ## 👨‍💻 Repositorio
 
-**Francis Jairo Matías Rosario — Jairo Matías**
+**Francis Jairo Matías Rosario**
 
 - 🎓 Tecnólogo en Desarrollo de Software — ITLA.
 - 🎓 Estudiante de Ingeniería de Software — UNAPEC.
