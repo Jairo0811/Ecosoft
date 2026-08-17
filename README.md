@@ -522,17 +522,18 @@ multi-tenancy complejo en el MVP.
 
 Los integrantes se presentan en orden ascendente de matrícula.
 
-## 🔗 Continuidad académica
+## 🧭 Continuidad académica
 
-EcoSoft se desarrolló durante un período de alta continuidad académica dentro del portafolio de proyectos de UNAPEC.
+**EcoSoft** forma parte de una continuidad académica por **compañera recurrente** con [**MediCore**](https://github.com/Jairo0811/MediCore). La relación es **formativa y cronológica**: los proyectos corresponden a asignaturas y equipos diferentes, pero **Emely Marie Castillo Rivera (A00110380)** coincidió con Francis Jairo Matías Rosario en ambos proyectos durante dos períodos consecutivos de 2026.
 
-| Tipo de continuidad | Coincidencia | Proyectos relacionados |
-|---|---|---|
-| 📅 Período académico compartido | **Mayo - Agosto 2026** | [RentCarRD](https://github.com/Jairo0811/RentCarRD) (ISO-715) y [Digital Sanctuary](https://github.com/Jairo0811/DigitalSanctuary) (ISO-710) |
-| 👨‍🏫 Profesor de EcoSoft | **Ing. Santo Rafael Navarro** | No se ha identificado otra asignatura de esta colección con el mismo profesor |
-| 👥 Compañera recurrente | **Emely Marie Castillo Rivera (A00110380)** | [MediCore](https://github.com/Jairo0811/MediCore) — Desarrollo de Software con Tecnología Propietaria 1 (ISO-605) |
+La primera coincidencia documentada ocurrió en **Enero - Abril de 2026** en **Desarrollo de Software con Tecnología Propietaria 1 (ISO-605)** con MediCore. Posteriormente, en **Mayo - Agosto de 2026**, ambos volvieron a formar parte del mismo equipo académico en **Proyecto de Software 1 (ISO-705)** con EcoSoft.
 
-**Emely Marie Castillo Rivera** coincidió con Francis Jairo Matías Rosario primero en **MediCore (ISO-605)** durante **Enero - Abril de 2026** y posteriormente en **EcoSoft (ISO-705)** durante **Mayo - Agosto de 2026**. Esta relación se considera continuidad académica verificada porque coincide tanto el **nombre completo** como la **matrícula A00110380**.
+| Orden | Código | Asignatura | Proyecto | Período | Compañera recurrente |
+|---:|---|---|---|---|---|
+| 1 | ISO-605 | Desarrollo de Software con Tecnología Propietaria 1 | [**MediCore**](https://github.com/Jairo0811/MediCore) | Enero - Abril 2026 | **Emely Marie Castillo Rivera — A00110380** |
+| 2 | ISO-705 | Proyecto de Software 1 | **EcoSoft** | Mayo - Agosto 2026 | **Emely Marie Castillo Rivera — A00110380** |
+
+Vistos en conjunto, ambos proyectos documentan una continuidad real entre compañeros a lo largo de dos cuatrimestres consecutivos. La coincidencia se considera verificada porque se mantiene el **mismo nombre completo y la misma matrícula A00110380**; no se infieren relaciones por similitud de nombres o matrículas aisladas.
 
 ## 👨‍💻 Repositorio
 
