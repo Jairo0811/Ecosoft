@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches: [main, develop]
@@ -81,18 +82,39 @@ jobs:
           exit "$STATUS"
       - name: Seed initial data
         run: npm run db:seed
-      - name: Verify API readiness against SQL Server
+      - name: Verify API, analytics and reports against SQL Server
         run: |
           npm run build --workspace @ecosoft/shared
           npm run build --workspace @ecosoft/api
           npm start --workspace @ecosoft/api > /tmp/ecosoft-api.log 2>&1 &
           API_PID=$!
           trap 'kill "$API_PID"' EXIT
+          READY=0
           for attempt in {1..20}; do
             if curl --fail --silent http://localhost:4000/api/v1/health/ready; then
-              exit 0
+              READY=1
+              break
             fi
             sleep 2
           done
-          cat /tmp/ecosoft-api.log
-          exit 1
+          if [ "$READY" -ne 1 ]; then
+            cat /tmp/ecosoft-api.log
+            exit 1
+          fi
+          LOGIN_RESPONSE=$(curl --fail --silent \
+            -H 'Content-Type: application/json' \
+            --data '{"email":"admin@ecosoft.com.do","password":"EcoSoft!Admin2026_CI"}' \
+            http://localhost:4000/api/v1/auth/login)
+          ACCESS_TOKEN=$(node -e 'process.stdout.write(JSON.parse(process.argv[1]).accessToken)' "$LOGIN_RESPONSE")
+          curl --fail --silent \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            http://localhost:4000/api/v1/analytics/dashboard > /tmp/ecosoft-analytics.json
+          curl --fail --silent \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            http://localhost:4000/api/v1/reports/auctions > /tmp/ecosoft-report.json
+          node -e '
+            const fs = require("node:fs");
+            const analytics = JSON.parse(fs.readFileSync("/tmp/ecosoft-analytics.json", "utf8"));
+            const report = JSON.parse(fs.readFileSync("/tmp/ecosoft-report.json", "utf8"));
+            if (!analytics.data?.kpis || !Array.isArray(report.data)) process.exit(1);
+          '

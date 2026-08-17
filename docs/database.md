@@ -28,6 +28,7 @@ erDiagram
     Award ||--o| PPAContract : originates
     Organization ||--o{ EnergyProject : develops
     EnergyProject ||--o{ PPAContract : supplies
+    PPAContract ||--o{ PPAContractVersion : versions
 ```
 
 La migración de Fase 1 crea identidad, organizaciones, sesiones y auditoría. La Fase 2 amplía la
@@ -42,6 +43,12 @@ La Fase 3 incorpora `Auction`, requisitos configurables, participantes autorizad
 dominio de solo anexado y eventos de calendario. Los hitos automáticos de apertura, cierre,
 evaluación y adjudicación se sincronizan con el cronograma. Restricciones SQL Server protegen
 capacidad/precio positivos y el orden básico de fechas.
+
+La Fase 7 incorpora la base de agregados analíticos (`Bid`, `Award`, `EnergyProject`,
+`PPAContract` y `PPAContractVersion`) necesaria para calcular indicadores sin datos simulados. Los
+índices por organización, tecnología, estado, provincia y vencimiento soportan filtros y alertas.
+Los reportes se calculan desde las tablas transaccionales; no mantienen una segunda fuente de
+verdad ni almacenan archivos exportados en SQL Server.
 
 ## Convenciones
 

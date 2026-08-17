@@ -14,6 +14,7 @@ export default defineConfig({
   server: { port: 5173 },
   preview: { port: 4173 },
   build: {
+    chunkSizeWarningLimit: 600,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -21,6 +22,7 @@ export default defineConfig({
           mui: ['@mui/material', '@mui/icons-material', '@emotion/react', '@emotion/styled'],
           data: ['axios', '@tanstack/react-query'],
           forms: ['react-hook-form', '@hookform/resolvers', 'zod'],
+          charts: ['apexcharts', 'react-apexcharts'],
         },
       },
     },

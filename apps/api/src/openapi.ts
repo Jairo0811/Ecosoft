@@ -2,9 +2,8 @@ export const openApiDocument = {
   openapi: '3.0.3',
   info: {
     title: 'EcoSoft API',
-    version: '0.4.0',
-    description:
-      'API para subastas energéticas y contratos PPA. Fase 2: organizaciones, catálogos y usuarios.',
+    version: '0.7.0',
+    description: 'API para subastas energéticas, indicadores y reportes auditables de EcoSoft.',
   },
   servers: [{ url: '/api/v1' }],
   components: {
@@ -255,6 +254,75 @@ export const openApiDocument = {
         summary: 'Crear un evento institucional manual',
         security: [{ bearerAuth: [] }],
         responses: { '201': { description: 'Evento creado y auditado' } },
+      },
+    },
+    '/analytics/dashboard': {
+      get: {
+        summary: 'Obtener KPIs, tendencias, distribuciones, alertas y actividad reciente',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'from', in: 'query', schema: { type: 'string', format: 'date-time' } },
+          { name: 'to', in: 'query', schema: { type: 'string', format: 'date-time' } },
+          { name: 'organizationId', in: 'query', schema: { type: 'string', format: 'uuid' } },
+          { name: 'technology', in: 'query', schema: { type: 'string' } },
+        ],
+        responses: {
+          '200': { description: 'Analítica filtrada por ámbito y permisos' },
+          '403': { description: 'Permiso analytics.read requerido' },
+        },
+      },
+    },
+    '/reports/{type}': {
+      get: {
+        summary: 'Consultar un reporte paginado y filtrado',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: 'type',
+            in: 'path',
+            required: true,
+            schema: {
+              type: 'string',
+              enum: [
+                'auctions',
+                'participants',
+                'bids',
+                'awards',
+                'contracts',
+                'projects',
+                'capacity',
+                'audit',
+              ],
+            },
+          },
+          { name: 'from', in: 'query', schema: { type: 'string', format: 'date-time' } },
+          { name: 'to', in: 'query', schema: { type: 'string', format: 'date-time' } },
+          { name: 'organizationId', in: 'query', schema: { type: 'string', format: 'uuid' } },
+          { name: 'technology', in: 'query', schema: { type: 'string' } },
+          { name: 'status', in: 'query', schema: { type: 'string' } },
+          { name: 'page', in: 'query', schema: { type: 'integer', minimum: 1 } },
+          { name: 'pageSize', in: 'query', schema: { type: 'integer', minimum: 1, maximum: 100 } },
+        ],
+        responses: { '200': { description: 'Columnas, filas y paginación del reporte' } },
+      },
+    },
+    '/reports/{type}/export': {
+      get: {
+        summary: 'Exportar un reporte a CSV, Excel XML o PDF',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'type', in: 'path', required: true, schema: { type: 'string' } },
+          {
+            name: 'format',
+            in: 'query',
+            required: true,
+            schema: { type: 'string', enum: ['csv', 'xls', 'pdf'] },
+          },
+        ],
+        responses: {
+          '200': { description: 'Archivo generado y exportación auditada' },
+          '403': { description: 'Permiso reports.export requerido' },
+        },
       },
     },
   },

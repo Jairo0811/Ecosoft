@@ -12,7 +12,7 @@
 |        P0 | Contracts     | Pendiente  | PPA, versiones, anexos, renovaciones y vencimientos            |
 |        P1 | Projects      | Pendiente  | capacidad, tecnología, ubicación y estado operacional          |
 |        P1 | Documents     | Pendiente  | Blob privado, versiones, metadata, hash y análisis seguro      |
-|        P1 | Reporting     | Pendiente  | dashboard, filtros, PDF/Excel/CSV y métricas energéticas       |
+|        P1 | Reporting     | Completada | dashboard, filtros, PDF/Excel/CSV y métricas energéticas       |
 |        P1 | Governance    | Pendiente  | regulación, auditoría ampliada y alertas                       |
 |        P2 | AI/OCR        | Pendiente  | extracción, resumen y anomalías con aprobación humana          |
 

@@ -27,6 +27,9 @@ model Organization {
   reviewedBy       User?     @relation("OrganizationReviews", fields: [reviewedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   managedAuctions  Auction[] @relation("AuctionManager")
   auctionParticipations AuctionParticipant[]
+  bids             Bid[]
+  energyProjects   EnergyProject[]
+  ppaContracts     PPAContract[]
 
   @@index([type, status])
   @@index([rnc])
@@ -58,6 +61,13 @@ model User {
   createdAuctions     Auction[]         @relation("AuctionCreator")
   auctionEvents       AuctionEvent[]
   createdCalendarEvents CalendarEvent[]
+  createdBids        Bid[]                @relation("BidCreator")
+  createdAwards      Award[]              @relation("AwardCreator")
+  approvedAwards     Award[]              @relation("AwardApprover")
+  createdProjects    EnergyProject[]      @relation("ProjectCreator")
+  createdContracts   PPAContract[]        @relation("ContractCreator")
+  approvedContracts  PPAContract[]        @relation("ContractApprover")
+  contractVersions   PPAContractVersion[] @relation("ContractVersionAuthor")
 
   @@index([organizationId, status])
 }
@@ -126,6 +136,8 @@ model Auction {
   participants            AuctionParticipant[]
   events                  AuctionEvent[]
   calendarEvents          CalendarEvent[]
+  bids                    Bid[]
+  awards                  Award[]
 
   @@index([status, openAt])
   @@index([managingOrganizationId, status])
@@ -199,6 +211,127 @@ model CalendarEvent {
 
   @@index([startsAt, type])
   @@index([auctionId, source])
+}
+
+model Bid {
+  id                      String       @id @default(uuid()) @db.UniqueIdentifier
+  auctionId               String       @db.UniqueIdentifier
+  organizationId          String       @db.UniqueIdentifier
+  createdByUserId         String       @db.UniqueIdentifier
+  projectName             String       @db.NVarChar(240)
+  renewableTechnologyCode String       @db.VarChar(60)
+  projectLocation         String?      @db.NVarChar(300)
+  offeredPowerMw          Decimal      @db.Decimal(18, 3)
+  estimatedEnergyMwh      Decimal      @db.Decimal(18, 3)
+  offeredPrice            Decimal      @db.Decimal(18, 4)
+  currencyCode            String       @db.VarChar(10)
+  validUntil              DateTime
+  status                  String       @default("BORRADOR") @db.VarChar(30)
+  submittedAt             DateTime?
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+  auction                 Auction      @relation(fields: [auctionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization            Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy               User         @relation("BidCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  award                    Award?
+
+  @@index([auctionId, status])
+  @@index([organizationId, status])
+  @@index([renewableTechnologyCode, status])
+}
+
+model Award {
+  id                  String      @id @default(uuid()) @db.UniqueIdentifier
+  auctionId           String      @db.UniqueIdentifier
+  bidId               String      @unique @db.UniqueIdentifier
+  resolutionNumber    String      @db.VarChar(80)
+  awardedPrice        Decimal     @db.Decimal(18, 4)
+  awardedCapacityMw   Decimal     @db.Decimal(18, 3)
+  justification       String      @db.NVarChar(2000)
+  status              String      @default("BORRADOR") @db.VarChar(20)
+  createdByUserId     String      @db.UniqueIdentifier
+  approvedByUserId    String?     @db.UniqueIdentifier
+  approvedAt          DateTime?
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  auction             Auction     @relation(fields: [auctionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  bid                 Bid         @relation(fields: [bidId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy           User        @relation("AwardCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  approvedBy          User?       @relation("AwardApprover", fields: [approvedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  contract            PPAContract?
+
+  @@unique([auctionId, resolutionNumber])
+  @@index([auctionId, status])
+}
+
+model EnergyProject {
+  id                      String        @id @default(uuid()) @db.UniqueIdentifier
+  organizationId          String        @db.UniqueIdentifier
+  createdByUserId         String        @db.UniqueIdentifier
+  name                    String        @db.NVarChar(240)
+  renewableTechnologyCode String        @db.VarChar(60)
+  province                String        @db.NVarChar(120)
+  municipality            String        @db.NVarChar(120)
+  installedCapacityMw     Decimal       @db.Decimal(18, 3)
+  contractedCapacityMw    Decimal       @default(0) @db.Decimal(18, 3)
+  estimatedOperationDate  DateTime?
+  actualOperationDate     DateTime?
+  status                  String        @default("PROPUESTO") @db.VarChar(30)
+  createdAt               DateTime      @default(now())
+  updatedAt               DateTime      @updatedAt
+  organization            Organization  @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy               User          @relation("ProjectCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  contracts               PPAContract[]
+
+  @@index([organizationId, status])
+  @@index([renewableTechnologyCode, status])
+  @@index([province, status])
+}
+
+model PPAContract {
+  id                     String               @id @default(uuid()) @db.UniqueIdentifier
+  contractNumber         String               @unique @db.VarChar(80)
+  awardId                String               @unique @db.UniqueIdentifier
+  projectId              String               @db.UniqueIdentifier
+  organizationId         String               @db.UniqueIdentifier
+  createdByUserId        String               @db.UniqueIdentifier
+  approvedByUserId       String?              @db.UniqueIdentifier
+  status                 String               @default("BORRADOR") @db.VarChar(30)
+  signatureDate          DateTime?
+  startDate              DateTime
+  endDate                DateTime
+  price                  Decimal              @db.Decimal(18, 4)
+  currencyCode           String               @db.VarChar(10)
+  capacityMw             Decimal              @db.Decimal(18, 3)
+  committedEnergyMwh     Decimal              @db.Decimal(18, 3)
+  conditions             String?              @db.NVarChar(Max)
+  approvedAt             DateTime?
+  createdAt              DateTime             @default(now())
+  updatedAt              DateTime             @updatedAt
+  award                  Award                @relation(fields: [awardId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  project                EnergyProject        @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization           Organization         @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy              User                 @relation("ContractCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  approvedBy             User?                @relation("ContractApprover", fields: [approvedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  versions               PPAContractVersion[]
+
+  @@index([organizationId, status])
+  @@index([endDate, status])
+}
+
+model PPAContractVersion {
+  id              String      @id @default(uuid()) @db.UniqueIdentifier
+  contractId      String      @db.UniqueIdentifier
+  versionNumber   Int
+  snapshotJson    String      @db.NVarChar(Max)
+  snapshotHash    String      @db.Char(64)
+  changeReason    String      @db.NVarChar(1000)
+  changedByUserId String      @db.UniqueIdentifier
+  createdAt       DateTime    @default(now())
+  contract        PPAContract @relation(fields: [contractId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  changedBy       User        @relation("ContractVersionAuthor", fields: [changedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([contractId, versionNumber])
 }
 
 model Role {
