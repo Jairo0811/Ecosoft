@@ -495,7 +495,7 @@ multi-tenancy complejo en el MVP.
 | 👥 Equipo            | Grupo #4                                            |
 | 🏢 Empresa del caso  | EcoSoft Solutions S.R.L.                            |
 | ⚡ Cliente principal | Comisión Nacional de Energía (CNE)                  |
-| 📅 Período           | Mayo–agosto de 2026                                 |
+| 📅 Período Academico           | Mayo – Agosto de 2026                                 |
 | 📁 Tipo              | Proyecto académico grupal de ingeniería de software |
 
 ### 👥 Equipo del proyecto
