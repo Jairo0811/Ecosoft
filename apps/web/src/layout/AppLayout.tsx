@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
   AppBar,
   Avatar,
+  Badge,
   Box,
   Divider,
   Drawer,
@@ -17,6 +18,7 @@ import {
 } from '@mui/material';
 import {
   AssessmentOutlined,
+  BalanceOutlined,
   BusinessOutlined,
   CalendarMonthOutlined,
   CategoryOutlined,
@@ -27,10 +29,13 @@ import {
   LightModeOutlined,
   LogoutOutlined,
   MenuOutlined,
+  NotificationsOutlined,
   PeopleAltOutlined,
   ShieldOutlined,
 } from '@mui/icons-material';
 import { NavLink, Outlet } from 'react-router';
+import { useQuery } from '@tanstack/react-query';
+import { apiClient } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { BrandLogo } from '../branding/BrandLogo';
 import { useThemeMode } from '../theme/ThemeContext';
@@ -45,13 +50,38 @@ const navigation = [
   { label: 'Reportes', path: '/reportes', icon: <AssessmentOutlined /> },
   { label: 'Calendario', path: '/calendario', icon: <CalendarMonthOutlined /> },
   { label: 'Usuarios', path: '/usuarios', icon: <PeopleAltOutlined /> },
-  { label: 'Auditoría', path: '/auditoria', icon: <ShieldOutlined /> },
+  {
+    label: 'Regulación',
+    path: '/regulacion',
+    icon: <BalanceOutlined />,
+    permission: 'regulatory.read',
+  },
+  {
+    label: 'Notificaciones',
+    path: '/notificaciones',
+    icon: <NotificationsOutlined />,
+    permission: 'notifications.read',
+  },
+  { label: 'Auditoría', path: '/auditoria', icon: <ShieldOutlined />, permission: 'audit.read' },
 ];
 
 export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { user, logout } = useAuth();
   const { mode, toggleMode } = useThemeMode();
+  const canReadNotifications = user?.permissions.includes('notifications.read') ?? false;
+  const unread = useQuery({
+    queryKey: ['notifications-unread'],
+    queryFn: () =>
+      apiClient
+        .get<{ data: { unread: number } }>('/notifications/unread-count')
+        .then(({ data }) => data.data.unread),
+    enabled: canReadNotifications,
+    refetchInterval: 60_000,
+  });
+  const visibleNavigation = navigation.filter(
+    (item) => !item.permission || user?.permissions.includes(item.permission),
+  );
 
   const drawer = (
     <Box
@@ -68,7 +98,7 @@ export function AppLayout() {
       </Box>
       <Divider sx={{ borderColor: 'rgba(255,255,255,.1)' }} />
       <List sx={{ px: 1.5, py: 2 }} aria-label="Navegación principal">
-        {navigation.map((item) => (
+        {visibleNavigation.map((item) => (
           <ListItemButton
             key={item.path}
             component={NavLink}
@@ -136,6 +166,19 @@ export function AppLayout() {
               Entorno institucional
             </Typography>
           </Box>
+          {canReadNotifications && (
+            <Tooltip title="Notificaciones">
+              <IconButton
+                component={NavLink}
+                to="/notificaciones"
+                aria-label={`${unread.data ?? 0} notificaciones sin leer`}
+              >
+                <Badge badgeContent={unread.data ?? 0} color="error" max={99}>
+                  <NotificationsOutlined />
+                </Badge>
+              </IconButton>
+            </Tooltip>
+          )}
           <Tooltip title={mode === 'light' ? 'Activar modo oscuro' : 'Activar modo claro'}>
             <IconButton onClick={toggleMode} aria-label="Cambiar tema">
               {mode === 'light' ? <DarkModeOutlined /> : <LightModeOutlined />}

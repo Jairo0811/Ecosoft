@@ -18,15 +18,30 @@
 
 ## Modelo de amenazas resumido
 
-| Riesgo                      | Control principal                                               |
-| --------------------------- | --------------------------------------------------------------- |
-| robo de refresh token       | rotación, hash, expiración y revocación                         |
-| escalamiento de privilegios | permiso backend por ruta y pruebas negativas                    |
-| IDOR                        | consultas limitadas por organización y permiso                  |
-| inyección SQL               | Prisma, DTOs validados y prohibición de SQL generado por IA     |
-| documento malicioso         | allowlist, tamaño, inspección y almacenamiento privado (Fase 4) |
-| filtración de ofertas       | reglas de visibilidad por estado y auditoría (Fase 4)           |
-| fuerza bruta                | rate limiting y bloqueo temporal por intentos fallidos          |
+| Riesgo                       | Control principal                                               |
+| ---------------------------- | --------------------------------------------------------------- |
+| robo de refresh token        | rotación, hash, expiración y revocación                         |
+| escalamiento de privilegios  | permiso backend por ruta y pruebas negativas                    |
+| IDOR                         | consultas limitadas por organización y permiso                  |
+| inyección SQL                | Prisma, DTOs validados y prohibición de SQL generado por IA     |
+| documento malicioso          | allowlist, tamaño, inspección y almacenamiento privado (Fase 4) |
+| filtración de ofertas        | reglas de visibilidad por estado y auditoría (Fase 4)           |
+| fuerza bruta                 | rate limiting y bloqueo temporal por intentos fallidos          |
+| alteración de trazabilidad   | triggers inmutables y hash SHA-256 de cada evento nuevo         |
+| secretos dentro de auditoría | redacción recursiva antes de persistir                          |
+| IDOR en notificaciones       | `userId` derivado de la sesión en lectura y actualización       |
+| normativa no autorizada      | autoridad aprobada, RBAC y transiciones justificadas            |
+
+## Gobierno y evidencia
+
+- `AuditLog` y `RegulationEvent` no tienen endpoints de edición ni eliminación.
+- SQL Server rechaza físicamente `UPDATE` y `DELETE` sobre ambos historiales.
+- Las lecturas de evidencia detallada se registran como `READ_SENSITIVE`.
+- Los valores auditados se serializan de forma estable y ocultan contraseñas, tokens, secretos,
+  cookies, cabeceras de autorización y hashes.
+- Una regulación vigente deja de ser editable; cualquier cambio posterior se expresa mediante
+  estado e historial.
+- Los consumidores empresariales solo reciben alertas de sus participaciones y contratos.
 
 ## Pendiente antes de producción
 

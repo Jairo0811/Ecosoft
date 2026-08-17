@@ -30,6 +30,8 @@ model Organization {
   bids             Bid[]
   energyProjects   EnergyProject[]
   ppaContracts     PPAContract[]
+  issuedRegulations Regulation[] @relation("RegulationAuthority")
+  notifications     Notification[]
 
   @@index([type, status])
   @@index([rnc])
@@ -68,6 +70,10 @@ model User {
   createdContracts   PPAContract[]        @relation("ContractCreator")
   approvedContracts  PPAContract[]        @relation("ContractApprover")
   contractVersions   PPAContractVersion[] @relation("ContractVersionAuthor")
+  createdRegulations Regulation[]          @relation("RegulationCreator")
+  approvedRegulations Regulation[]         @relation("RegulationApprover")
+  regulationEvents  RegulationEvent[]      @relation("RegulationEventActor")
+  notifications     Notification[]
 
   @@index([organizationId, status])
 }
@@ -402,10 +408,92 @@ model AuditLog {
   correlationId  String   @db.UniqueIdentifier
   previousValues String?  @db.NVarChar(Max)
   newValues      String?  @db.NVarChar(Max)
+  eventHash      String?  @db.Char(64)
   createdAt      DateTime @default(now())
   user           User?    @relation(fields: [userId], references: [id], onDelete: NoAction)
 
   @@index([createdAt])
   @@index([userId, action])
   @@index([module, entity, entityId])
+  @@index([eventHash])
+}
+
+model Regulation {
+  id                    String            @id @default(uuid()) @db.UniqueIdentifier
+  code                  String            @unique @db.VarChar(80)
+  title                 String            @db.NVarChar(300)
+  summary               String?           @db.NVarChar(2000)
+  type                  String            @db.VarChar(30)
+  status                String            @default("BORRADOR") @db.VarChar(30)
+  issuingOrganizationId String            @db.UniqueIdentifier
+  effectiveFrom         DateTime
+  effectiveTo           DateTime?
+  sourceUrl             String?           @db.NVarChar(1000)
+  documentReference     String?           @db.NVarChar(500)
+  createdByUserId       String            @db.UniqueIdentifier
+  approvedByUserId      String?           @db.UniqueIdentifier
+  approvedAt            DateTime?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  issuingOrganization   Organization      @relation("RegulationAuthority", fields: [issuingOrganizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy             User              @relation("RegulationCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  approvedBy            User?             @relation("RegulationApprover", fields: [approvedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  scopes                RegulationScope[]
+  events                RegulationEvent[]
+
+  @@index([status, effectiveFrom])
+  @@index([issuingOrganizationId, type, status])
+}
+
+model RegulationScope {
+  id           String     @id @default(uuid()) @db.UniqueIdentifier
+  regulationId String     @db.UniqueIdentifier
+  entityType   String     @db.VarChar(40)
+  entityId     String     @db.VarChar(100)
+  notes        String?    @db.NVarChar(1000)
+  createdAt    DateTime   @default(now())
+  regulation   Regulation @relation(fields: [regulationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+
+  @@unique([regulationId, entityType, entityId])
+  @@index([entityType, entityId])
+}
+
+model RegulationEvent {
+  id              String     @id @default(uuid()) @db.UniqueIdentifier
+  regulationId    String     @db.UniqueIdentifier
+  changedByUserId String     @db.UniqueIdentifier
+  action          String     @db.VarChar(40)
+  previousStatus  String?    @db.VarChar(30)
+  newStatus       String?    @db.VarChar(30)
+  reason          String?    @db.NVarChar(1000)
+  snapshotJson    String?    @db.NVarChar(Max)
+  createdAt       DateTime   @default(now())
+  regulation      Regulation @relation(fields: [regulationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  changedBy       User       @relation("RegulationEventActor", fields: [changedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([regulationId, createdAt])
+}
+
+model Notification {
+  id             String        @id @default(uuid()) @db.UniqueIdentifier
+  userId         String        @db.UniqueIdentifier
+  organizationId String?       @db.UniqueIdentifier
+  sourceKey      String        @db.VarChar(220)
+  type           String        @db.VarChar(50)
+  severity       String        @default("INFO") @db.VarChar(20)
+  title          String        @db.NVarChar(240)
+  message        String        @db.NVarChar(1200)
+  entityType     String?       @db.VarChar(50)
+  entityId       String?       @db.VarChar(100)
+  actionUrl      String?       @db.NVarChar(500)
+  emailStatus    String        @default("NOT_CONFIGURED") @db.VarChar(30)
+  readAt         DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime      @default(now())
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([userId, sourceKey])
+  @@index([userId, readAt, createdAt])
+  @@index([organizationId, type, createdAt])
 }

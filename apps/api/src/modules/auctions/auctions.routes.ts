@@ -8,6 +8,7 @@ import { prisma } from '../../config/prisma';
 import { auditService } from '../audit/audit.service';
 import { authenticate, requirePermission } from '../auth/auth.middleware';
 import { permissions } from '../auth/permissions';
+import { notificationService } from '../notifications/notification.service';
 import { auctionAccessWhere, assertInstitutionalAuctionAccess } from './auction-access';
 import { replaceSystemCalendarEvents } from './auction-calendar.service';
 import { assertAuctionTransition, editableAuctionStatuses } from './auction-state';
@@ -465,6 +466,12 @@ router.patch(
       previousStatus: auction.status as AuctionStatus,
       newStatus: input.status,
       occurredAt: now.toISOString(),
+    });
+    await notificationService.notifyAuctionStatus({
+      id,
+      code: auction.code,
+      title: auction.title,
+      status: input.status,
     });
     response.json({ data: await getAuction(id, request) });
   }),

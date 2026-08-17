@@ -98,3 +98,33 @@ Las exportaciones admiten `csv`, `xls` y `pdf`, usan `Cache-Control: private, no
 usuario, organización, formato, cantidad de filas y `CorrelationId` en auditoría. Un usuario
 empresarial no puede ampliar su alcance mediante `organizationId`; el backend fuerza siempre su
 organización autenticada.
+
+## Fase 8
+
+| Método | Ruta                          | Acceso               |
+| ------ | ----------------------------- | -------------------- |
+| GET    | `/audit`                      | `audit.read`         |
+| GET    | `/audit/:id`                  | `audit.read`         |
+| GET    | `/regulatory`                 | `regulatory.read`    |
+| GET    | `/regulatory/:id`             | `regulatory.read`    |
+| POST   | `/regulatory`                 | `regulatory.manage`  |
+| PUT    | `/regulatory/:id`             | `regulatory.manage`  |
+| PATCH  | `/regulatory/:id/status`      | `regulatory.manage`  |
+| GET    | `/notifications`              | `notifications.read` |
+| GET    | `/notifications/unread-count` | `notifications.read` |
+| PATCH  | `/notifications/:id/read`     | `notifications.read` |
+| POST   | `/notifications/read-all`     | `notifications.read` |
+
+La consulta de auditoría acepta acción, módulo, resultado, usuario, organización, rango UTC,
+búsqueda y paginación. Leer evidencia genera a su vez un evento `READ_SENSITIVE`. No existen rutas
+de modificación o eliminación para `AuditLog` ni `RegulationEvent`.
+
+Las regulaciones nacen en `BORRADOR`. Solo los borradores son editables; publicación, suspensión,
+reactivación y derogación se registran como transiciones justificadas. Los usuarios sin
+`regulatory.manage` solo ven elementos `VIGENTE`. Los alcances `AUCTION`, `PPA_CONTRACT` y
+`ENERGY_PROJECT` se validan contra la base; `EVALUATION` queda preparado para la integración de la
+Fase 5 y no introduce reglas regulatorias reales.
+
+Las notificaciones se deduplican por usuario y clave de origen. El backend fuerza `userId` desde
+la sesión para evitar IDOR y genera alertas de cierres en siete días y contratos próximos a vencer
+en noventa días. Los adaptadores de correo y tiempo real son puertos sin proveedor configurado.

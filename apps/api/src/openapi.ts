@@ -2,8 +2,9 @@ export const openApiDocument = {
   openapi: '3.0.3',
   info: {
     title: 'EcoSoft API',
-    version: '0.7.0',
-    description: 'API para subastas energéticas, indicadores y reportes auditables de EcoSoft.',
+    version: '0.8.0',
+    description:
+      'API para subastas energéticas, gobierno regulatorio, notificaciones e indicadores auditables de EcoSoft.',
   },
   servers: [{ url: '/api/v1' }],
   components: {
@@ -323,6 +324,102 @@ export const openApiDocument = {
           '200': { description: 'Archivo generado y exportación auditada' },
           '403': { description: 'Permiso reports.export requerido' },
         },
+      },
+    },
+    '/audit': {
+      get: {
+        summary: 'Consultar eventos de auditoría inmutables con filtros y paginación',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'q', in: 'query', schema: { type: 'string' } },
+          { name: 'action', in: 'query', schema: { type: 'string' } },
+          { name: 'module', in: 'query', schema: { type: 'string' } },
+          {
+            name: 'result',
+            in: 'query',
+            schema: { type: 'string', enum: ['SUCCESS', 'FAILURE', 'DENIED'] },
+          },
+          { name: 'from', in: 'query', schema: { type: 'string', format: 'date-time' } },
+          { name: 'to', in: 'query', schema: { type: 'string', format: 'date-time' } },
+        ],
+        responses: {
+          '200': {
+            description: 'Eventos y paginación; la consulta se registra como READ_SENSITIVE',
+          },
+          '403': { description: 'Permiso audit.read requerido' },
+        },
+      },
+    },
+    '/audit/{id}': {
+      get: {
+        summary: 'Consultar evidencia completa de un evento de auditoría',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'id', in: 'path', required: true, schema: { type: 'string', format: 'uuid' } },
+        ],
+        responses: { '200': { description: 'Evento con valores, metadatos y hash de integridad' } },
+      },
+    },
+    '/regulatory': {
+      get: {
+        summary: 'Listar regulaciones visibles según permisos',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Normativas, resoluciones y reglamentos paginados' } },
+      },
+      post: {
+        summary: 'Crear una regulación en estado borrador',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Regulación, alcance e historial creados' } },
+      },
+    },
+    '/regulatory/{id}': {
+      get: {
+        summary: 'Consultar regulación, alcance e historial',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Detalle regulatorio' } },
+      },
+      put: {
+        summary: 'Editar una regulación mientras permanezca en borrador',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Borrador actualizado y auditado' } },
+      },
+    },
+    '/regulatory/{id}/status': {
+      patch: {
+        summary: 'Publicar, suspender, reactivar o derogar con justificación',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '200': { description: 'Transición e historial inmutable registrados' },
+          '409': { description: 'Transición inválida o cambio concurrente' },
+        },
+      },
+    },
+    '/notifications': {
+      get: {
+        summary: 'Consultar el centro de notificaciones del usuario',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Alertas por usuario con conteo no leído' } },
+      },
+    },
+    '/notifications/unread-count': {
+      get: {
+        summary: 'Obtener el contador de notificaciones no leídas',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Contador actualizado' } },
+      },
+    },
+    '/notifications/{id}/read': {
+      patch: {
+        summary: 'Marcar una notificación propia como leída',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Notificación actualizada y auditada' } },
+      },
+    },
+    '/notifications/read-all': {
+      post: {
+        summary: 'Marcar todas las notificaciones propias como leídas',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Cantidad actualizada y auditada' } },
       },
     },
   },
