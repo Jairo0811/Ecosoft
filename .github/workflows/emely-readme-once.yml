@@ -1,0 +1,54 @@
+name: Emely continuity one-time update
+
+on:
+  push:
+    branches:
+      - agent/fix-emely-readme-v2
+    paths:
+      - .github/workflows/emely-readme-once.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch-readme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/fix-emely-readme-v2
+
+      - name: Correct Emely academic continuity
+        shell: python
+        run: |
+          from pathlib import Path
+
+          path = Path("README.md")
+          text = path.read_text(encoding="utf-8")
+
+          professor_row = "| 👨‍🏫 Profesor de EcoSoft | **Ing. Santo Rafael Navarro** | No se ha identificado otra asignatura de esta colección con el mismo profesor |"
+          teammate_row = "| 👥 Compañera recurrente | **Emely Marie Castillo Rivera (A00110380)** | [MediCore](https://github.com/Jairo0811/MediCore) — Desarrollo de Software con Tecnología Propietaria 1 (ISO-605) |"
+          old_note = "En los proyectos comparados tampoco se ha confirmado un compañero recurrente de EcoSoft mediante coincidencia inequívoca de **nombre y matrícula**. La documentación evita asociar personas únicamente por nombres similares o por matrículas inconsistentes."
+          new_note = "**Emely Marie Castillo Rivera** coincidió con Francis Jairo Matías Rosario primero en **MediCore (ISO-605)** durante **Enero - Abril de 2026** y posteriormente en **EcoSoft (ISO-705)** durante **Mayo - Agosto de 2026**. Esta relación se considera continuidad académica verificada porque coincide tanto el **nombre completo** como la **matrícula A00110380**."
+
+          if teammate_row not in text:
+              if professor_row not in text:
+                  raise SystemExit("Professor row not found")
+              text = text.replace(professor_row, professor_row + "\n" + teammate_row, 1)
+
+          if old_note in text:
+              text = text.replace(old_note, new_note, 1)
+
+          path.write_text(text, encoding="utf-8")
+
+      - name: Commit README update
+        shell: bash
+        run: |
+          if git diff --quiet -- README.md; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add README.md
+          git commit -m "docs: correct Emely academic continuity"
+          git push origin HEAD:agent/fix-emely-readme-v2
