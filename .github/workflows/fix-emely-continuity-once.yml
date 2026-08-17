@@ -19,8 +19,9 @@ jobs:
           fetch-depth: 0
 
       - name: Update README
-        shell: python
+        shell: bash
         run: |
+          python - <<'PY'
           from pathlib import Path
 
           path = Path('README.md')
@@ -55,6 +56,7 @@ EcoSoft se desarrolló durante un período de alta continuidad académica dentro
               raise SystemExit('Expected continuity block not found')
 
           path.write_text(text.replace(old, new, 1), encoding='utf-8')
+          PY
 
       - name: Commit correction
         run: |
