@@ -17,6 +17,7 @@ export const permissions = {
   contractsApprove: 'contracts.approve',
   reportsRead: 'reports.read',
   reportsExport: 'reports.export',
+  analyticsRead: 'analytics.read',
   auditRead: 'audit.read',
 } as const;
 

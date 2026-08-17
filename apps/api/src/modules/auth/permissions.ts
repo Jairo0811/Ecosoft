@@ -9,5 +9,8 @@ export const permissions = {
   auctionsCreate: 'auctions.create',
   auctionsUpdate: 'auctions.update',
   auctionsPublish: 'auctions.publish',
+  reportsRead: 'reports.read',
+  reportsExport: 'reports.export',
+  analyticsRead: 'analytics.read',
   auditRead: 'audit.read',
 } as const;

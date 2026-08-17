@@ -17,9 +17,11 @@ describe('EcoSoft API', () => {
   });
 
   it('requires a token for protected resources', async () => {
-    const response = await request(createApp()).get('/api/v1/users');
-    const body = response.body as { code: string };
-    expect(response.status).toBe(401);
-    expect(body.code).toBe('AUTHENTICATION_REQUIRED');
+    for (const resource of ['users', 'analytics/dashboard', 'reports/auctions']) {
+      const response = await request(createApp()).get(`/api/v1/${resource}`);
+      const body = response.body as { code: string };
+      expect(response.status).toBe(401);
+      expect(body.code).toBe('AUTHENTICATION_REQUIRED');
+    }
   });
 });

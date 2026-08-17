@@ -10,6 +10,7 @@ import { ActivateAccountPage } from './pages/ActivateAccountPage';
 import { UsersPage } from './pages/UsersPage';
 import { AuctionsPage } from './pages/AuctionsPage';
 import { CalendarPage } from './pages/CalendarPage';
+import { ReportsPage } from './pages/ReportsPage';
 
 export function App() {
   return (
@@ -26,10 +27,7 @@ export function App() {
           />
           <Route path="participantes" element={<OrganizationsPage />} />
           <Route path="catalogos" element={<CatalogsPage />} />
-          <Route
-            path="reportes"
-            element={<ModulePlaceholderPage title="Reportes y analítica" phase={7} />}
-          />
+          <Route path="reportes" element={<ReportsPage />} />
           <Route path="calendario" element={<CalendarPage />} />
           <Route path="usuarios" element={<UsersPage />} />
           <Route path="auditoria" element={<ModulePlaceholderPage title="Auditoría" phase={8} />} />

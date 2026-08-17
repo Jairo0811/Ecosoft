@@ -1,75 +1,173 @@
 import {
+  BusinessOutlined,
+  DescriptionOutlined,
+  ElectricBoltOutlined,
+  GavelOutlined,
+  LocalOfferOutlined,
+  ScheduleOutlined,
+  SolarPowerOutlined,
+  WarningAmberOutlined,
+} from '@mui/icons-material';
+import {
   Alert,
   Box,
   Card,
   CardContent,
   Chip,
-  LinearProgress,
+  CircularProgress,
   List,
   ListItem,
   ListItemText,
   Stack,
   Typography,
 } from '@mui/material';
-import {
-  BusinessOutlined,
-  DescriptionOutlined,
-  ElectricBoltOutlined,
-  GavelOutlined,
-  ScheduleOutlined,
-  TrendingUpOutlined,
-} from '@mui/icons-material';
-import { format } from 'date-fns';
+import { useQuery } from '@tanstack/react-query';
+import { format, formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
+import ReactApexChart from 'react-apexcharts';
+import { apiClient } from '../api/client';
+import { getApiErrorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
 
-const kpis = [
-  {
-    label: 'Subastas activas',
-    value: '4',
-    note: '2 cierran esta semana',
-    icon: <GavelOutlined />,
-    color: '#0A5C73',
-  },
-  {
-    label: 'Empresas participantes',
-    value: '28',
-    note: '5 pendientes de revisión',
-    icon: <BusinessOutlined />,
-    color: '#28A96B',
-  },
-  {
-    label: 'Contratos PPA',
-    value: '16',
-    note: '13 vigentes',
-    icon: <DescriptionOutlined />,
-    color: '#6657C8',
-  },
-  {
-    label: 'MW adjudicados',
-    value: '342',
-    note: '+12.4 % frente al periodo anterior',
-    icon: <ElectricBoltOutlined />,
-    color: '#D8891C',
-  },
-];
+interface DashboardAnalytics {
+  kpis: {
+    activeAuctions: number;
+    pendingAuctions: number;
+    participantOrganizations: number;
+    bidsReceived: number;
+    contracts: number;
+    activeContracts: number;
+    auctionedMw: number;
+    offeredMw: number;
+    awardedMw: number;
+    operationalMw: number;
+    operationalContractedMw: number;
+    operationalProjects: number;
+    approvedAwards: number;
+    expiringContracts: number;
+  };
+  capacityByTechnology: {
+    technology: string;
+    installedMw: number;
+    contractedMw: number;
+  }[];
+  auctionsByStatus: { status: string; auctions: number; capacityMw: number }[];
+  averageAwardPriceByCurrency: { currency: string; price: number }[];
+  contractedValueByCurrency: { currency: string; value: number; contracts: number }[];
+  trend: { month: string; auctionedMw: number; awardedMw: number }[];
+  upcomingEvents: { id: string; title: string; type: string; startsAt: string }[];
+  alerts: {
+    closingAuctions: { id: string; code: string; title: string; closeAt: string }[];
+    expiringContracts: {
+      id: string;
+      contractNumber: string;
+      endDate: string;
+      organization: { legalName: string; commercialName: string | null };
+    }[];
+  };
+  recentActivity: {
+    id: string;
+    action: string;
+    module: string;
+    entity: string | null;
+    result: string;
+    createdAt: string;
+    user: { firstName: string; lastName: string } | null;
+  }[];
+}
 
-const events = [
-  { date: '12 AGO', title: 'Cierre de ofertas — Solar CNE 2026-02', type: 'Cierre' },
-  { date: '15 AGO', title: 'Comité de evaluación técnica', type: 'Evaluación' },
-  { date: '22 AGO', title: 'Vencimiento de garantía — Energía Verde', type: 'Alerta' },
-];
-
-const capacityByTechnology = [
-  { label: 'Solar', mw: 158, percent: 46, color: '#D8891C' },
-  { label: 'Eólica', mw: 103, percent: 30, color: '#0A5C73' },
-  { label: 'Hidroeléctrica', mw: 58, percent: 17, color: '#3C78C4' },
-  { label: 'Biomasa', mw: 23, percent: 7, color: '#28A96B' },
-];
+const integer = new Intl.NumberFormat('es-DO', { maximumFractionDigits: 0 });
+const decimal = new Intl.NumberFormat('es-DO', { maximumFractionDigits: 2 });
+const technologyLabels: Record<string, string> = {
+  SOLAR: 'Solar',
+  WIND: 'Eólica',
+  HYDRO: 'Hidroeléctrica',
+  BIOMASS: 'Biomasa',
+};
 
 export function DashboardPage() {
   const { user } = useAuth();
+  const analytics = useQuery({
+    queryKey: ['analytics', 'dashboard'],
+    queryFn: () =>
+      apiClient
+        .get<{ data: DashboardAnalytics }>('/analytics/dashboard')
+        .then((response) => response.data.data),
+  });
+  const data = analytics.data;
   const currentDate = format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
+  const kpis = [
+    {
+      label: 'Subastas activas',
+      value: data?.kpis.activeAuctions ?? 0,
+      note: `${data?.kpis.pendingAuctions ?? 0} pendientes`,
+      icon: <GavelOutlined />,
+      color: '#0A5C73',
+    },
+    {
+      label: 'Empresas participantes',
+      value: data?.kpis.participantOrganizations ?? 0,
+      note: 'Organizaciones habilitadas',
+      icon: <BusinessOutlined />,
+      color: '#28A96B',
+    },
+    {
+      label: 'Ofertas recibidas',
+      value: data?.kpis.bidsReceived ?? 0,
+      note: `${decimal.format(data?.kpis.offeredMw ?? 0)} MW ofertados`,
+      icon: <LocalOfferOutlined />,
+      color: '#3C78C4',
+    },
+    {
+      label: 'Contratos PPA',
+      value: data?.kpis.contracts ?? 0,
+      note: `${data?.kpis.activeContracts ?? 0} vigentes`,
+      icon: <DescriptionOutlined />,
+      color: '#6657C8',
+    },
+    {
+      label: 'MW licitados',
+      value: decimal.format(data?.kpis.auctionedMw ?? 0),
+      note: 'Capacidad total de procesos',
+      icon: <ElectricBoltOutlined />,
+      color: '#D8891C',
+    },
+    {
+      label: 'MW adjudicados',
+      value: decimal.format(data?.kpis.awardedMw ?? 0),
+      note: `${data?.kpis.approvedAwards ?? 0} adjudicaciones aprobadas`,
+      icon: <GavelOutlined />,
+      color: '#128C7E',
+    },
+    {
+      label: 'MW operativos',
+      value: decimal.format(data?.kpis.operationalMw ?? 0),
+      note: `${data?.kpis.operationalProjects ?? 0} proyectos operativos`,
+      icon: <SolarPowerOutlined />,
+      color: '#168D4E',
+    },
+    {
+      label: 'Vencen en 90 días',
+      value: data?.kpis.expiringContracts ?? 0,
+      note: 'Contratos que requieren seguimiento',
+      icon: <WarningAmberOutlined />,
+      color: '#C96C1D',
+    },
+  ];
+  const eventItems = data?.upcomingEvents ?? [];
+  const alerts = [
+    ...(data?.alerts.closingAuctions.map((item) => ({
+      id: `auction-${item.id}`,
+      title: `${item.code} cierra ${formatDistanceToNow(new Date(item.closeAt), { locale: es, addSuffix: true })}`,
+      type: 'Cierre de subasta',
+    })) ?? []),
+    ...(data?.alerts.expiringContracts.map((item) => ({
+      id: `contract-${item.id}`,
+      title: `${item.contractNumber} vence ${formatDistanceToNow(new Date(item.endDate), { locale: es, addSuffix: true })}`,
+      type: item.organization.commercialName ?? item.organization.legalName,
+    })) ?? []),
+  ];
+
   return (
     <Stack spacing={3}>
       <Box>
@@ -80,13 +178,15 @@ export function DashboardPage() {
           Buenos días, {user?.firstName}
         </Typography>
         <Typography color="text.secondary" mt={0.5}>
-          Este es el panorama actual del portafolio energético.
+          Panorama del portafolio energético según tu ámbito y permisos.
         </Typography>
       </Box>
-      <Alert severity="info" variant="outlined">
-        Datos demostrativos de Fase 1. Los indicadores se conectarán al dominio de subastas en la
-        Fase 3.
-      </Alert>
+      {analytics.isLoading && (
+        <Stack alignItems="center" py={4}>
+          <CircularProgress aria-label="Cargando indicadores" />
+        </Stack>
+      )}
+      {analytics.error && <Alert severity="error">{getApiErrorMessage(analytics.error)}</Alert>}
       <Box
         display="grid"
         gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', xl: 'repeat(4, 1fr)' }}
@@ -100,8 +200,8 @@ export function DashboardPage() {
                   <Typography color="text.secondary" variant="body2" fontWeight={650}>
                     {kpi.label}
                   </Typography>
-                  <Typography variant="h3" mt={1}>
-                    {kpi.value}
+                  <Typography variant="h4" mt={1}>
+                    {typeof kpi.value === 'number' ? integer.format(kpi.value) : kpi.value}
                   </Typography>
                 </Box>
                 <Box
@@ -125,45 +225,94 @@ export function DashboardPage() {
           </Card>
         ))}
       </Box>
-      <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1.6fr 1fr' }} gap={2.5}>
+      <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1.45fr 1fr' }} gap={2.5}>
         <Card>
           <CardContent sx={{ p: 3 }}>
-            <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" mb={3}>
-              <Box>
-                <Typography variant="h6" fontWeight={750}>
-                  Capacidad por tecnología
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  MW adjudicados en el periodo actual
-                </Typography>
-              </Box>
-              <Chip
-                icon={<TrendingUpOutlined />}
-                color="success"
-                variant="outlined"
-                label="+12.4 %"
-              />
-            </Stack>
-            <Stack spacing={2.5}>
-              {capacityByTechnology.map(({ label, mw, percent, color }) => (
-                <Box key={label}>
-                  <Stack direction="row" justifyContent="space-between" mb={0.75}>
-                    <Typography fontWeight={650}>{label}</Typography>
-                    <Typography color="text.secondary">{mw} MW</Typography>
-                  </Stack>
-                  <LinearProgress
-                    variant="determinate"
-                    value={percent}
-                    sx={{
-                      height: 9,
-                      borderRadius: 9,
-                      bgcolor: 'action.hover',
-                      '& .MuiLinearProgress-bar': { bgcolor: color },
-                    }}
-                  />
-                </Box>
-              ))}
-            </Stack>
+            <Typography variant="h6" fontWeight={750}>
+              Tendencia de capacidad
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              MW licitados y adjudicados por mes
+            </Typography>
+            <ReactApexChart
+              type="area"
+              height={320}
+              series={[
+                { name: 'MW licitados', data: data?.trend.map((item) => item.auctionedMw) ?? [] },
+                { name: 'MW adjudicados', data: data?.trend.map((item) => item.awardedMw) ?? [] },
+              ]}
+              options={{
+                chart: { toolbar: { show: false }, fontFamily: 'inherit' },
+                colors: ['#0A5C73', '#28A96B'],
+                dataLabels: { enabled: false },
+                stroke: { curve: 'smooth', width: 3 },
+                xaxis: { categories: data?.trend.map((item) => item.month) ?? [] },
+                yaxis: { labels: { formatter: (value) => `${integer.format(value)} MW` } },
+                noData: { text: 'Sin datos para el período' },
+              }}
+            />
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight={750}>
+              Subastas por estado
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Distribución del portafolio visible
+            </Typography>
+            <ReactApexChart
+              type="donut"
+              height={320}
+              series={data?.auctionsByStatus.map((item) => item.auctions) ?? []}
+              options={{
+                labels:
+                  data?.auctionsByStatus.map((item) => item.status.replaceAll('_', ' ')) ?? [],
+                legend: { position: 'bottom' },
+                dataLabels: { enabled: true },
+                noData: { text: 'Sin subastas' },
+              }}
+            />
+          </CardContent>
+        </Card>
+      </Box>
+      <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1.45fr 1fr' }} gap={2.5}>
+        <Card>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight={750}>
+              Capacidad de proyectos por tecnología
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Comparación entre capacidad instalada y contratada
+            </Typography>
+            <ReactApexChart
+              type="bar"
+              height={310}
+              series={[
+                {
+                  name: 'Instalada',
+                  data: data?.capacityByTechnology.map((item) => item.installedMw) ?? [],
+                },
+                {
+                  name: 'Contratada',
+                  data: data?.capacityByTechnology.map((item) => item.contractedMw) ?? [],
+                },
+              ]}
+              options={{
+                chart: { toolbar: { show: false }, fontFamily: 'inherit' },
+                colors: ['#0A5C73', '#28A96B'],
+                plotOptions: { bar: { borderRadius: 5, columnWidth: '48%' } },
+                dataLabels: { enabled: false },
+                xaxis: {
+                  categories:
+                    data?.capacityByTechnology.map(
+                      (item) => technologyLabels[item.technology] ?? item.technology,
+                    ) ?? [],
+                },
+                yaxis: { labels: { formatter: (value) => `${integer.format(value)} MW` } },
+                noData: { text: 'Sin proyectos registrados' },
+              }}
+            />
           </CardContent>
         </Card>
         <Card>
@@ -174,74 +323,103 @@ export function DashboardPage() {
                 Próximos eventos
               </Typography>
             </Stack>
-            <List disablePadding>
-              {events.map((event, index) => (
-                <ListItem
-                  key={event.title}
-                  disableGutters
-                  divider={index < events.length - 1}
-                  sx={{ py: 1.6, alignItems: 'flex-start' }}
-                >
-                  <Box
-                    mr={2}
-                    textAlign="center"
-                    bgcolor="action.hover"
-                    borderRadius={2}
-                    p={1}
-                    minWidth={58}
+            {eventItems.length === 0 ? (
+              <Typography color="text.secondary" py={3}>
+                No hay eventos próximos en tu ámbito.
+              </Typography>
+            ) : (
+              <List disablePadding>
+                {eventItems.map((event, index) => (
+                  <ListItem
+                    key={event.id}
+                    disableGutters
+                    divider={index < eventItems.length - 1}
+                    sx={{ py: 1.4 }}
                   >
-                    <Typography variant="caption" fontWeight={800} color="primary">
-                      {event.date}
-                    </Typography>
-                  </Box>
-                  <ListItemText
-                    primary={event.title}
-                    secondary={event.type}
-                    primaryTypographyProps={{ fontWeight: 650, fontSize: 14 }}
-                  />
-                </ListItem>
-              ))}
-            </List>
+                    <Box mr={2} bgcolor="action.hover" borderRadius={2} p={1} minWidth={64}>
+                      <Typography variant="caption" fontWeight={800} color="primary">
+                        {format(new Date(event.startsAt), 'dd MMM', { locale: es }).toUpperCase()}
+                      </Typography>
+                    </Box>
+                    <ListItemText
+                      primary={event.title}
+                      secondary={event.type}
+                      primaryTypographyProps={{ fontWeight: 650, fontSize: 14 }}
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            )}
           </CardContent>
         </Card>
       </Box>
-      <Card>
-        <CardContent sx={{ p: 3 }}>
-          <Typography variant="h6" fontWeight={750}>
-            Actividad reciente
-          </Typography>
-          <Typography color="text.secondary" variant="body2" mb={2}>
-            Trazabilidad de acciones relevantes
-          </Typography>
-          <Stack spacing={1.5}>
-            {[
-              ['Oferta recibida', 'Soluciones Renovables del Caribe · hace 12 min', 'success'],
-              [
-                'Documento actualizado',
-                'Bases de Licitación Solar CNE 2026-02 · hace 48 min',
-                'info',
-              ],
-              [
-                'Evaluación pendiente',
-                '3 propuestas esperan evaluación financiera · hace 2 h',
-                'warning',
-              ],
-            ].map(([title, subtitle, color]) => (
-              <Stack key={title} direction="row" spacing={1.5} alignItems="center">
-                <Box width={9} height={9} borderRadius="50%" bgcolor={`${color}.main`} />
-                <Box>
-                  <Typography variant="body2" fontWeight={700}>
-                    {title}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {subtitle}
-                  </Typography>
-                </Box>
-              </Stack>
-            ))}
-          </Stack>
-        </CardContent>
-      </Card>
+      <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1fr 1fr' }} gap={2.5}>
+        <Card>
+          <CardContent sx={{ p: 3 }}>
+            <Stack direction="row" alignItems="center" spacing={1} mb={2}>
+              <WarningAmberOutlined color="warning" />
+              <Typography variant="h6" fontWeight={750}>
+                Alertas operativas
+              </Typography>
+              <Chip size="small" label={alerts.length} color="warning" variant="outlined" />
+            </Stack>
+            <Stack spacing={1.5}>
+              {alerts.length ? (
+                alerts.map((item) => (
+                  <Box key={item.id}>
+                    <Typography variant="body2" fontWeight={700}>
+                      {item.title}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {item.type}
+                    </Typography>
+                  </Box>
+                ))
+              ) : (
+                <Typography color="text.secondary">No hay alertas próximas.</Typography>
+              )}
+            </Stack>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent sx={{ p: 3 }}>
+            <Typography variant="h6" fontWeight={750}>
+              Actividad reciente
+            </Typography>
+            <Typography color="text.secondary" variant="body2" mb={2}>
+              Acciones registradas en auditoría
+            </Typography>
+            <Stack spacing={1.5}>
+              {data?.recentActivity.length ? (
+                data.recentActivity.map((item) => (
+                  <Stack key={item.id} direction="row" spacing={1.5} alignItems="center">
+                    <Box
+                      width={9}
+                      height={9}
+                      borderRadius="50%"
+                      bgcolor={item.result === 'SUCCESS' ? 'success.main' : 'warning.main'}
+                    />
+                    <Box>
+                      <Typography variant="body2" fontWeight={700}>
+                        {item.action} · {item.module}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {item.user ? `${item.user.firstName} ${item.user.lastName}` : 'Sistema'} ·{' '}
+                        {formatDistanceToNow(new Date(item.createdAt), {
+                          locale: es,
+                          addSuffix: true,
+                        })}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                ))
+              ) : (
+                <Typography color="text.secondary">Sin actividad reciente.</Typography>
+              )}
+            </Stack>
+          </CardContent>
+        </Card>
+      </Box>
     </Stack>
   );
 }

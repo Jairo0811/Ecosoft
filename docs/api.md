@@ -81,3 +81,20 @@ la subasta es de solo anexado desde la aplicación.
 
 Los contratos de Bids, Evaluations, Awards y PPAContracts se agregarán con su fase. El versionado
 evita romper clientes cuando el producto evolucione.
+
+## Fase 7
+
+| Método | Ruta                    | Acceso                     |
+| ------ | ----------------------- | -------------------------- |
+| GET    | `/analytics/dashboard`  | `analytics.read` + alcance |
+| GET    | `/reports/:type`        | `reports.read` + alcance   |
+| GET    | `/reports/:type/export` | `reports.export` + alcance |
+
+`analytics/dashboard` acepta `from`, `to`, `organizationId` y `technology`. Los reportes agregan
+`status`, `page` y `pageSize`. Los tipos disponibles son `auctions`, `participants`, `bids`,
+`awards`, `contracts`, `projects`, `capacity` y `audit`; este último exige además `audit.read`.
+
+Las exportaciones admiten `csv`, `xls` y `pdf`, usan `Cache-Control: private, no-store` y registran
+usuario, organización, formato, cantidad de filas y `CorrelationId` en auditoría. Un usuario
+empresarial no puede ampliar su alcance mediante `organizationId`; el backend fuerza siempre su
+organización autenticada.
