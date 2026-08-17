@@ -1,6 +1,7 @@
 name: CI
 
 on:
+  workflow_dispatch:
   pull_request:
   push:
     branches: [main, develop]
@@ -27,6 +28,7 @@ jobs:
       - run: npm audit --omit=dev --audit-level=high
 
   sqlserver-integration:
+  workflow_dispatch:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
