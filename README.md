@@ -524,7 +524,9 @@ Los integrantes se presentan en orden ascendente de matrícula.
 
 ## 🧭 Continuidad académica
 
-**EcoSoft** forma parte de una continuidad académica por **compañera recurrente** con [**MediCore**](https://github.com/Jairo0811/MediCore). La relación es **formativa y cronológica**: los proyectos corresponden a asignaturas y equipos diferentes, pero **Emely Marie Castillo Rivera (A00110380)** coincidió con Francis Jairo Matías Rosario en ambos proyectos durante dos períodos consecutivos de 2026.
+**EcoSoft** forma parte de una continuidad académica por **compañera recurrente** con [**MediCore**](https://github.com/Jairo0811/MediCore). 
+
+La relación es **formativa y cronológica**: los proyectos corresponden a asignaturas y equipos diferentes, pero **Emely Marie Castillo Rivera (A00110380)** coincidió con Francis Jairo Matías Rosario en ambos proyectos durante dos períodos consecutivos de 2026.
 
 La primera coincidencia documentada ocurrió en **Enero - Abril de 2026** en **Desarrollo de Software con Tecnología Propietaria 1 (ISO-605)** con MediCore. Posteriormente, en **Mayo - Agosto de 2026**, ambos volvieron a formar parte del mismo equipo académico en **Proyecto de Software 1 (ISO-705)** con EcoSoft.
 
