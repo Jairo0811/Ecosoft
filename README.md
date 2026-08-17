@@ -500,12 +500,12 @@ multi-tenancy complejo en el MVP.
 
 ### 👥 Equipo del proyecto
 
-| Integrante                    | Matrícula  | Participación                    |
-| ----------------------------- | ---------- | -------------------------------- |
-| Emely Marie Castillo Rivera   | A00110380  | Equipo de proyecto               |
-| Héctor David Pichardo Ortiz   | A001110746 | Líder del proyecto               |
-| Nathaly Patricia Tamayo Ortiz | A00113859  | Equipo de proyecto               |
-| Francis Jairo Matías Rosario  | A00115261  | Equipo de proyecto y repositorio |
+| Integrante                    | Matrícula | Participación                    |
+| ----------------------------- | --------- | -------------------------------- |
+| Emely Marie Castillo Rivera   | A00110380 | Equipo de proyecto               |
+| Héctor David Pichardo Ortiz   | A00110746 | Líder del proyecto               |
+| Nathaly Patricia Tamayo Ortiz | A00113859 | Equipo de proyecto               |
+| Francis Jairo Matías Rosario  | A00115261 | Equipo de proyecto y repositorio |
 
 Los integrantes se presentan en orden ascendente de matrícula.
 
