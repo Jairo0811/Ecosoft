@@ -13,4 +13,7 @@ export const permissions = {
   reportsExport: 'reports.export',
   analyticsRead: 'analytics.read',
   auditRead: 'audit.read',
+  regulatoryRead: 'regulatory.read',
+  regulatoryManage: 'regulatory.manage',
+  notificationsRead: 'notifications.read',
 } as const;

@@ -11,6 +11,9 @@ import { UsersPage } from './pages/UsersPage';
 import { AuctionsPage } from './pages/AuctionsPage';
 import { CalendarPage } from './pages/CalendarPage';
 import { ReportsPage } from './pages/ReportsPage';
+import { AuditPage } from './pages/AuditPage';
+import { RegulatoryPage } from './pages/RegulatoryPage';
+import { NotificationsPage } from './pages/NotificationsPage';
 
 export function App() {
   return (
@@ -30,7 +33,9 @@ export function App() {
           <Route path="reportes" element={<ReportsPage />} />
           <Route path="calendario" element={<CalendarPage />} />
           <Route path="usuarios" element={<UsersPage />} />
-          <Route path="auditoria" element={<ModulePlaceholderPage title="Auditoría" phase={8} />} />
+          <Route path="regulacion" element={<RegulatoryPage />} />
+          <Route path="notificaciones" element={<NotificationsPage />} />
+          <Route path="auditoria" element={<AuditPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

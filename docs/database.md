@@ -29,6 +29,10 @@ erDiagram
     Organization ||--o{ EnergyProject : develops
     EnergyProject ||--o{ PPAContract : supplies
     PPAContract ||--o{ PPAContractVersion : versions
+    Organization ||--o{ Regulation : issues
+    Regulation ||--o{ RegulationScope : applies_to
+    Regulation ||--o{ RegulationEvent : records
+    User ||--o{ Notification : receives
 ```
 
 La migración de Fase 1 crea identidad, organizaciones, sesiones y auditoría. La Fase 2 amplía la
@@ -49,6 +53,17 @@ La Fase 7 incorpora la base de agregados analíticos (`Bid`, `Award`, `EnergyPro
 índices por organización, tecnología, estado, provincia y vencimiento soportan filtros y alertas.
 Los reportes se calculan desde las tablas transaccionales; no mantienen una segunda fuente de
 verdad ni almacenan archivos exportados en SQL Server.
+
+La Fase 8 agrega `Regulation`, `RegulationScope`, `RegulationEvent` y `Notification`. Las
+regulaciones conservan autoridad emisora, vigencia, fuente oficial, referencia documental y
+alcances configurables. `RegulationEvent` registra un historial de solo anexado. Las
+notificaciones usan la restricción única `(userId, sourceKey)` para que recalcular alertas no
+duplique mensajes.
+
+`AuditLog.eventHash` contiene SHA-256 del contenido canónico y redactado del evento. Los triggers
+`TR_AuditLog_Immutable` y `TR_RegulationEvent_Immutable` rechazan `UPDATE` y `DELETE` incluso si un
+error de aplicación intentara ejecutarlos. Los registros anteriores a la Fase 8 pueden conservar
+`eventHash` nulo; todos los eventos nuevos lo incluyen.
 
 ## Convenciones
 

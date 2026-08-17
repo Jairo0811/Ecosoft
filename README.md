@@ -85,7 +85,7 @@ analítica.
 
 ## ✅ Estado actual
 
-Las **Fases 0, 1, 2 y 3** están implementadas e integradas en `main`. La **Fase 7** está
+Las **Fases 0, 1, 2, 3 y 7** están implementadas e integradas en `main`. La **Fase 8** está
 implementada en la rama de trabajo, pendiente de revisión e integración.
 
 ### 🔐 Identidad y seguridad
@@ -141,6 +141,18 @@ implementada en la rama de trabajo, pendiente de revisión e integración.
 - Filtros por período, organización, tecnología y estado.
 - Exportación auditable a CSV, Excel y PDF con protección contra fórmulas maliciosas.
 
+### 🛡️ Gobierno, regulación y notificaciones
+
+- Auditoría paginada con filtros, detalle, `CorrelationId`, IP, User Agent y hash de integridad.
+- Redacción automática de contraseñas, tokens, secretos, cookies y hashes en valores auditados.
+- Triggers SQL Server que impiden modificar o eliminar auditoría e historial regulatorio.
+- Normativas, resoluciones y reglamentos emitidos por autoridades reguladoras aprobadas.
+- Alcance configurable hacia subastas, contratos PPA, proyectos y futuras evaluaciones.
+- Publicación, suspensión, reactivación y derogación mediante transiciones justificadas.
+- Centro de notificaciones con lectura individual, lectura masiva y contador en el header.
+- Alertas idempotentes por cierres de subasta, vencimientos de contratos y cambios regulatorios.
+- Puertos desacoplados para incorporar correo transaccional y Socket.IO sin alterar el dominio.
+
 > Los enlaces de activación se devuelven únicamente en desarrollo. En producción no se expone el token y queda pendiente conectar un proveedor transaccional de correo.
 
 ---
@@ -156,7 +168,7 @@ implementada en la rama de trabajo, pendiente de revisión e integración.
 | Evaluations y Awards              | Matrices configurables, puntuación y adjudicación      |           5 | ⏳ Planificado  |
 | PPAContracts y EnergyProjects     | Contratos, anexos, renovaciones y proyectos renovables |           6 | ⏳ Planificado  |
 | Reports y Analytics               | KPIs, tendencias, filtros y exportaciones              |           7 | ✅ Implementado |
-| Audit, Regulatory y Notifications | Gobierno, normativa, trazabilidad y alertas            |           8 | 🟡 Base inicial |
+| Audit, Regulatory y Notifications | Gobierno, normativa, trazabilidad y alertas            |           8 | ✅ Implementado |
 | AI y OCR                          | Análisis consultivo, anomalías, resumen y extracción   |           9 | ⏳ Planificado  |
 | Administration                    | Configuración operativa y catálogos                    | Transversal | 🟡 Parcial      |
 
@@ -456,12 +468,12 @@ privacidad.
 |    1 | Foundation, Authentication y RBAC                   | ✅ Completada   |
 |    2 | Organizaciones, participantes y usuarios            | ✅ Completada   |
 |    3 | Licitaciones, subastas y calendario                 | ✅ Completada   |
-|    4 | Ofertas inmutables y documentos                     | ▶️ Siguiente    |
+|    4 | Ofertas inmutables y documentos                     | ⏳ Pendiente    |
 |    5 | Evaluaciones configurables y adjudicaciones         | ⏳ Pendiente    |
 |    6 | Contratos PPA y proyectos energéticos               | ⏳ Pendiente    |
 |    7 | Dashboard, analítica y reportes                     | ✅ Implementada |
-|    8 | Auditoría ampliada, regulación y notificaciones     | ⏳ Pendiente    |
-|    9 | IA, OCR y análisis predictivo con aprobación humana | ⏳ Pendiente    |
+|    8 | Auditoría ampliada, regulación y notificaciones     | ✅ Implementada |
+|    9 | IA, OCR y análisis predictivo con aprobación humana | ▶️ Siguiente    |
 |   10 | Hardening, QA, WCAG 2.2 AA, CI/CD y documentación   | ⏳ Pendiente    |
 
 El proyecto utiliza Scrum y trata cada fase como un incremento potencialmente entregable. Su
@@ -496,17 +508,17 @@ multi-tenancy complejo en el MVP.
 | 👥 Equipo            | Grupo #4                                            |
 | 🏢 Empresa del caso  | EcoSoft Solutions S.R.L.                            |
 | ⚡ Cliente principal | Comisión Nacional de Energía (CNE)                  |
-| 📅 Período Academico           | Mayo – Agosto de 2026                                 |
+| 📅 Período Academico | Mayo – Agosto de 2026                               |
 | 📁 Tipo              | Proyecto académico grupal de ingeniería de software |
 
 ### 👥 Equipo del proyecto
 
 | 👤 Integrante                    | 🆔 Matrícula | Participación                    |
-| ----------------------------- | --------- | -------------------------------- |
-| 👩🏻‍💻 Emely Marie Castillo Rivera   | A00110380 | Equipo de proyecto               |
-| 👨🏻‍💻 Héctor David Pichardo Ortiz   | A00110746 | Líder del proyecto               |
-| 👩🏻‍💻 Nathaly Patricia Tamayo Ortiz | A00113859 | Equipo de proyecto               |
-| 👨🏻‍💻 Francis Jairo Matías Rosario  | A00115261 | Equipo de proyecto y repositorio |
+| -------------------------------- | ------------ | -------------------------------- |
+| 👩🏻‍💻 Emely Marie Castillo Rivera   | A00110380    | Equipo de proyecto               |
+| 👨🏻‍💻 Héctor David Pichardo Ortiz   | A00110746    | Líder del proyecto               |
+| 👩🏻‍💻 Nathaly Patricia Tamayo Ortiz | A00113859    | Equipo de proyecto               |
+| 👨🏻‍💻 Francis Jairo Matías Rosario  | A00115261    | Equipo de proyecto y repositorio |
 
 Los integrantes se presentan en orden ascendente de matrícula.
 

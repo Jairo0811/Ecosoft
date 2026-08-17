@@ -82,7 +82,7 @@ jobs:
           exit "$STATUS"
       - name: Seed initial data
         run: npm run db:seed
-      - name: Verify API, analytics and reports against SQL Server
+      - name: Verify API, analytics, governance and reports against SQL Server
         run: |
           npm run build --workspace @ecosoft/shared
           npm run build --workspace @ecosoft/api
@@ -112,9 +112,27 @@ jobs:
           curl --fail --silent \
             -H "Authorization: Bearer $ACCESS_TOKEN" \
             http://localhost:4000/api/v1/reports/auctions > /tmp/ecosoft-report.json
+          curl --fail --silent \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            http://localhost:4000/api/v1/audit > /tmp/ecosoft-audit.json
+          curl --fail --silent \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            http://localhost:4000/api/v1/regulatory > /tmp/ecosoft-regulatory.json
+          curl --fail --silent \
+            -H "Authorization: Bearer $ACCESS_TOKEN" \
+            http://localhost:4000/api/v1/notifications > /tmp/ecosoft-notifications.json
           node -e '
             const fs = require("node:fs");
             const analytics = JSON.parse(fs.readFileSync("/tmp/ecosoft-analytics.json", "utf8"));
             const report = JSON.parse(fs.readFileSync("/tmp/ecosoft-report.json", "utf8"));
-            if (!analytics.data?.kpis || !Array.isArray(report.data)) process.exit(1);
+            const audit = JSON.parse(fs.readFileSync("/tmp/ecosoft-audit.json", "utf8"));
+            const regulatory = JSON.parse(fs.readFileSync("/tmp/ecosoft-regulatory.json", "utf8"));
+            const notifications = JSON.parse(fs.readFileSync("/tmp/ecosoft-notifications.json", "utf8"));
+            if (
+              !analytics.data?.kpis ||
+              !Array.isArray(report.data) ||
+              !Array.isArray(audit.data) ||
+              !Array.isArray(regulatory.data) ||
+              !Array.isArray(notifications.data)
+            ) process.exit(1);
           '

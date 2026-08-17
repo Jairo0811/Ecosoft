@@ -40,6 +40,11 @@ interfaces. Ningún proveedor se filtra al dominio. Auctions ya publica al puert
 `AuctionRealtimePublisher`; el adaptador Socket.IO se añadirá con la recepción de ofertas, cuando
 existan consumidores en vivo y reglas formales de confidencialidad.
 
+Governance expone además `realtimeNotificationPublisher` y `emailNotificationPublisher`. Ambos
+son puertos sin proveedor durante el MVP: permiten validar autorización, deduplicación y ciclo de
+lectura sin acoplar el dominio a Socket.IO o a un servicio de correo. La decisión se detalla en
+ADR-006.
+
 ## Flujo de una solicitud protegida
 
 1. El middleware asigna o valida `X-Correlation-Id`.

@@ -24,6 +24,9 @@ const permissionCodes = [
   'reports.export',
   'analytics.read',
   'audit.read',
+  'regulatory.read',
+  'regulatory.manage',
+  'notifications.read',
 ] as const;
 
 const roles = [
@@ -54,6 +57,8 @@ const rolePermissionCodes: Record<
     'auctions.publish',
     'reports.read',
     'analytics.read',
+    'regulatory.read',
+    'notifications.read',
   ],
   TECHNICAL_EVALUATOR: [
     'organizations.read',
@@ -63,6 +68,8 @@ const rolePermissionCodes: Record<
     'bids.evaluate',
     'reports.read',
     'analytics.read',
+    'regulatory.read',
+    'notifications.read',
   ],
   FINANCIAL_EVALUATOR: [
     'organizations.read',
@@ -72,6 +79,8 @@ const rolePermissionCodes: Record<
     'bids.evaluate',
     'reports.read',
     'analytics.read',
+    'regulatory.read',
+    'notifications.read',
   ],
   REGULATORY_SUPERVISOR: [
     'organizations.read',
@@ -83,6 +92,9 @@ const rolePermissionCodes: Record<
     'reports.read',
     'analytics.read',
     'audit.read',
+    'regulatory.read',
+    'regulatory.manage',
+    'notifications.read',
   ],
   AUDITOR: [
     'organizations.read',
@@ -93,6 +105,8 @@ const rolePermissionCodes: Record<
     'reports.read',
     'analytics.read',
     'audit.read',
+    'regulatory.read',
+    'notifications.read',
   ],
   COMPANY_ADMIN: [
     'users.manage',
@@ -104,6 +118,8 @@ const rolePermissionCodes: Record<
     'contracts.read',
     'reports.read',
     'analytics.read',
+    'regulatory.read',
+    'notifications.read',
   ],
   COMPANY_REPRESENTATIVE: [
     'organizations.read',
@@ -114,6 +130,8 @@ const rolePermissionCodes: Record<
     'contracts.read',
     'reports.read',
     'analytics.read',
+    'regulatory.read',
+    'notifications.read',
   ],
   READ_ONLY: [
     'organizations.read',
@@ -122,6 +140,8 @@ const rolePermissionCodes: Record<
     'contracts.read',
     'reports.read',
     'analytics.read',
+    'regulatory.read',
+    'notifications.read',
   ],
 };
 

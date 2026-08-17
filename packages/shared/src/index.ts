@@ -19,6 +19,9 @@ export const permissions = {
   reportsExport: 'reports.export',
   analyticsRead: 'analytics.read',
   auditRead: 'audit.read',
+  regulatoryRead: 'regulatory.read',
+  regulatoryManage: 'regulatory.manage',
+  notificationsRead: 'notifications.read',
 } as const;
 
 export type Permission = (typeof permissions)[keyof typeof permissions];
@@ -100,3 +103,20 @@ export const calendarEventTypes = [
 ] as const;
 
 export type CalendarEventType = (typeof calendarEventTypes)[number];
+
+export const regulationTypes = ['NORMATIVA', 'RESOLUCION', 'REGLAMENTO'] as const;
+export type RegulationType = (typeof regulationTypes)[number];
+
+export const regulationStatuses = ['BORRADOR', 'VIGENTE', 'SUSPENDIDA', 'DEROGADA'] as const;
+export type RegulationStatus = (typeof regulationStatuses)[number];
+
+export const regulationScopeTypes = [
+  'AUCTION',
+  'PPA_CONTRACT',
+  'ENERGY_PROJECT',
+  'EVALUATION',
+] as const;
+export type RegulationScopeType = (typeof regulationScopeTypes)[number];
+
+export const notificationSeverities = ['INFO', 'WARNING', 'CRITICAL'] as const;
+export type NotificationSeverity = (typeof notificationSeverities)[number];
