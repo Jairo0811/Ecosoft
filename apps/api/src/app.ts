@@ -21,6 +21,12 @@ import { analyticsRouter } from './modules/analytics/analytics.routes';
 import { reportsRouter } from './modules/reports/reports.routes';
 import { regulatoryRouter } from './modules/regulatory/regulatory.routes';
 import { notificationsRouter } from './modules/notifications/notifications.routes';
+import { bidsRouter } from './modules/bids/bids.routes';
+import { documentsRouter } from './modules/documents/documents.routes';
+import { evaluationsRouter } from './modules/evaluations/evaluations.routes';
+import { projectsRouter } from './modules/projects/projects.routes';
+import { contractsRouter } from './modules/contracts/contracts.routes';
+import { aiRouter } from './modules/ai/ai.routes';
 import { openApiDocument } from './openapi';
 
 export const createApp = () => {
@@ -39,7 +45,7 @@ export const createApp = () => {
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
     }),
   );
-  app.use(express.json({ limit: '1mb' }));
+  app.use(express.json({ limit: '8mb' }));
   app.use(cookieParser());
 
   app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(openApiDocument));
@@ -56,6 +62,12 @@ export const createApp = () => {
   app.use('/api/v1/reports', reportsRouter);
   app.use('/api/v1/regulatory', regulatoryRouter);
   app.use('/api/v1/notifications', notificationsRouter);
+  app.use('/api/v1/bids', bidsRouter);
+  app.use('/api/v1/documents', documentsRouter);
+  app.use('/api/v1/evaluations', evaluationsRouter);
+  app.use('/api/v1/projects', projectsRouter);
+  app.use('/api/v1/contracts', contractsRouter);
+  app.use('/api/v1/ai', aiRouter);
 
   app.use(notFound);
   app.use(errorHandler);

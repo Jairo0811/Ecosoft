@@ -1,0 +1,1 @@
+"""EcoSoft AI service."""

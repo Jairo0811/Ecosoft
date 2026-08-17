@@ -31,6 +31,9 @@ import {
   MenuOutlined,
   NotificationsOutlined,
   PeopleAltOutlined,
+  RequestQuoteOutlined,
+  RuleOutlined,
+  PsychologyOutlined,
   ShieldOutlined,
 } from '@mui/icons-material';
 import { NavLink, Outlet } from 'react-router';
@@ -43,8 +46,26 @@ import { useThemeMode } from '../theme/ThemeContext';
 const drawerWidth = 272;
 const navigation = [
   { label: 'Panel de control', path: '/', icon: <DashboardOutlined /> },
-  { label: 'Subastas', path: '/subastas', icon: <GavelOutlined /> },
-  { label: 'Contratos PPA', path: '/contratos', icon: <DescriptionOutlined /> },
+  { label: 'Subastas', path: '/subastas', icon: <GavelOutlined />, permission: 'auctions.read' },
+  {
+    label: 'Ofertas y documentos',
+    path: '/ofertas',
+    icon: <RequestQuoteOutlined />,
+    permission: 'bids.read',
+  },
+  {
+    label: 'Evaluación',
+    path: '/evaluaciones',
+    icon: <RuleOutlined />,
+    permission: 'evaluations.read',
+  },
+  {
+    label: 'Proyectos y PPA',
+    path: '/contratos',
+    icon: <DescriptionOutlined />,
+    permission: 'contracts.read',
+  },
+  { label: 'Asistencia de IA', path: '/ia', icon: <PsychologyOutlined />, permission: 'ai.use' },
   { label: 'Participantes', path: '/participantes', icon: <BusinessOutlined /> },
   { label: 'Catálogos', path: '/catalogos', icon: <CategoryOutlined /> },
   { label: 'Reportes', path: '/reportes', icon: <AssessmentOutlined /> },

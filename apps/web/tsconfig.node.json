@@ -6,7 +6,7 @@
     "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": ["node", "@playwright/test"]
   },
-  "include": ["vite.config.ts", "eslint.config.js"]
+  "include": ["vite.config.ts", "playwright.config.ts", "e2e/**/*.ts", "eslint.config.js"]
 }

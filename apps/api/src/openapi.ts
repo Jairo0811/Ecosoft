@@ -2,9 +2,9 @@ export const openApiDocument = {
   openapi: '3.0.3',
   info: {
     title: 'EcoSoft API',
-    version: '0.8.0',
+    version: '1.0.0',
     description:
-      'API para subastas energéticas, gobierno regulatorio, notificaciones e indicadores auditables de EcoSoft.',
+      'API integral para subastas energéticas, ofertas, evaluación, PPA, documentos, IA asistiva y gobierno auditable de EcoSoft.',
   },
   servers: [{ url: '/api/v1' }],
   components: {
@@ -255,6 +255,119 @@ export const openApiDocument = {
         summary: 'Crear un evento institucional manual',
         security: [{ bearerAuth: [] }],
         responses: { '201': { description: 'Evento creado y auditado' } },
+      },
+    },
+    '/bids': {
+      get: {
+        summary: 'Listar ofertas según rol y organización',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Ofertas visibles y versionadas' } },
+      },
+      post: {
+        summary: 'Crear una oferta en borrador',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Oferta y versión inicial creadas' } },
+      },
+    },
+    '/bids/{id}/submit': {
+      post: {
+        summary: 'Enviar una oferta con verificación documental y hash',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '200': { description: 'Oferta enviada de forma inmutable' },
+          '409': { description: 'Faltan documentos o la subasta cerró' },
+        },
+      },
+    },
+    '/documents': {
+      get: {
+        summary: 'Listar el expediente documental autorizado',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Documentos y versiones visibles' } },
+      },
+      post: {
+        summary: 'Cargar un documento privado y calcular SHA-256',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Documento almacenado y auditado' } },
+      },
+    },
+    '/documents/{id}/download': {
+      get: {
+        summary: 'Descargar la versión vigente de un documento',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Contenido binario con hash de integridad' } },
+      },
+    },
+    '/evaluations/matrices': {
+      get: {
+        summary: 'Listar matrices de evaluación',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Matrices y criterios ponderados' } },
+      },
+      post: {
+        summary: 'Crear una matriz versionada',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Matriz creada' } },
+      },
+    },
+    '/evaluations': {
+      get: {
+        summary: 'Listar evaluaciones autorizadas',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Evaluaciones técnicas y financieras' } },
+      },
+      post: {
+        summary: 'Enviar puntuaciones de una evaluación',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Evaluación ponderada y auditada' } },
+      },
+    },
+    '/evaluations/awards/list': {
+      get: {
+        summary: 'Listar adjudicaciones visibles',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Adjudicaciones y resolución' } },
+      },
+    },
+    '/projects': {
+      get: {
+        summary: 'Listar proyectos energéticos',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Proyectos dentro del ámbito' } },
+      },
+      post: {
+        summary: 'Registrar un proyecto renovable',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Proyecto e historial creados' } },
+      },
+    },
+    '/contracts': {
+      get: {
+        summary: 'Listar contratos PPA',
+        security: [{ bearerAuth: [] }],
+        responses: { '200': { description: 'Contratos y versiones visibles' } },
+      },
+      post: {
+        summary: 'Crear un PPA desde una adjudicación aprobada',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Contrato, versión e historial creados' } },
+      },
+    },
+    '/ai/ocr': {
+      post: {
+        summary: 'Extraer texto mediante proveedor OCR desacoplado',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          '201': { description: 'Extracción trazable con fuente y confianza' },
+          '422': { description: 'No se obtuvo texto verificable' },
+        },
+      },
+    },
+    '/ai/analyze': {
+      post: {
+        summary: 'Generar resumen o señales de anomalía asistivas',
+        security: [{ bearerAuth: [] }],
+        responses: { '201': { description: 'Resultado sujeto a revisión humana' } },
       },
     },
     '/analytics/dashboard': {

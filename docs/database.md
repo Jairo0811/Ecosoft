@@ -1,7 +1,8 @@
 # Modelo de datos
 
 SQL Server es el sistema de registro. Prisma administra el esquema y las migraciones. Los archivos
-se almacenarán en Azure Blob Storage; SQL Server conserva metadatos, hashes y referencias.
+usan un adaptador privado local en desarrollo; SQL Server conserva metadatos, hashes y referencias.
+Producción puede sustituirlo por Azure Blob Storage.
 
 ## ERD inicial y evolución prevista
 
@@ -23,12 +24,18 @@ erDiagram
     Auction ||--o{ AuctionEvent : records
     Auction ||--o{ CalendarEvent : schedules
     Auction ||--o{ Bid : receives
+    Bid ||--o{ BidVersion : versions
+    Bid ||--o{ Document : documents
     Bid ||--o{ Evaluation : assessed_by
     Bid ||--o| Award : wins
     Award ||--o| PPAContract : originates
     Organization ||--o{ EnergyProject : develops
     EnergyProject ||--o{ PPAContract : supplies
     PPAContract ||--o{ PPAContractVersion : versions
+    PPAContract ||--o{ PPAContractEvent : records
+    EnergyProject ||--o{ EnergyProjectEvent : records
+    Document ||--o{ DocumentVersion : versions
+    Document ||--o{ AIAnalysis : analyzed_by
     Organization ||--o{ Regulation : issues
     Regulation ||--o{ RegulationScope : applies_to
     Regulation ||--o{ RegulationEvent : records
@@ -37,8 +44,8 @@ erDiagram
 
 La migración de Fase 1 crea identidad, organizaciones, sesiones y auditoría. La Fase 2 amplía la
 organización con contactos y decisiones de revisión, agrega un índice único filtrado para permitir
-RNC nulo y crea catálogos controlados. Las entidades de subastas y contratos se agregarán con sus
-invariantes en sus respectivas fases para no congelar reglas aún no definidas.
+RNC nulo y crea catálogos controlados. Las entidades de dominio se agregan mediante migraciones
+consecutivas, con restricciones e índices alineados a sus invariantes.
 
 La ampliación de usuarios agrega `authVersion`, usada para invalidación inmediata de sesiones, y
 `UserInvitation`, que conserva el hash del token, emisor, vencimiento, aceptación y revocación.
@@ -65,12 +72,17 @@ duplique mensajes.
 error de aplicación intentara ejecutarlos. Los registros anteriores a la Fase 8 pueden conservar
 `eventHash` nulo; todos los eventos nuevos lo incluyen.
 
+Las Fases 4 a 6 agregan versiones inmutables de oferta/documento/PPA, matrices y criterios,
+evaluaciones y puntuaciones, e historiales de proyectos y contratos. La Fase 9 agrega `AIAnalysis`
+con hash de entrada, proveedor, fuentes, resultado, confianza y decisión de revisión.
+
 ## Convenciones
 
 - UUID (`uniqueidentifier`) como clave primaria.
 - `createdAt`, `updatedAt` y fechas de negocio en UTC.
 - índices únicos en email, RNC no nulo, códigos de rol, permisos y códigos por tipo de catálogo.
-- `rowVersion` se agregará a agregados con edición concurrente (ofertas, evaluaciones y contratos).
+- las transiciones sensibles usan actualizaciones condicionales y restricciones únicas para
+  detectar concurrencia; las versiones mantienen número y hash únicos por agregado.
 - datos críticos no se eliminan físicamente desde la aplicación.
 - los hashes de refresh tokens, invitaciones y documentos se almacenan, nunca los valores
   sensibles originales.

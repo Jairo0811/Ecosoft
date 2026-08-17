@@ -12,9 +12,21 @@ export const permissions = {
   bidsRead: 'bids.read',
   bidsSubmit: 'bids.submit',
   bidsEvaluate: 'bids.evaluate',
+  documentsRead: 'documents.read',
+  documentsManage: 'documents.manage',
+  evaluationsRead: 'evaluations.read',
+  evaluationsSubmit: 'evaluations.submit',
+  evaluationsManage: 'evaluations.manage',
+  awardsRead: 'awards.read',
+  awardsManage: 'awards.manage',
+  awardsApprove: 'awards.approve',
+  projectsRead: 'projects.read',
+  projectsManage: 'projects.manage',
   contractsRead: 'contracts.read',
   contractsCreate: 'contracts.create',
   contractsApprove: 'contracts.approve',
+  aiUse: 'ai.use',
+  aiReview: 'ai.review',
   reportsRead: 'reports.read',
   reportsExport: 'reports.export',
   analyticsRead: 'analytics.read',
@@ -89,6 +101,59 @@ export const auctionStatuses = [
 ] as const;
 
 export type AuctionStatus = (typeof auctionStatuses)[number];
+
+export const bidStatuses = [
+  'BORRADOR',
+  'ENVIADA',
+  'RETIRADA',
+  'EN_EVALUACION',
+  'ADJUDICADA',
+  'NO_SELECCIONADA',
+] as const;
+export type BidStatus = (typeof bidStatuses)[number];
+
+export const evaluationTypes = ['TECNICA', 'FINANCIERA'] as const;
+export type EvaluationType = (typeof evaluationTypes)[number];
+
+export const evaluationStatuses = ['BORRADOR', 'ENVIADA'] as const;
+export type EvaluationStatus = (typeof evaluationStatuses)[number];
+
+export const awardStatuses = ['BORRADOR', 'APROBADA', 'RECHAZADA'] as const;
+export type AwardStatus = (typeof awardStatuses)[number];
+
+export const projectStatuses = [
+  'PROPUESTO',
+  'EN_DESARROLLO',
+  'EN_CONSTRUCCION',
+  'OPERATIVO',
+  'SUSPENDIDO',
+  'FINALIZADO',
+] as const;
+export type ProjectStatus = (typeof projectStatuses)[number];
+
+export const contractStatuses = [
+  'BORRADOR',
+  'PENDIENTE_FIRMA',
+  'VIGENTE',
+  'SUSPENDIDO',
+  'VENCIDO',
+  'CANCELADO',
+] as const;
+export type ContractStatus = (typeof contractStatuses)[number];
+
+export const documentEntityTypes = [
+  'AUCTION',
+  'BID',
+  'EVALUATION',
+  'AWARD',
+  'PPA_CONTRACT',
+  'ENERGY_PROJECT',
+  'REGULATION',
+] as const;
+export type DocumentEntityType = (typeof documentEntityTypes)[number];
+
+export const aiOperations = ['OCR', 'SUMMARY', 'ANOMALY_REVIEW'] as const;
+export type AIOperation = (typeof aiOperations)[number];
 
 export const calendarEventTypes = [
   'APERTURA',

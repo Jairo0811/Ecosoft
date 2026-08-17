@@ -8,30 +8,32 @@ datasource db {
 }
 
 model Organization {
-  id               String    @id @default(uuid()) @db.UniqueIdentifier
-  rnc              String?   @db.VarChar(11)
-  legalName        String    @db.NVarChar(200)
-  commercialName   String?   @db.NVarChar(200)
-  type             String    @db.VarChar(40)
-  status           String    @default("PENDING") @db.VarChar(30)
-  contactName      String?   @db.NVarChar(200)
-  contactEmail     String?   @db.NVarChar(320)
-  contactPhone     String?   @db.VarChar(30)
-  website          String?   @db.NVarChar(500)
-  rejectionReason  String?   @db.NVarChar(1000)
-  reviewedAt       DateTime?
-  reviewedByUserId String?   @db.UniqueIdentifier
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  users            User[]    @relation("OrganizationMembers")
-  reviewedBy       User?     @relation("OrganizationReviews", fields: [reviewedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  managedAuctions  Auction[] @relation("AuctionManager")
+  id                    String               @id @default(uuid()) @db.UniqueIdentifier
+  rnc                   String?              @db.VarChar(11)
+  legalName             String               @db.NVarChar(200)
+  commercialName        String?              @db.NVarChar(200)
+  type                  String               @db.VarChar(40)
+  status                String               @default("PENDING") @db.VarChar(30)
+  contactName           String?              @db.NVarChar(200)
+  contactEmail          String?              @db.NVarChar(320)
+  contactPhone          String?              @db.VarChar(30)
+  website               String?              @db.NVarChar(500)
+  rejectionReason       String?              @db.NVarChar(1000)
+  reviewedAt            DateTime?
+  reviewedByUserId      String?              @db.UniqueIdentifier
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  users                 User[]               @relation("OrganizationMembers")
+  reviewedBy            User?                @relation("OrganizationReviews", fields: [reviewedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  managedAuctions       Auction[]            @relation("AuctionManager")
   auctionParticipations AuctionParticipant[]
-  bids             Bid[]
-  energyProjects   EnergyProject[]
-  ppaContracts     PPAContract[]
-  issuedRegulations Regulation[] @relation("RegulationAuthority")
-  notifications     Notification[]
+  bids                  Bid[]
+  energyProjects        EnergyProject[]
+  ppaContracts          PPAContract[]
+  issuedRegulations     Regulation[]         @relation("RegulationAuthority")
+  notifications         Notification[]
+  documents             Document[]
+  aiAnalyses            AIAnalysis[]
 
   @@index([type, status])
   @@index([rnc])
@@ -39,41 +41,50 @@ model Organization {
 }
 
 model User {
-  id                  String         @id @default(uuid()) @db.UniqueIdentifier
-  email               String         @unique @db.NVarChar(320)
-  passwordHash        String         @db.VarChar(100)
-  firstName           String         @db.NVarChar(100)
-  lastName            String         @db.NVarChar(100)
-  status              String         @default("PENDING_CONFIRMATION") @db.VarChar(30)
-  emailConfirmedAt    DateTime?
-  failedLoginAttempts Int            @default(0)
-  lockedUntil         DateTime?
-  lastLoginAt         DateTime?
-  organizationId      String?        @db.UniqueIdentifier
-  authVersion         Int            @default(0)
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-  organization        Organization?  @relation("OrganizationMembers", fields: [organizationId], references: [id])
-  reviewedOrganizations Organization[] @relation("OrganizationReviews")
-  roles               UserRole[]
-  refreshTokens       RefreshToken[]
-  auditLogs           AuditLog[]
-  invitations         UserInvitation[] @relation("InvitedUser")
-  sentInvitations     UserInvitation[] @relation("InvitationSender")
-  createdAuctions     Auction[]         @relation("AuctionCreator")
-  auctionEvents       AuctionEvent[]
+  id                    String               @id @default(uuid()) @db.UniqueIdentifier
+  email                 String               @unique @db.NVarChar(320)
+  passwordHash          String               @db.VarChar(100)
+  firstName             String               @db.NVarChar(100)
+  lastName              String               @db.NVarChar(100)
+  status                String               @default("PENDING_CONFIRMATION") @db.VarChar(30)
+  emailConfirmedAt      DateTime?
+  failedLoginAttempts   Int                  @default(0)
+  lockedUntil           DateTime?
+  lastLoginAt           DateTime?
+  organizationId        String?              @db.UniqueIdentifier
+  authVersion           Int                  @default(0)
+  createdAt             DateTime             @default(now())
+  updatedAt             DateTime             @updatedAt
+  organization          Organization?        @relation("OrganizationMembers", fields: [organizationId], references: [id])
+  reviewedOrganizations Organization[]       @relation("OrganizationReviews")
+  roles                 UserRole[]
+  refreshTokens         RefreshToken[]
+  auditLogs             AuditLog[]
+  invitations           UserInvitation[]     @relation("InvitedUser")
+  sentInvitations       UserInvitation[]     @relation("InvitationSender")
+  createdAuctions       Auction[]            @relation("AuctionCreator")
+  auctionEvents         AuctionEvent[]
   createdCalendarEvents CalendarEvent[]
-  createdBids        Bid[]                @relation("BidCreator")
-  createdAwards      Award[]              @relation("AwardCreator")
-  approvedAwards     Award[]              @relation("AwardApprover")
-  createdProjects    EnergyProject[]      @relation("ProjectCreator")
-  createdContracts   PPAContract[]        @relation("ContractCreator")
-  approvedContracts  PPAContract[]        @relation("ContractApprover")
-  contractVersions   PPAContractVersion[] @relation("ContractVersionAuthor")
-  createdRegulations Regulation[]          @relation("RegulationCreator")
-  approvedRegulations Regulation[]         @relation("RegulationApprover")
-  regulationEvents  RegulationEvent[]      @relation("RegulationEventActor")
-  notifications     Notification[]
+  createdBids           Bid[]                @relation("BidCreator")
+  bidVersions           BidVersion[]         @relation("BidVersionAuthor")
+  createdDocuments      Document[]           @relation("DocumentCreator")
+  documentVersions      DocumentVersion[]    @relation("DocumentVersionAuthor")
+  evaluationMatrices    EvaluationMatrix[]   @relation("EvaluationMatrixCreator")
+  evaluations           Evaluation[]         @relation("EvaluationAuthor")
+  createdAwards         Award[]              @relation("AwardCreator")
+  approvedAwards        Award[]              @relation("AwardApprover")
+  createdProjects       EnergyProject[]      @relation("ProjectCreator")
+  createdContracts      PPAContract[]        @relation("ContractCreator")
+  approvedContracts     PPAContract[]        @relation("ContractApprover")
+  contractVersions      PPAContractVersion[] @relation("ContractVersionAuthor")
+  projectEvents         EnergyProjectEvent[] @relation("ProjectEventActor")
+  contractEvents        PPAContractEvent[]   @relation("ContractEventActor")
+  requestedAnalyses     AIAnalysis[]         @relation("AIAnalysisRequester")
+  reviewedAnalyses      AIAnalysis[]         @relation("AIAnalysisReviewer")
+  createdRegulations    Regulation[]         @relation("RegulationCreator")
+  approvedRegulations   Regulation[]         @relation("RegulationApprover")
+  regulationEvents      RegulationEvent[]    @relation("RegulationEventActor")
+  notifications         Notification[]
 
   @@index([organizationId, status])
 }
@@ -113,18 +124,18 @@ model CatalogItem {
 }
 
 model Auction {
-  id                      String    @id @default(uuid()) @db.UniqueIdentifier
-  code                    String    @unique @db.VarChar(40)
-  title                   String    @db.NVarChar(240)
-  description             String?   @db.NVarChar(Max)
-  status                  String    @default("BORRADOR") @db.VarChar(30)
-  managingOrganizationId  String    @db.UniqueIdentifier
-  createdByUserId         String    @db.UniqueIdentifier
-  renewableTechnologyCode String    @db.VarChar(60)
-  currencyCode            String    @db.VarChar(10)
-  capacityMw              Decimal   @db.Decimal(18, 3)
-  maximumPrice            Decimal?  @db.Decimal(18, 4)
-  timezone                String    @default("America/Santo_Domingo") @db.VarChar(80)
+  id                      String               @id @default(uuid()) @db.UniqueIdentifier
+  code                    String               @unique @db.VarChar(40)
+  title                   String               @db.NVarChar(240)
+  description             String?              @db.NVarChar(Max)
+  status                  String               @default("BORRADOR") @db.VarChar(30)
+  managingOrganizationId  String               @db.UniqueIdentifier
+  createdByUserId         String               @db.UniqueIdentifier
+  renewableTechnologyCode String               @db.VarChar(60)
+  currencyCode            String               @db.VarChar(10)
+  capacityMw              Decimal              @db.Decimal(18, 3)
+  maximumPrice            Decimal?             @db.Decimal(18, 4)
+  timezone                String               @default("America/Santo_Domingo") @db.VarChar(80)
   openAt                  DateTime
   closeAt                 DateTime
   evaluationStartAt       DateTime?
@@ -133,17 +144,18 @@ model Auction {
   closedAt                DateTime?
   cancelledAt             DateTime?
   finalizedAt             DateTime?
-  cancellationReason      String?   @db.NVarChar(1000)
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  managingOrganization    Organization @relation("AuctionManager", fields: [managingOrganizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  createdBy               User      @relation("AuctionCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  cancellationReason      String?              @db.NVarChar(1000)
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  managingOrganization    Organization         @relation("AuctionManager", fields: [managingOrganizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy               User                 @relation("AuctionCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   requirements            AuctionRequirement[]
   participants            AuctionParticipant[]
   events                  AuctionEvent[]
   calendarEvents          CalendarEvent[]
   bids                    Bid[]
   awards                  Award[]
+  evaluationMatrices      EvaluationMatrix[]
 
   @@index([status, openAt])
   @@index([managingOrganizationId, status])
@@ -199,21 +211,21 @@ model AuctionEvent {
 }
 
 model CalendarEvent {
-  id              String   @id @default(uuid()) @db.UniqueIdentifier
-  auctionId       String?  @db.UniqueIdentifier
-  createdByUserId String   @db.UniqueIdentifier
-  type            String   @db.VarChar(40)
-  source          String   @default("MANUAL") @db.VarChar(20)
-  title           String   @db.NVarChar(240)
-  description     String?  @db.NVarChar(1000)
+  id              String    @id @default(uuid()) @db.UniqueIdentifier
+  auctionId       String?   @db.UniqueIdentifier
+  createdByUserId String    @db.UniqueIdentifier
+  type            String    @db.VarChar(40)
+  source          String    @default("MANUAL") @db.VarChar(20)
+  title           String    @db.NVarChar(240)
+  description     String?   @db.NVarChar(1000)
   startsAt        DateTime
   endsAt          DateTime?
-  allDay          Boolean  @default(false)
-  location        String?  @db.NVarChar(300)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  auction         Auction? @relation(fields: [auctionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  createdBy       User     @relation(fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  allDay          Boolean   @default(false)
+  location        String?   @db.NVarChar(300)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  auction         Auction?  @relation(fields: [auctionId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  createdBy       User      @relation(fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 
   @@index([startsAt, type])
   @@index([auctionId, source])
@@ -234,95 +246,256 @@ model Bid {
   validUntil              DateTime
   status                  String       @default("BORRADOR") @db.VarChar(30)
   submittedAt             DateTime?
+  withdrawnAt             DateTime?
+  submissionHash          String?      @db.Char(64)
   createdAt               DateTime     @default(now())
   updatedAt               DateTime     @updatedAt
   auction                 Auction      @relation(fields: [auctionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   organization            Organization @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   createdBy               User         @relation("BidCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  award                    Award?
+  versions                BidVersion[]
+  evaluations             Evaluation[]
+  award                   Award?
 
   @@index([auctionId, status])
   @@index([organizationId, status])
   @@index([renewableTechnologyCode, status])
 }
 
+model BidVersion {
+  id              String   @id @default(uuid()) @db.UniqueIdentifier
+  bidId           String   @db.UniqueIdentifier
+  versionNumber   Int
+  snapshotJson    String   @db.NVarChar(Max)
+  snapshotHash    String   @db.Char(64)
+  changeReason    String   @db.NVarChar(1000)
+  changedByUserId String   @db.UniqueIdentifier
+  createdAt       DateTime @default(now())
+  bid             Bid      @relation(fields: [bidId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  changedBy       User     @relation("BidVersionAuthor", fields: [changedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([bidId, versionNumber])
+  @@index([bidId, createdAt])
+}
+
+model Document {
+  id                   String            @id @default(uuid()) @db.UniqueIdentifier
+  organizationId       String?           @db.UniqueIdentifier
+  createdByUserId      String            @db.UniqueIdentifier
+  entityType           String            @db.VarChar(40)
+  entityId             String            @db.VarChar(100)
+  documentType         String            @db.VarChar(60)
+  title                String            @db.NVarChar(240)
+  confidentiality      String            @default("PRIVATE") @db.VarChar(20)
+  status               String            @default("ACTIVE") @db.VarChar(20)
+  currentVersionNumber Int               @default(1)
+  extractedText        String?           @db.NVarChar(Max)
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  organization         Organization?     @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy            User              @relation("DocumentCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  versions             DocumentVersion[]
+  aiAnalyses           AIAnalysis[]
+
+  @@index([entityType, entityId, status])
+  @@index([organizationId, confidentiality])
+}
+
+model DocumentVersion {
+  id               String   @id @default(uuid()) @db.UniqueIdentifier
+  documentId       String   @db.UniqueIdentifier
+  versionNumber    Int
+  storageKey       String   @db.NVarChar(500)
+  originalFileName String   @db.NVarChar(255)
+  mimeType         String   @db.VarChar(120)
+  sizeBytes        Int
+  sha256           String   @db.Char(64)
+  uploadedByUserId String   @db.UniqueIdentifier
+  createdAt        DateTime @default(now())
+  document         Document @relation(fields: [documentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  uploadedBy       User     @relation("DocumentVersionAuthor", fields: [uploadedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([documentId, versionNumber])
+  @@index([sha256])
+}
+
+model EvaluationMatrix {
+  id              String                @id @default(uuid()) @db.UniqueIdentifier
+  auctionId       String                @db.UniqueIdentifier
+  versionNumber   Int
+  name            String                @db.NVarChar(240)
+  status          String                @default("BORRADOR") @db.VarChar(20)
+  createdByUserId String                @db.UniqueIdentifier
+  publishedAt     DateTime?
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  auction         Auction               @relation(fields: [auctionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy       User                  @relation("EvaluationMatrixCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  criteria        EvaluationCriterion[]
+  evaluations     Evaluation[]
+
+  @@unique([auctionId, versionNumber])
+  @@index([auctionId, status])
+}
+
+model EvaluationCriterion {
+  id           String            @id @default(uuid()) @db.UniqueIdentifier
+  matrixId     String            @db.UniqueIdentifier
+  code         String            @db.VarChar(60)
+  title        String            @db.NVarChar(240)
+  description  String?           @db.NVarChar(1000)
+  type         String            @db.VarChar(20)
+  weight       Decimal           @db.Decimal(8, 4)
+  minimumScore Decimal?          @db.Decimal(8, 3)
+  maximumScore Decimal           @db.Decimal(8, 3)
+  sortOrder    Int               @default(0)
+  matrix       EvaluationMatrix  @relation(fields: [matrixId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  scores       EvaluationScore[]
+
+  @@unique([matrixId, code])
+  @@index([matrixId, type, sortOrder])
+}
+
+model Evaluation {
+  id              String            @id @default(uuid()) @db.UniqueIdentifier
+  matrixId        String            @db.UniqueIdentifier
+  bidId           String            @db.UniqueIdentifier
+  evaluatorUserId String            @db.UniqueIdentifier
+  type            String            @db.VarChar(20)
+  status          String            @default("BORRADOR") @db.VarChar(20)
+  totalScore      Decimal?          @db.Decimal(10, 4)
+  comments        String?           @db.NVarChar(2000)
+  submittedAt     DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  matrix          EvaluationMatrix  @relation(fields: [matrixId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  bid             Bid               @relation(fields: [bidId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  evaluator       User              @relation("EvaluationAuthor", fields: [evaluatorUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  scores          EvaluationScore[]
+
+  @@unique([matrixId, bidId, evaluatorUserId, type])
+  @@index([bidId, type, status])
+}
+
+model EvaluationScore {
+  id           String              @id @default(uuid()) @db.UniqueIdentifier
+  evaluationId String              @db.UniqueIdentifier
+  criterionId  String              @db.UniqueIdentifier
+  score        Decimal             @db.Decimal(8, 3)
+  comments     String?             @db.NVarChar(1000)
+  evaluation   Evaluation          @relation(fields: [evaluationId], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  criterion    EvaluationCriterion @relation(fields: [criterionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([evaluationId, criterionId])
+}
+
 model Award {
-  id                  String      @id @default(uuid()) @db.UniqueIdentifier
-  auctionId           String      @db.UniqueIdentifier
-  bidId               String      @unique @db.UniqueIdentifier
-  resolutionNumber    String      @db.VarChar(80)
-  awardedPrice        Decimal     @db.Decimal(18, 4)
-  awardedCapacityMw   Decimal     @db.Decimal(18, 3)
-  justification       String      @db.NVarChar(2000)
-  status              String      @default("BORRADOR") @db.VarChar(20)
-  createdByUserId     String      @db.UniqueIdentifier
-  approvedByUserId    String?     @db.UniqueIdentifier
-  approvedAt          DateTime?
-  createdAt           DateTime    @default(now())
-  updatedAt           DateTime    @updatedAt
-  auction             Auction     @relation(fields: [auctionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  bid                 Bid         @relation(fields: [bidId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  createdBy           User        @relation("AwardCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  approvedBy          User?       @relation("AwardApprover", fields: [approvedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  contract            PPAContract?
+  id                String       @id @default(uuid()) @db.UniqueIdentifier
+  auctionId         String       @db.UniqueIdentifier
+  bidId             String       @unique @db.UniqueIdentifier
+  resolutionNumber  String       @db.VarChar(80)
+  awardedPrice      Decimal      @db.Decimal(18, 4)
+  awardedCapacityMw Decimal      @db.Decimal(18, 3)
+  justification     String       @db.NVarChar(2000)
+  status            String       @default("BORRADOR") @db.VarChar(20)
+  createdByUserId   String       @db.UniqueIdentifier
+  approvedByUserId  String?      @db.UniqueIdentifier
+  approvedAt        DateTime?
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  auction           Auction      @relation(fields: [auctionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  bid               Bid          @relation(fields: [bidId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy         User         @relation("AwardCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  approvedBy        User?        @relation("AwardApprover", fields: [approvedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  contract          PPAContract?
 
   @@unique([auctionId, resolutionNumber])
   @@index([auctionId, status])
 }
 
 model EnergyProject {
-  id                      String        @id @default(uuid()) @db.UniqueIdentifier
-  organizationId          String        @db.UniqueIdentifier
-  createdByUserId         String        @db.UniqueIdentifier
-  name                    String        @db.NVarChar(240)
-  renewableTechnologyCode String        @db.VarChar(60)
-  province                String        @db.NVarChar(120)
-  municipality            String        @db.NVarChar(120)
-  installedCapacityMw     Decimal       @db.Decimal(18, 3)
-  contractedCapacityMw    Decimal       @default(0) @db.Decimal(18, 3)
+  id                      String               @id @default(uuid()) @db.UniqueIdentifier
+  organizationId          String               @db.UniqueIdentifier
+  createdByUserId         String               @db.UniqueIdentifier
+  name                    String               @db.NVarChar(240)
+  renewableTechnologyCode String               @db.VarChar(60)
+  province                String               @db.NVarChar(120)
+  municipality            String               @db.NVarChar(120)
+  installedCapacityMw     Decimal              @db.Decimal(18, 3)
+  contractedCapacityMw    Decimal              @default(0) @db.Decimal(18, 3)
   estimatedOperationDate  DateTime?
   actualOperationDate     DateTime?
-  status                  String        @default("PROPUESTO") @db.VarChar(30)
-  createdAt               DateTime      @default(now())
-  updatedAt               DateTime      @updatedAt
-  organization            Organization  @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  createdBy               User          @relation("ProjectCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  status                  String               @default("PROPUESTO") @db.VarChar(30)
+  createdAt               DateTime             @default(now())
+  updatedAt               DateTime             @updatedAt
+  organization            Organization         @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy               User                 @relation("ProjectCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
   contracts               PPAContract[]
+  events                  EnergyProjectEvent[]
 
   @@index([organizationId, status])
   @@index([renewableTechnologyCode, status])
   @@index([province, status])
 }
 
+model EnergyProjectEvent {
+  id              String        @id @default(uuid()) @db.UniqueIdentifier
+  projectId       String        @db.UniqueIdentifier
+  changedByUserId String        @db.UniqueIdentifier
+  previousStatus  String?       @db.VarChar(30)
+  newStatus       String        @db.VarChar(30)
+  reason          String        @db.NVarChar(1000)
+  createdAt       DateTime      @default(now())
+  project         EnergyProject @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  changedBy       User          @relation("ProjectEventActor", fields: [changedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([projectId, createdAt])
+}
+
 model PPAContract {
-  id                     String               @id @default(uuid()) @db.UniqueIdentifier
-  contractNumber         String               @unique @db.VarChar(80)
-  awardId                String               @unique @db.UniqueIdentifier
-  projectId              String               @db.UniqueIdentifier
-  organizationId         String               @db.UniqueIdentifier
-  createdByUserId        String               @db.UniqueIdentifier
-  approvedByUserId       String?              @db.UniqueIdentifier
-  status                 String               @default("BORRADOR") @db.VarChar(30)
-  signatureDate          DateTime?
-  startDate              DateTime
-  endDate                DateTime
-  price                  Decimal              @db.Decimal(18, 4)
-  currencyCode           String               @db.VarChar(10)
-  capacityMw             Decimal              @db.Decimal(18, 3)
-  committedEnergyMwh     Decimal              @db.Decimal(18, 3)
-  conditions             String?              @db.NVarChar(Max)
-  approvedAt             DateTime?
-  createdAt              DateTime             @default(now())
-  updatedAt              DateTime             @updatedAt
-  award                  Award                @relation(fields: [awardId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  project                EnergyProject        @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  organization           Organization         @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  createdBy              User                 @relation("ContractCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  approvedBy             User?                @relation("ContractApprover", fields: [approvedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  versions               PPAContractVersion[]
+  id                 String               @id @default(uuid()) @db.UniqueIdentifier
+  contractNumber     String               @unique @db.VarChar(80)
+  awardId            String               @unique @db.UniqueIdentifier
+  projectId          String               @db.UniqueIdentifier
+  organizationId     String               @db.UniqueIdentifier
+  createdByUserId    String               @db.UniqueIdentifier
+  approvedByUserId   String?              @db.UniqueIdentifier
+  status             String               @default("BORRADOR") @db.VarChar(30)
+  signatureDate      DateTime?
+  startDate          DateTime
+  endDate            DateTime
+  price              Decimal              @db.Decimal(18, 4)
+  currencyCode       String               @db.VarChar(10)
+  capacityMw         Decimal              @db.Decimal(18, 3)
+  committedEnergyMwh Decimal              @db.Decimal(18, 3)
+  conditions         String?              @db.NVarChar(Max)
+  approvedAt         DateTime?
+  createdAt          DateTime             @default(now())
+  updatedAt          DateTime             @updatedAt
+  award              Award                @relation(fields: [awardId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  project            EnergyProject        @relation(fields: [projectId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization       Organization         @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  createdBy          User                 @relation("ContractCreator", fields: [createdByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  approvedBy         User?                @relation("ContractApprover", fields: [approvedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  versions           PPAContractVersion[]
+  events             PPAContractEvent[]
 
   @@index([organizationId, status])
   @@index([endDate, status])
+}
+
+model PPAContractEvent {
+  id              String      @id @default(uuid()) @db.UniqueIdentifier
+  contractId      String      @db.UniqueIdentifier
+  changedByUserId String      @db.UniqueIdentifier
+  previousStatus  String?     @db.VarChar(30)
+  newStatus       String      @db.VarChar(30)
+  reason          String      @db.NVarChar(1000)
+  createdAt       DateTime    @default(now())
+  contract        PPAContract @relation(fields: [contractId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  changedBy       User        @relation("ContractEventActor", fields: [changedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([contractId, createdAt])
 }
 
 model PPAContractVersion {
@@ -359,36 +532,36 @@ model Permission {
 }
 
 model UserRole {
-  userId    String   @db.UniqueIdentifier
-  roleId    String   @db.UniqueIdentifier
+  userId     String   @db.UniqueIdentifier
+  roleId     String   @db.UniqueIdentifier
   assignedAt DateTime @default(now())
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role       Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([userId, roleId])
 }
 
 model RolePermission {
-  roleId      String     @db.UniqueIdentifier
+  roleId       String     @db.UniqueIdentifier
   permissionId String     @db.UniqueIdentifier
-  role        Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
-  permission  Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@id([roleId, permissionId])
 }
 
 model RefreshToken {
-  id          String    @id @default(uuid()) @db.UniqueIdentifier
-  userId      String    @db.UniqueIdentifier
-  familyId    String    @db.UniqueIdentifier
-  jti         String    @unique @db.UniqueIdentifier
-  tokenHash   String    @unique @db.Char(64)
-  expiresAt   DateTime
-  revokedAt   DateTime?
-  ipAddress   String?   @db.VarChar(64)
-  userAgent   String?   @db.NVarChar(500)
-  createdAt   DateTime  @default(now())
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id        String    @id @default(uuid()) @db.UniqueIdentifier
+  userId    String    @db.UniqueIdentifier
+  familyId  String    @db.UniqueIdentifier
+  jti       String    @unique @db.UniqueIdentifier
+  tokenHash String    @unique @db.Char(64)
+  expiresAt DateTime
+  revokedAt DateTime?
+  ipAddress String?   @db.VarChar(64)
+  userAgent String?   @db.NVarChar(500)
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, familyId])
   @@index([expiresAt, revokedAt])
@@ -496,4 +669,31 @@ model Notification {
   @@unique([userId, sourceKey])
   @@index([userId, readAt, createdAt])
   @@index([organizationId, type, createdAt])
+}
+
+model AIAnalysis {
+  id                   String        @id @default(uuid()) @db.UniqueIdentifier
+  documentId           String?       @db.UniqueIdentifier
+  organizationId       String?       @db.UniqueIdentifier
+  requestedByUserId    String        @db.UniqueIdentifier
+  reviewedByUserId     String?       @db.UniqueIdentifier
+  operation            String        @db.VarChar(40)
+  status               String        @default("COMPLETED") @db.VarChar(20)
+  provider             String        @db.VarChar(60)
+  inputHash            String        @db.Char(64)
+  sourceReferencesJson String        @db.NVarChar(Max)
+  resultJson           String        @db.NVarChar(Max)
+  confidence           Decimal?      @db.Decimal(5, 4)
+  reviewDecision       String?       @db.VarChar(30)
+  reviewNotes          String?       @db.NVarChar(1000)
+  reviewedAt           DateTime?
+  createdAt            DateTime      @default(now())
+  document             Document?     @relation(fields: [documentId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  organization         Organization? @relation(fields: [organizationId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  requestedBy          User          @relation("AIAnalysisRequester", fields: [requestedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reviewedBy           User?         @relation("AIAnalysisReviewer", fields: [reviewedByUserId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([organizationId, createdAt])
+  @@index([documentId, operation])
+  @@index([status, reviewDecision])
 }

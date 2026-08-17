@@ -4,4 +4,4 @@ coverage
 package-lock.json
 apps/api/prisma/migrations
 apps/web/public/branding
-
+apps/ai-service
