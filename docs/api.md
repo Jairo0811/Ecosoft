@@ -79,8 +79,22 @@ publicados donde su organización figure como participante habilitado. Las trans
 cambios de requisitos/participantes y eventos manuales generan auditoría; el historial propio de
 la subasta es de solo anexado desde la aplicación.
 
-Los contratos de Bids, Evaluations, Awards y PPAContracts se agregarán con su fase. El versionado
-evita romper clientes cuando el producto evolucione.
+## Fases 4 a 6
+
+| Recurso                   | Operaciones principales                         | Permiso base              |
+| ------------------------- | ----------------------------------------------- | ------------------------- |
+| `/bids`                   | listar, crear y actualizar borrador             | `bids.read/submit`        |
+| `/bids/:id/submit`        | validar expediente, sellar hash y enviar        | `bids.submit`             |
+| `/documents`              | listar y cargar documento privado               | `documents.read/manage`   |
+| `/documents/:id/versions` | agregar una versión inmutable                   | `documents.manage`        |
+| `/evaluations/matrices`   | configurar y publicar criterios ponderados      | `evaluations.manage`      |
+| `/evaluations`            | listar y enviar evaluación técnica o financiera | `evaluations.read/submit` |
+| `/evaluations/awards`     | crear y aprobar una adjudicación                | `awards.manage/approve`   |
+| `/projects`               | registrar y transicionar proyectos              | `projects.read/manage`    |
+| `/contracts`              | crear, versionar y transicionar PPA             | `contracts.read/create`   |
+
+El backend fuerza el ámbito organizacional. Las versiones de ofertas, documentos y contratos, y
+los historiales de proyectos/PPA, son de solo anexado y están protegidos por triggers SQL Server.
 
 ## Fase 7
 
@@ -128,3 +142,14 @@ Fase 5 y no introduce reglas regulatorias reales.
 Las notificaciones se deduplican por usuario y clave de origen. El backend fuerza `userId` desde
 la sesión para evitar IDOR y genera alertas de cierres en siete días y contratos próximos a vencer
 en noventa días. Los adaptadores de correo y tiempo real son puertos sin proveedor configurado.
+
+## Fase 9
+
+| Método | Ruta             | Acceso      | Resultado                            |
+| ------ | ---------------- | ----------- | ------------------------------------ |
+| GET    | `/ai`            | `ai.use`    | análisis visibles por organización   |
+| POST   | `/ai/ocr`        | `ai.use`    | texto, fuente, proveedor y confianza |
+| POST   | `/ai/analyze`    | `ai.use`    | resumen o señales de anomalía        |
+| PATCH  | `/ai/:id/review` | `ai.review` | revisión humana con notas            |
+
+La API no expone una ruta que permita a la IA adjudicar, aprobar o ejecutar cambios de dominio.

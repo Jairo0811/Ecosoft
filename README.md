@@ -14,12 +14,12 @@
 
 <p align="center">
   <img src="https://img.shields.io/badge/Grupo-%234-128C7E?style=for-the-badge" alt="Grupo 4">
-  <img src="https://img.shields.io/badge/estado-En_desarrollo-F5A623?style=for-the-badge" alt="Estado en desarrollo">
+  <img src="https://img.shields.io/badge/estado-MVP_completo-18A96F?style=for-the-badge" alt="MVP completo">
 </p>
 
 <p align="center">
   <a href="https://github.com/Jairo0811/Ecosoft/actions/workflows/ci.yml"><img src="https://github.com/Jairo0811/Ecosoft/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/fases-0_a_3_y_7-18A96F" alt="Fases 0 a 3 y 7 implementadas">
+  <img src="https://img.shields.io/badge/fases-0_a_10-18A96F" alt="Fases 0 a 10 implementadas">
   <img src="https://img.shields.io/badge/arquitectura-Monolito_modular-0F172A" alt="Monolito modular">
   <img src="https://img.shields.io/badge/base_de_datos-SQL_Server_2022-CC2927?logo=microsoftsqlserver&logoColor=white" alt="SQL Server 2022">
   <img src="https://img.shields.io/badge/licencia-MIT-2EA44F" alt="Licencia MIT">
@@ -85,8 +85,9 @@ analítica.
 
 ## ✅ Estado actual
 
-Las **Fases 0, 1, 2, 3 y 7** están implementadas e integradas en `main`. La **Fase 8** está
-implementada en la rama de trabajo, pendiente de revisión e integración.
+Las **Fases 0 a 10** están implementadas como un MVP integral. La entrega incluye dominio,
+autorización, interfaz, migraciones, pruebas, documentación y CI; la publicación en infraestructura
+productiva y los adaptadores cloud requieren credenciales y aprobación del operador.
 
 ### 🔐 Identidad y seguridad
 
@@ -159,18 +160,18 @@ implementada en la rama de trabajo, pendiente de revisión e integración.
 
 ## 🧩 Módulos del producto
 
-| Módulo                            | Responsabilidad                                        |        Fase | Estado          |
-| --------------------------------- | ------------------------------------------------------ | ----------: | --------------- |
-| Auth, Users, Roles y Permissions  | Identidad, sesiones, RBAC y administración             |         1–2 | ✅ Implementado |
-| Organizations y Participants      | CNE, empresas y participantes autorizados              |           2 | ✅ Implementado |
-| Auctions y Calendar               | Licitaciones, reglas, cronograma y eventos auditados   |           3 | ✅ Implementado |
-| Bids y Documents                  | Ofertas, versiones, confidencialidad y documentos      |           4 | ⏳ Planificado  |
-| Evaluations y Awards              | Matrices configurables, puntuación y adjudicación      |           5 | ⏳ Planificado  |
-| PPAContracts y EnergyProjects     | Contratos, anexos, renovaciones y proyectos renovables |           6 | ⏳ Planificado  |
-| Reports y Analytics               | KPIs, tendencias, filtros y exportaciones              |           7 | ✅ Implementado |
-| Audit, Regulatory y Notifications | Gobierno, normativa, trazabilidad y alertas            |           8 | ✅ Implementado |
-| AI y OCR                          | Análisis consultivo, anomalías, resumen y extracción   |           9 | ⏳ Planificado  |
-| Administration                    | Configuración operativa y catálogos                    | Transversal | 🟡 Parcial      |
+| Módulo                            | Responsabilidad                                      |        Fase | Estado          |
+| --------------------------------- | ---------------------------------------------------- | ----------: | --------------- |
+| Auth, Users, Roles y Permissions  | Identidad, sesiones, RBAC y administración           |         1–2 | ✅ Implementado |
+| Organizations y Participants      | CNE, empresas y participantes autorizados            |           2 | ✅ Implementado |
+| Auctions y Calendar               | Licitaciones, reglas, cronograma y eventos auditados |           3 | ✅ Implementado |
+| Bids y Documents                  | Ofertas, versiones, confidencialidad y documentos    |           4 | ✅ Implementado |
+| Evaluations y Awards              | Matrices configurables, puntuación y adjudicación    |           5 | ✅ Implementado |
+| PPAContracts y EnergyProjects     | Contratos, versiones, estados y proyectos renovables |           6 | ✅ Implementado |
+| Reports y Analytics               | KPIs, tendencias, filtros y exportaciones            |           7 | ✅ Implementado |
+| Audit, Regulatory y Notifications | Gobierno, normativa, trazabilidad y alertas          |           8 | ✅ Implementado |
+| AI y OCR                          | Análisis consultivo, anomalías, resumen y extracción |           9 | ✅ Implementado |
+| Administration                    | Configuración operativa y catálogos                  | Transversal | ✅ Implementado |
 
 ## 👥 Roles iniciales
 
@@ -238,11 +239,11 @@ permisos y, cuando corresponde, la pertenencia a la organización para prevenir 
 
 - Microsoft SQL Server 2022 como sistema de registro.
 - Prisma Migrate para evolución controlada del esquema.
-- Azure Blob Storage planificado para documentos; SQL Server conservará metadata, hashes y
-  referencias.
+- Almacenamiento privado local para desarrollo, desacoplado tras un adaptador; SQL Server conserva
+  metadata, versiones, hashes y referencias. Azure Blob es el adaptador productivo previsto.
 - Fechas de backend y base de datos en UTC.
 
-### 🤖 Inteligencia artificial y OCR — Fase 9
+### 🤖 Inteligencia artificial y OCR
 
 <p align="center">
   <img src="https://skillicons.dev/icons?i=python,fastapi,azure" alt="Python, FastAPI y Azure">
@@ -250,8 +251,9 @@ permisos y, cuando corresponde, la pertenencia a la organización para prevenir 
 </p>
 
 - Servicio Python/FastAPI aislado mediante interfaces.
-- OpenAI API o Azure OpenAI como proveedor sustituible.
-- Azure AI Document Intelligence como proveedor OCR principal, también abstraído.
+- Proveedor local determinista incluido para desarrollo, pruebas y demostración verificable.
+- OpenAI/Azure OpenAI y Azure AI Document Intelligence quedan como adaptadores productivos
+  sustituibles, sujetos a credenciales y evaluación de privacidad.
 - IA consultiva: nunca adjudica subastas, aprueba contratos ni modifica información oficial.
 - Respuestas sujetas a permisos, confidencialidad, fuentes internas y trazabilidad.
 
@@ -268,7 +270,7 @@ permisos y, cuando corresponde, la pertenencia a la organización para prevenir 
 | Backend                   | Jest y Supertest                     |
 | Frontend                  | Vitest y React Testing Library       |
 | Calidad                   | ESLint, Prettier y TypeScript strict |
-| E2E planificado           | Playwright                           |
+| E2E y accesibilidad       | Playwright y axe-core                |
 | Seguridad de dependencias | `npm audit` en CI                    |
 
 ---
@@ -285,8 +287,8 @@ flowchart TD
     API --> Domain["Módulos de dominio"]
     Domain --> Prisma["Prisma ORM"]
     Prisma --> SQL["SQL Server 2022"]
-    Domain -.-> Blob["Azure Blob Storage · Fase 4"]
-    Domain -.-> AI["FastAPI · IA/OCR · Fase 9"]
+    Domain --> Files["Almacenamiento documental privado"]
+    Domain --> AI["FastAPI · IA/OCR"]
     API --> Audit["Auditoría"]
 ```
 
@@ -302,8 +304,9 @@ Request → Security Middleware → Permission/Organization Scope → Zod → Do
 EcoSoft/
 ├── .github/workflows/       # Integración continua
 ├── apps/
+│   ├── ai-service/          # FastAPI, proveedor IA/OCR y pruebas Python
 │   ├── api/                 # API Express, Prisma, módulos y pruebas Jest
-│   └── web/                 # React, Material UI y pruebas Vitest
+│   └── web/                 # React, Material UI, Vitest y Playwright
 ├── packages/
 │   └── shared/              # Contratos y constantes compartidas
 ├── docs/
@@ -315,8 +318,8 @@ EcoSoft/
 └── README.md
 ```
 
-`apps/ai-service` se incorporará en la Fase 9, cuando existan contratos de IA concretos. No se crea
-un servicio vacío antes de necesitarlo.
+`apps/ai-service` expone contratos concretos de OCR, resumen y revisión de anomalías, sin autoridad
+para modificar decisiones oficiales.
 
 ## 🧩 Principios de ingeniería
 
@@ -355,7 +358,7 @@ los secretos JWT de ejemplo.
 ### 2️⃣ Iniciar SQL Server
 
 ```bash
-docker compose up -d sqlserver
+docker compose up -d sqlserver ai-service
 docker compose ps
 ```
 
@@ -384,6 +387,7 @@ npm run dev
 | Swagger        | `http://localhost:4000/api/docs`            |
 | Liveness       | `http://localhost:4000/api/v1/health/live`  |
 | Readiness      | `http://localhost:4000/api/v1/health/ready` |
+| IA/OCR         | `http://localhost:8000`                     |
 
 ## 🔑 Acceso inicial de desarrollo
 
@@ -411,6 +415,9 @@ El repositorio no incluye una contraseña predeterminada. El seed se detiene si
 | `WEB_ORIGIN`               | Origen permitido por CORS                  |
 | `VITE_API_URL`             | Base URL consumida por el frontend         |
 | `LOG_LEVEL`                | Nivel de logging de Pino                   |
+| `DOCUMENT_STORAGE_PATH`    | Directorio privado de documentos           |
+| `AI_SERVICE_URL`           | URL interna del servicio FastAPI           |
+| `AI_SERVICE_TIMEOUT_MS`    | Tiempo máximo para IA/OCR                  |
 
 Nunca almacenes secretos reales en Git. Antes de producción se requiere un gestor de secretos,
 TLS en el borde y credenciales de mínimo privilegio para base de datos.
@@ -425,6 +432,7 @@ npm run lint
 npm run typecheck
 npm test
 npm run build
+npm run test:e2e --workspace @ecosoft/web
 ```
 
 Cada pull request ejecuta:
@@ -438,8 +446,7 @@ Cada pull request ejecuta:
 7. auditoría de dependencias de producción;
 8. migraciones, seed y readiness contra **SQL Server 2022 real**.
 
-Una fase no se considera terminada hasta que código, tipos, lint, pruebas, migraciones, SQL Server,
-autorización, OpenAPI, frontend, documentación y CI estén verdes.
+La CI también valida el servicio FastAPI, su health check y pruebas E2E/accesibilidad en Chromium.
 
 ## 🛡️ Seguridad
 
@@ -468,13 +475,13 @@ privacidad.
 |    1 | Foundation, Authentication y RBAC                   | ✅ Completada   |
 |    2 | Organizaciones, participantes y usuarios            | ✅ Completada   |
 |    3 | Licitaciones, subastas y calendario                 | ✅ Completada   |
-|    4 | Ofertas inmutables y documentos                     | ⏳ Pendiente    |
-|    5 | Evaluaciones configurables y adjudicaciones         | ⏳ Pendiente    |
-|    6 | Contratos PPA y proyectos energéticos               | ⏳ Pendiente    |
+|    4 | Ofertas inmutables y documentos                     | ✅ Implementada |
+|    5 | Evaluaciones configurables y adjudicaciones         | ✅ Implementada |
+|    6 | Contratos PPA y proyectos energéticos               | ✅ Implementada |
 |    7 | Dashboard, analítica y reportes                     | ✅ Implementada |
 |    8 | Auditoría ampliada, regulación y notificaciones     | ✅ Implementada |
-|    9 | IA, OCR y análisis predictivo con aprobación humana | ▶️ Siguiente    |
-|   10 | Hardening, QA, WCAG 2.2 AA, CI/CD y documentación   | ⏳ Pendiente    |
+|    9 | IA, OCR y análisis asistivo con aprobación humana   | ✅ Implementada |
+|   10 | Hardening, QA, accesibilidad, CI/CD y documentación | ✅ Implementada |
 
 El proyecto utiliza Scrum y trata cada fase como un incremento potencialmente entregable. Su
 diseño considera una duración académica máxima de 12 meses, presupuesto limitado, protección de
@@ -524,16 +531,16 @@ Los integrantes se presentan en orden ascendente de matrícula.
 
 ## 🧭 Continuidad académica
 
-**EcoSoft** forma parte de una continuidad académica por **compañera recurrente** con [**MediCore**](https://github.com/Jairo0811/MediCore). 
+**EcoSoft** forma parte de una continuidad académica por **compañera recurrente** con [**MediCore**](https://github.com/Jairo0811/MediCore).
 
 La relación es **formativa y cronológica**: los proyectos corresponden a asignaturas y equipos diferentes, pero **Emely Marie Castillo Rivera (A00110380)** coincidió con Francis Jairo Matías Rosario en ambos proyectos durante dos períodos consecutivos de 2026.
 
 La primera coincidencia documentada ocurrió en **Enero - Abril de 2026** en **Desarrollo de Software con Tecnología Propietaria 1 (ISO-605)** con MediCore. Posteriormente, en **Mayo - Agosto de 2026**, ambos volvieron a formar parte del mismo equipo académico en **Proyecto de Software 1 (ISO-705)** con EcoSoft.
 
-| Orden | Asignatura | Proyecto | Período | Compañera recurrente |
-|---:|---|---|---|---|
-| 1 | Desarrollo de Software con Tecnología Propietaria 1 (ISO-605) | [**MediCore**](https://github.com/Jairo0811/MediCore) | Enero - Abril 2026 | **Emely Marie Castillo Rivera — A00110380** |
-| 2 | Proyecto de Software 1 (ISO-705) | **EcoSoft** | Mayo - Agosto 2026 | **Emely Marie Castillo Rivera — A00110380** |
+| Orden | Asignatura                                                    | Proyecto                                              | Período            | Compañera recurrente                        |
+| ----: | ------------------------------------------------------------- | ----------------------------------------------------- | ------------------ | ------------------------------------------- |
+|     1 | Desarrollo de Software con Tecnología Propietaria 1 (ISO-605) | [**MediCore**](https://github.com/Jairo0811/MediCore) | Enero - Abril 2026 | **Emely Marie Castillo Rivera — A00110380** |
+|     2 | Proyecto de Software 1 (ISO-705)                              | **EcoSoft**                                           | Mayo - Agosto 2026 | **Emely Marie Castillo Rivera — A00110380** |
 
 Vistos en conjunto, ambos proyectos documentan una continuidad real entre compañeros a lo largo de dos cuatrimestres consecutivos. La coincidencia se considera verificada porque se mantiene el **mismo nombre completo y la misma matrícula A00110380**; no se infieren relaciones por similitud de nombres o matrículas aisladas.
 

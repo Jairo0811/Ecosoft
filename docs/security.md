@@ -18,19 +18,19 @@
 
 ## Modelo de amenazas resumido
 
-| Riesgo                       | Control principal                                               |
-| ---------------------------- | --------------------------------------------------------------- |
-| robo de refresh token        | rotación, hash, expiración y revocación                         |
-| escalamiento de privilegios  | permiso backend por ruta y pruebas negativas                    |
-| IDOR                         | consultas limitadas por organización y permiso                  |
-| inyección SQL                | Prisma, DTOs validados y prohibición de SQL generado por IA     |
-| documento malicioso          | allowlist, tamaño, inspección y almacenamiento privado (Fase 4) |
-| filtración de ofertas        | reglas de visibilidad por estado y auditoría (Fase 4)           |
-| fuerza bruta                 | rate limiting y bloqueo temporal por intentos fallidos          |
-| alteración de trazabilidad   | triggers inmutables y hash SHA-256 de cada evento nuevo         |
-| secretos dentro de auditoría | redacción recursiva antes de persistir                          |
-| IDOR en notificaciones       | `userId` derivado de la sesión en lectura y actualización       |
-| normativa no autorizada      | autoridad aprobada, RBAC y transiciones justificadas            |
+| Riesgo                       | Control principal                                           |
+| ---------------------------- | ----------------------------------------------------------- |
+| robo de refresh token        | rotación, hash, expiración y revocación                     |
+| escalamiento de privilegios  | permiso backend por ruta y pruebas negativas                |
+| IDOR                         | consultas limitadas por organización y permiso              |
+| inyección SQL                | Prisma, DTOs validados y prohibición de SQL generado por IA |
+| documento malicioso          | allowlist MIME, límite 5 MB y almacenamiento privado        |
+| filtración de ofertas        | ámbito organizacional y ocultamiento financiero por rol     |
+| fuerza bruta                 | rate limiting y bloqueo temporal por intentos fallidos      |
+| alteración de trazabilidad   | triggers inmutables y hash SHA-256 de cada evento nuevo     |
+| secretos dentro de auditoría | redacción recursiva antes de persistir                      |
+| IDOR en notificaciones       | `userId` derivado de la sesión en lectura y actualización   |
+| normativa no autorizada      | autoridad aprobada, RBAC y transiciones justificadas        |
 
 ## Gobierno y evidencia
 
@@ -42,8 +42,12 @@
 - Una regulación vigente deja de ser editable; cualquier cambio posterior se expresa mediante
   estado e historial.
 - Los consumidores empresariales solo reciben alertas de sus participaciones y contratos.
+- Versiones de ofertas, documentos y PPA e historiales de proyecto/contrato tienen triggers que
+  rechazan modificación o eliminación.
+- Resultados de IA conservan hash de entrada, proveedor, fuentes y revisión humana.
 
 ## Pendiente antes de producción
 
-Azure Key Vault, gestión de llaves, TLS en el borde, análisis antivirus, política CSP afinada,
-pruebas IDOR completas, retención legal, respaldo/restauración y revisión formal de privacidad.
+Azure Key Vault, gestión de llaves, TLS en el borde, análisis antivirus/CDR, política CSP afinada,
+retención legal, restauración ensayada y revisión formal de privacidad. Estos controles dependen de
+infraestructura y gobierno del entorno productivo.

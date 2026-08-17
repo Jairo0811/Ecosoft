@@ -14,7 +14,7 @@ caso operativo completo y aumentaría el riesgo de revelar información competit
 ## Decisión
 
 El módulo Auctions publica sus cambios de estado a través del puerto `AuctionRealtimePublisher`.
-La implementación actual es local y sin transporte. En la Fase 4 se incorporará un adaptador
+La implementación actual es local y sin transporte. En un incremento posterior se incorporará un adaptador
 Socket.IO con autenticación, salas por subasta y organización, filtros de payload y auditoría.
 
 Los eventos persistentes de `AuctionEvent` siguen siendo la fuente trazable. El transporte en

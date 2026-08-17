@@ -24,6 +24,12 @@ describe('EcoSoft API', () => {
       'audit',
       'regulatory',
       'notifications',
+      'bids',
+      'documents',
+      'evaluations',
+      'projects',
+      'contracts',
+      'ai',
     ]) {
       const response = await request(createApp()).get(`/api/v1/${resource}`);
       const body = response.body as { code: string };

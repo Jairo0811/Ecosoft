@@ -4,7 +4,6 @@ import { AppLayout } from './layout/AppLayout';
 import { DashboardPage } from './pages/DashboardPage';
 import { CatalogsPage } from './pages/CatalogsPage';
 import { LoginPage } from './pages/LoginPage';
-import { ModulePlaceholderPage } from './pages/ModulePlaceholderPage';
 import { OrganizationsPage } from './pages/OrganizationsPage';
 import { ActivateAccountPage } from './pages/ActivateAccountPage';
 import { UsersPage } from './pages/UsersPage';
@@ -14,6 +13,10 @@ import { ReportsPage } from './pages/ReportsPage';
 import { AuditPage } from './pages/AuditPage';
 import { RegulatoryPage } from './pages/RegulatoryPage';
 import { NotificationsPage } from './pages/NotificationsPage';
+import { OffersDocumentsPage } from './pages/OffersDocumentsPage';
+import { EvaluationsPage } from './pages/EvaluationsPage';
+import { ContractsProjectsPage } from './pages/ContractsProjectsPage';
+import { AIPage } from './pages/AIPage';
 
 export function App() {
   return (
@@ -24,10 +27,10 @@ export function App() {
         <Route element={<AppLayout />}>
           <Route index element={<DashboardPage />} />
           <Route path="subastas" element={<AuctionsPage />} />
-          <Route
-            path="contratos"
-            element={<ModulePlaceholderPage title="Contratos PPA" phase={6} />}
-          />
+          <Route path="ofertas" element={<OffersDocumentsPage />} />
+          <Route path="evaluaciones" element={<EvaluationsPage />} />
+          <Route path="contratos" element={<ContractsProjectsPage />} />
+          <Route path="ia" element={<AIPage />} />
           <Route path="participantes" element={<OrganizationsPage />} />
           <Route path="catalogos" element={<CatalogsPage />} />
           <Route path="reportes" element={<ReportsPage />} />
