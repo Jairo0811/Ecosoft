@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="apps/web/public/branding/logo-horizontal-dark.png" width="860" alt="EcoSoft Solutions S.R.L.">
+  <img src="apps/web/public/branding/EcoSoft.png" width="860" alt="EcoSoft Solutions S.R.L.">
 </p>
 
 <p align="center">
