@@ -1,7 +1,9 @@
 <p align="center">
   <img src="apps/web/public/branding/EcoSoft.png" width="860" alt="EcoSoft Solutions S.R.L.">
 </p>
-
+<p align="center">
+  <img src="https://img.shields.io/badge/UNAPEC-ISO--705-003B70?style=for-the-badge" alt="UNAPEC ISO-705">
+</p>
 <p align="center">
   <strong>Sistema de Gestión de Subastas Energéticas y Contratos PPA</strong>
 </p>
@@ -11,7 +13,6 @@
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/UNAPEC-ISO--705-003B70?style=for-the-badge" alt="UNAPEC ISO-705">
   <img src="https://img.shields.io/badge/Grupo-%234-128C7E?style=for-the-badge" alt="Grupo 4">
   <img src="https://img.shields.io/badge/estado-En_desarrollo-F5A623?style=for-the-badge" alt="Estado en desarrollo">
 </p>
