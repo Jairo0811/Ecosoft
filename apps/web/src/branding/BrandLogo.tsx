@@ -1,29 +1,25 @@
 import { Box } from '@mui/material';
 
-export function BrandLogo({ maxWidth = 420 }: { maxWidth?: number }) {
+interface BrandLogoProps {
+  maxWidth?: number;
+  decorative?: boolean;
+}
+
+export function BrandLogo({ maxWidth = 420, decorative = false }: BrandLogoProps) {
   return (
     <Box
+      component="img"
+      src="/branding/EcoSoft.png"
+      alt={decorative ? '' : 'EcoSoft Solutions S.R.L.'}
+      aria-hidden={decorative || undefined}
       sx={{
-        position: 'relative',
-        overflow: 'hidden',
+        display: 'block',
         width: '100%',
         maxWidth,
-        aspectRatio: '1148 / 376',
+        height: 'auto',
+        objectFit: 'contain',
+        filter: 'drop-shadow(0 8px 22px rgba(0,108,255,.18))',
       }}
-    >
-      <Box
-        component="img"
-        src="/branding/logo-horizontal-dark.png"
-        alt="EcoSoft Solutions S.R.L."
-        sx={{
-          display: 'block',
-          position: 'absolute',
-          width: '133.8%',
-          maxWidth: 'none',
-          left: '-17.7%',
-          top: '-80.6%',
-        }}
-      />
-    </Box>
+    />
   );
 }
