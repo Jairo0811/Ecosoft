@@ -18,12 +18,15 @@ import { Navigate, useLocation, useNavigate } from 'react-router';
 import { z } from 'zod';
 import { useAuth } from '../auth/AuthContext';
 import { BrandLogo } from '../branding/BrandLogo';
+import { brandColors, brandGradients } from '../theme/brand';
 
 const schema = z.object({
   email: z.email('Ingrese un correo válido.'),
   password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres.'),
 });
 type LoginForm = z.infer<typeof schema>;
+
+const brandPillars = ['Tecnología', 'Eficiencia', 'Sostenibilidad'] as const;
 
 export function LoginPage() {
   const { user, login } = useAuth();
@@ -62,68 +65,137 @@ export function LoginPage() {
           display: { xs: 'none', md: 'flex' },
           position: 'relative',
           overflow: 'hidden',
-          bgcolor: '#073B4C',
+          background: brandGradients.hero,
           color: 'white',
-          p: 8,
+          p: { md: 6, lg: 8 },
           flexDirection: 'column',
           justifyContent: 'space-between',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            inset: 0,
+            opacity: 0.34,
+            backgroundImage:
+              'linear-gradient(rgba(0,183,255,.10) 1px, transparent 1px), linear-gradient(90deg, rgba(0,183,255,.10) 1px, transparent 1px)',
+            backgroundSize: '72px 72px',
+            maskImage: 'linear-gradient(to bottom right, black, transparent 72%)',
+            pointerEvents: 'none',
+          },
           '&::after': {
             content: '""',
             position: 'absolute',
-            width: 520,
-            height: 520,
+            width: 560,
+            height: 560,
             borderRadius: '50%',
-            bgcolor: 'rgba(40,169,107,.17)',
-            right: -140,
-            bottom: -210,
+            background: 'radial-gradient(circle, rgba(32,200,51,.16), transparent 68%)',
+            right: -180,
+            bottom: -240,
+            pointerEvents: 'none',
           },
         }}
       >
-        <Box>
-          <BrandLogo maxWidth={430} />
+        <Box zIndex={1}>
+          <BrandLogo maxWidth={480} />
         </Box>
-        <Box zIndex={1} maxWidth={580}>
-          <BoltOutlined sx={{ color: '#72DDA5', fontSize: 52, mb: 2 }} />
-          <Typography variant="h2" fontSize={{ md: 48, lg: 58 }} lineHeight={1.08}>
-            Transparencia para el futuro energético.
+        <Box zIndex={1} maxWidth={620}>
+          <Box
+            display="grid"
+            sx={{
+              placeItems: 'center',
+              width: 52,
+              height: 52,
+              borderRadius: 2.5,
+              mb: 2.5,
+              color: brandColors.lime500,
+              background: 'rgba(0,108,255,.15)',
+              border: '1px solid rgba(0,183,255,.24)',
+            }}
+          >
+            <BoltOutlined sx={{ fontSize: 32 }} />
+          </Box>
+          <Typography variant="h2" fontSize={{ md: 46, lg: 58 }} lineHeight={1.08}>
+            Transparencia para el{' '}
+            <Box
+              component="span"
+              sx={{
+                backgroundImage: brandGradients.primary,
+                backgroundClip: 'text',
+                WebkitBackgroundClip: 'text',
+                color: 'transparent',
+              }}
+            >
+              futuro energético.
+            </Box>
           </Typography>
-          <Typography mt={2.5} fontSize={18} sx={{ color: 'rgba(255,255,255,.72)' }}>
+          <Typography mt={2.5} fontSize={18} sx={{ color: 'rgba(247,251,255,.72)' }}>
             Gestión segura y trazable de subastas renovables y contratos PPA para la República
             Dominicana.
           </Typography>
+          <Stack direction="row" spacing={1.25} mt={4} flexWrap="wrap" useFlexGap>
+            {brandPillars.map((pillar) => (
+              <Box
+                key={pillar}
+                px={1.6}
+                py={0.8}
+                borderRadius={999}
+                sx={{
+                  border: '1px solid rgba(0,183,255,.25)',
+                  bgcolor: 'rgba(4,17,38,.56)',
+                  color: 'rgba(247,251,255,.86)',
+                  fontSize: 13,
+                  fontWeight: 700,
+                  letterSpacing: '.02em',
+                }}
+              >
+                {pillar}
+              </Box>
+            ))}
+          </Stack>
         </Box>
-        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,.55)' }}>
+        <Typography variant="caption" zIndex={1} sx={{ color: 'rgba(247,251,255,.55)' }}>
           EcoSoft Solutions S.R.L. · Comisión Nacional de Energía
         </Typography>
       </Box>
-      <Box display="grid" sx={{ placeItems: 'center' }} p={2.5}>
-        <Card sx={{ width: '100%', maxWidth: 480, boxShadow: { xs: 'none', md: undefined } }}>
+      <Box
+        display="grid"
+        sx={{
+          placeItems: 'center',
+          background:
+            'radial-gradient(circle at 82% 16%, rgba(0,183,255,.08), transparent 28%), radial-gradient(circle at 15% 90%, rgba(32,200,51,.07), transparent 24%)',
+        }}
+        p={2.5}
+      >
+        <Card sx={{ width: '100%', maxWidth: 500, boxShadow: { xs: 'none', md: undefined } }}>
           <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
             <Box display={{ md: 'none' }} mb={4}>
-              <Typography variant="h4" color="primary" fontWeight={850}>
-                EcoSoft
-              </Typography>
+              <BrandLogo maxWidth={300} />
             </Box>
             <Stack direction="row" spacing={1.5} alignItems="center" mb={1}>
               <Box
                 display="grid"
                 sx={{
                   placeItems: 'center',
-                  width: 44,
-                  height: 44,
-                  borderRadius: 2,
-                  bgcolor: 'primary.main',
+                  width: 46,
+                  height: 46,
+                  borderRadius: 2.25,
+                  backgroundImage: brandGradients.primary,
                   color: 'white',
+                  boxShadow: '0 8px 20px rgba(0,108,255,.22)',
                 }}
               >
                 <LockOutlined />
               </Box>
-              <Typography variant="h4" fontSize={30}>
-                Bienvenido
-              </Typography>
+              <Box>
+                <Typography variant="h4" fontSize={30}>
+                  Bienvenido
+                </Typography>
+                <Typography variant="caption" color="primary.light" fontWeight={700}>
+                  Plataforma institucional segura
+                </Typography>
+              </Box>
             </Stack>
-            <Typography color="text.secondary" mb={4}>
-              Ingrese sus credenciales institucionales para continuar.
+            <Typography color="text.secondary" mb={4} mt={1.25}>
+              Ingrese sus credenciales institucionales para continuar en EcoSoft.
             </Typography>
             {serverError && (
               <Alert severity="error" sx={{ mb: 2 }} role="alert">
