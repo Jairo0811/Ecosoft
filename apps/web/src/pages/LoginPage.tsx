@@ -168,7 +168,7 @@ export function LoginPage() {
         <Card sx={{ width: '100%', maxWidth: 500, boxShadow: { xs: 'none', md: undefined } }}>
           <CardContent sx={{ p: { xs: 3, sm: 5 } }}>
             <Box display={{ md: 'none' }} mb={4}>
-              <BrandLogo maxWidth={300} />
+              <BrandLogo maxWidth={300} decorative />
             </Box>
             <Stack direction="row" spacing={1.5} alignItems="center" mb={1}>
               <Box
