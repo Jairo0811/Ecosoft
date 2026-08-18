@@ -6,7 +6,7 @@ services:
       MSSQL_PID: Developer
       MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-YourStrong!Passw0rd}
     ports:
-      - '1433:1433'
+      - '14330:1433'
     volumes:
       - ecosoft-sqlserver:/var/opt/mssql
     healthcheck:
