@@ -31,9 +31,9 @@ import {
   MenuOutlined,
   NotificationsOutlined,
   PeopleAltOutlined,
+  PsychologyOutlined,
   RequestQuoteOutlined,
   RuleOutlined,
-  PsychologyOutlined,
   ShieldOutlined,
 } from '@mui/icons-material';
 import { NavLink, Outlet } from 'react-router';
@@ -41,6 +41,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { BrandLogo } from '../branding/BrandLogo';
+import { brandColors, brandGradients } from '../theme/brand';
 import { useThemeMode } from '../theme/ThemeContext';
 
 const drawerWidth = 272;
@@ -109,16 +110,29 @@ export function AppLayout() {
       sx={{
         height: '100%',
         color: 'white',
-        bgcolor: '#073B4C',
+        background: brandGradients.sidebar,
         display: 'flex',
         flexDirection: 'column',
+        position: 'relative',
+        overflow: 'hidden',
+        '&::after': {
+          content: '""',
+          position: 'absolute',
+          width: 260,
+          height: 260,
+          borderRadius: '50%',
+          background: 'radial-gradient(circle, rgba(32,200,51,.13), transparent 68%)',
+          left: -120,
+          bottom: 80,
+          pointerEvents: 'none',
+        },
       }}
     >
-      <Box px={3} py={2.25}>
-        <BrandLogo maxWidth={224} />
+      <Box px={2.25} py={1.8} minHeight={108} display="flex" alignItems="center" zIndex={1}>
+        <BrandLogo maxWidth={228} />
       </Box>
-      <Divider sx={{ borderColor: 'rgba(255,255,255,.1)' }} />
-      <List sx={{ px: 1.5, py: 2 }} aria-label="Navegación principal">
+      <Divider sx={{ borderColor: 'rgba(0,183,255,.18)' }} />
+      <List sx={{ px: 1.5, py: 2, zIndex: 1 }} aria-label="Navegación principal">
         {visibleNavigation.map((item) => (
           <ListItemButton
             key={item.path}
@@ -127,29 +141,40 @@ export function AppLayout() {
             end={item.path === '/'}
             onClick={() => setMobileOpen(false)}
             sx={{
-              mb: 0.5,
-              borderRadius: 2,
-              color: 'rgba(255,255,255,.76)',
+              mb: 0.55,
+              minHeight: 44,
+              borderRadius: 2.25,
+              color: 'rgba(247,251,255,.76)',
+              transition: 'all .2s ease',
               '&.active': {
-                bgcolor: 'rgba(40,169,107,.22)',
+                backgroundImage: brandGradients.primary,
                 color: 'white',
-                '& .MuiListItemIcon-root': { color: '#62D79A' },
+                boxShadow: '0 10px 24px rgba(0,108,255,.24)',
+                '& .MuiListItemIcon-root': { color: 'white' },
               },
-              '&:hover': { bgcolor: 'rgba(255,255,255,.08)' },
+              '&:hover': {
+                bgcolor: 'rgba(0,183,255,.10)',
+                color: 'white',
+                transform: 'translateX(2px)',
+              },
             }}
           >
             <ListItemIcon sx={{ minWidth: 42, color: 'inherit' }}>{item.icon}</ListItemIcon>
             <ListItemText
               primary={item.label}
-              primaryTypographyProps={{ fontWeight: 600, fontSize: 14 }}
+              primaryTypographyProps={{ fontWeight: 650, fontSize: 14 }}
             />
           </ListItemButton>
         ))}
       </List>
-      <Box mt="auto" p={2}>
+      <Box mt="auto" p={2} zIndex={1}>
         <ListItemButton
           onClick={() => void logout()}
-          sx={{ borderRadius: 2, color: 'rgba(255,255,255,.76)' }}
+          sx={{
+            borderRadius: 2,
+            color: 'rgba(247,251,255,.76)',
+            '&:hover': { bgcolor: 'rgba(0,183,255,.10)', color: 'white' },
+          }}
         >
           <ListItemIcon sx={{ minWidth: 42, color: 'inherit' }}>
             <LogoutOutlined />
@@ -171,6 +196,9 @@ export function AppLayout() {
           ml: { md: `${drawerWidth}px` },
           borderBottom: 1,
           borderColor: 'divider',
+          background:
+            mode === 'dark' ? 'rgba(2,8,23,.92)' : 'rgba(255,255,255,.92)',
+          backdropFilter: 'blur(16px)',
         }}
       >
         <Toolbar sx={{ gap: 1.5 }}>
@@ -182,7 +210,7 @@ export function AppLayout() {
             <MenuOutlined />
           </IconButton>
           <Box flexGrow={1}>
-            <Typography fontWeight={700}>Comisión Nacional de Energía</Typography>
+            <Typography fontWeight={750}>Comisión Nacional de Energía</Typography>
             <Typography variant="caption" color="text.secondary">
               Entorno institucional
             </Typography>
@@ -193,6 +221,7 @@ export function AppLayout() {
                 component={NavLink}
                 to="/notificaciones"
                 aria-label={`${unread.data ?? 0} notificaciones sin leer`}
+                sx={{ color: mode === 'dark' ? brandColors.cyan500 : 'primary.main' }}
               >
                 <Badge badgeContent={unread.data ?? 0} color="error" max={99}>
                   <NotificationsOutlined />
@@ -206,7 +235,15 @@ export function AppLayout() {
             </IconButton>
           </Tooltip>
           <Stack direction="row" spacing={1.25} alignItems="center">
-            <Avatar sx={{ bgcolor: 'secondary.main', width: 38, height: 38 }}>
+            <Avatar
+              sx={{
+                backgroundImage: brandGradients.primary,
+                color: 'white',
+                width: 38,
+                height: 38,
+                boxShadow: '0 6px 16px rgba(0,108,255,.2)',
+              }}
+            >
               {user?.firstName[0]}
               {user?.lastName[0]}
             </Avatar>
@@ -214,7 +251,7 @@ export function AppLayout() {
               <Typography variant="body2" fontWeight={700}>
                 {user?.firstName} {user?.lastName}
               </Typography>
-              <Typography variant="caption" color="text.secondary">
+              <Typography variant="caption" color="primary.light" fontWeight={700}>
                 {user?.roles[0]?.replaceAll('_', ' ')}
               </Typography>
             </Box>
@@ -229,7 +266,7 @@ export function AppLayout() {
           ModalProps={{ keepMounted: true }}
           sx={{
             display: { xs: 'block', md: 'none' },
-            '& .MuiDrawer-paper': { width: drawerWidth },
+            '& .MuiDrawer-paper': { width: drawerWidth, border: 0 },
           }}
         >
           {drawer}
@@ -239,7 +276,11 @@ export function AppLayout() {
           open
           sx={{
             display: { xs: 'none', md: 'block' },
-            '& .MuiDrawer-paper': { width: drawerWidth, border: 0 },
+            '& .MuiDrawer-paper': {
+              width: drawerWidth,
+              border: 0,
+              boxShadow: '8px 0 28px rgba(0,0,0,.12)',
+            },
           }}
         >
           {drawer}
