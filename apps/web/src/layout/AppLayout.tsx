@@ -196,8 +196,7 @@ export function AppLayout() {
           ml: { md: `${drawerWidth}px` },
           borderBottom: 1,
           borderColor: 'divider',
-          background:
-            mode === 'dark' ? 'rgba(2,8,23,.92)' : 'rgba(255,255,255,.92)',
+          background: mode === 'dark' ? 'rgba(2,8,23,.92)' : 'rgba(255,255,255,.92)',
           backdropFilter: 'blur(16px)',
         }}
       >

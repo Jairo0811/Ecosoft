@@ -80,8 +80,8 @@ const integer = new Intl.NumberFormat('es-DO', { maximumFractionDigits: 0 });
 const decimal = new Intl.NumberFormat('es-DO', { maximumFractionDigits: 2 });
 const technologyLabels: Record<string, string> = {
   SOLAR: 'Solar',
-  WIND: 'Eólica',
-  HYDRO: 'Hidroeléctrica',
+  WIND: 'EÃ³lica',
+  HYDRO: 'HidroelÃ©ctrica',
   BIOMASS: 'Biomasa',
 };
 
@@ -95,7 +95,16 @@ export function DashboardPage() {
         .then((response) => response.data.data),
   });
   const data = analytics.data;
-  const currentDate = format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
+  const now = new Date();
+  const currentDate = format(now, "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
+  const hour = now.getHours();
+  let greeting = 'Buenas noches';
+
+  if (hour >= 5 && hour < 12) {
+    greeting = 'Buenos días';
+  } else if (hour >= 12 && hour < 19) {
+    greeting = 'Buenas tardes';
+  }
   const kpis = [
     {
       label: 'Subastas activas',
@@ -147,7 +156,7 @@ export function DashboardPage() {
       color: '#168D4E',
     },
     {
-      label: 'Vencen en 90 días',
+      label: 'Vencen en 90 dÃ­as',
       value: data?.kpis.expiringContracts ?? 0,
       note: 'Contratos que requieren seguimiento',
       icon: <WarningAmberOutlined />,
@@ -175,10 +184,10 @@ export function DashboardPage() {
           {currentDate}
         </Typography>
         <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-          Buenos días, {user?.firstName}
+          Buenos dÃ­as, {user?.firstName}
         </Typography>
         <Typography color="text.secondary" mt={0.5}>
-          Panorama del portafolio energético según tu ámbito y permisos.
+          Panorama del portafolio energÃ©tico segÃºn tu Ã¡mbito y permisos.
         </Typography>
       </Box>
       {analytics.isLoading && (
@@ -248,7 +257,7 @@ export function DashboardPage() {
                 stroke: { curve: 'smooth', width: 3 },
                 xaxis: { categories: data?.trend.map((item) => item.month) ?? [] },
                 yaxis: { labels: { formatter: (value) => `${integer.format(value)} MW` } },
-                noData: { text: 'Sin datos para el período' },
+                noData: { text: 'Sin datos para el perÃ­odo' },
               }}
             />
           </CardContent>
@@ -259,7 +268,7 @@ export function DashboardPage() {
               Subastas por estado
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Distribución del portafolio visible
+              DistribuciÃ³n del portafolio visible
             </Typography>
             <ReactApexChart
               type="donut"
@@ -280,10 +289,10 @@ export function DashboardPage() {
         <Card>
           <CardContent sx={{ p: 3 }}>
             <Typography variant="h6" fontWeight={750}>
-              Capacidad de proyectos por tecnología
+              Capacidad de proyectos por tecnologÃ­a
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Comparación entre capacidad instalada y contratada
+              ComparaciÃ³n entre capacidad instalada y contratada
             </Typography>
             <ReactApexChart
               type="bar"
@@ -320,12 +329,12 @@ export function DashboardPage() {
             <Stack direction="row" alignItems="center" spacing={1} mb={1}>
               <ScheduleOutlined color="primary" />
               <Typography variant="h6" fontWeight={750}>
-                Próximos eventos
+                PrÃ³ximos eventos
               </Typography>
             </Stack>
             {eventItems.length === 0 ? (
               <Typography color="text.secondary" py={3}>
-                No hay eventos próximos en tu ámbito.
+                No hay eventos prÃ³ximos en tu Ã¡mbito.
               </Typography>
             ) : (
               <List disablePadding>
@@ -376,7 +385,7 @@ export function DashboardPage() {
                   </Box>
                 ))
               ) : (
-                <Typography color="text.secondary">No hay alertas próximas.</Typography>
+                <Typography color="text.secondary">No hay alertas prÃ³ximas.</Typography>
               )}
             </Stack>
           </CardContent>
@@ -387,7 +396,7 @@ export function DashboardPage() {
               Actividad reciente
             </Typography>
             <Typography color="text.secondary" variant="body2" mb={2}>
-              Acciones registradas en auditoría
+              Acciones registradas en auditorÃ­a
             </Typography>
             <Stack spacing={1.5}>
               {data?.recentActivity.length ? (
@@ -401,10 +410,10 @@ export function DashboardPage() {
                     />
                     <Box>
                       <Typography variant="body2" fontWeight={700}>
-                        {item.action} · {item.module}
+                        {item.action} Â· {item.module}
                       </Typography>
                       <Typography variant="caption" color="text.secondary">
-                        {item.user ? `${item.user.firstName} ${item.user.lastName}` : 'Sistema'} ·{' '}
+                        {item.user ? `${item.user.firstName} ${item.user.lastName}` : 'Sistema'} Â·{' '}
                         {formatDistanceToNow(new Date(item.createdAt), {
                           locale: es,
                           addSuffix: true,
