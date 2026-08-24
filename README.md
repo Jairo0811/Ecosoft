@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="apps/web/public/branding/EcoSoft.png" width="860" alt="EcoSoft Solutions S.R.L.">
+  <img src="apps/web/public/branding/EcoSoft-logo.jpeg" width="860" alt="EcoSoft Solutions S.R.L.">
 </p>
 <p align="center">
   <img src="https://img.shields.io/badge/UNAPEC-ISO--705-003B70?style=for-the-badge" alt="UNAPEC ISO-705">
