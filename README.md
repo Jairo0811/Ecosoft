@@ -197,7 +197,7 @@ permisos y, cuando corresponde, la pertenencia a la organización para prevenir 
 
 ### 🎨 Frontend
 
-<p align="center">
+<p>
   <img src="https://skillicons.dev/icons?i=react,ts,vite,materialui" alt="React, TypeScript, Vite y Material UI">
 </p>
 
@@ -215,7 +215,7 @@ permisos y, cuando corresponde, la pertenencia a la organización para prevenir 
 
 ### ⚙️ Backend
 
-<p align="center">
+<p>
   <img src="https://skillicons.dev/icons?i=nodejs,express,ts,prisma" alt="Node.js, Express, TypeScript y Prisma">
 </p>
 
@@ -231,7 +231,7 @@ permisos y, cuando corresponde, la pertenencia a la organización para prevenir 
 
 ### 🗄️ Datos y almacenamiento
 
-<p align="center">
+<p>
   <img src="https://cdn.jsdelivr.net/gh/devicons/devicon/icons/microsoftsqlserver/microsoftsqlserver-plain.svg" width="52" height="52" alt="Microsoft SQL Server" title="Microsoft SQL Server 2022">
   &nbsp;&nbsp;
   <img src="https://img.shields.io/badge/Azure_Blob_Storage-Documentos-0078D4?style=for-the-badge&logo=microsoftazure&logoColor=white" alt="Azure Blob Storage planificado">
@@ -245,7 +245,7 @@ permisos y, cuando corresponde, la pertenencia a la organización para prevenir 
 
 ### 🤖 Inteligencia artificial y OCR
 
-<p align="center">
+<p>
   <img src="https://skillicons.dev/icons?i=python,fastapi,azure" alt="Python, FastAPI y Azure">
   <img src="https://img.shields.io/badge/OpenAI%20%2F%20Azure_OpenAI-Proveedor_desacoplado-412991?style=for-the-badge&logo=openai&logoColor=white" alt="OpenAI o Azure OpenAI">
 </p>
@@ -259,7 +259,7 @@ permisos y, cuando corresponde, la pertenencia a la organización para prevenir 
 
 ### 🧪 Calidad e infraestructura
 
-<p align="center">
+<p>
   <img src="https://skillicons.dev/icons?i=docker,git,github,githubactions,jest,vitest" alt="Docker, Git, GitHub, GitHub Actions, Jest y Vitest">
 </p>
 
