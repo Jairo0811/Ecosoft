@@ -20,15 +20,15 @@
 
 ## Productización Enterprise — Fases 11–18
 
-| Fase | Incremento | Estado | Resultado verificable |
-| ---: | --- | --- | --- |
-| 11 | Productization | Implementada | separación Academic/Enterprise, posicionamiento y modelo comercial |
-| 12 | Production Security | Implementada | baseline productivo y hardening parametrizable |
-| 13 | Enterprise Identity | Foundation | política MFA, configuración OIDC/SAML y validación fail-fast |
-| 14 | Multi-Organization | Foundation | topología dedicada/compartida y tenant context derivado de identidad |
-| 15 | Cloud & Observability | Foundation | topología Azure, ambientes, telemetría, SLO y runbooks |
-| 16 | Integrations | Foundation | contratos seguros y firma HMAC para webhooks |
-| 17 | Compliance & Scale | Foundation | gate de seguridad, DR, retención y pruebas de carga |
-| 18 | Commercial Pilot | Implementada | onboarding, métricas, soporte y criterios go/no-go |
+| Fase | Incremento            | Estado       | Resultado verificable                                                |
+| ---: | --------------------- | ------------ | -------------------------------------------------------------------- |
+|   11 | Productization        | Implementada | separación Academic/Enterprise, posicionamiento y modelo comercial   |
+|   12 | Production Security   | Implementada | baseline productivo y hardening parametrizable                       |
+|   13 | Enterprise Identity   | Foundation   | política MFA, configuración OIDC/SAML y validación fail-fast         |
+|   14 | Multi-Organization    | Foundation   | topología dedicada/compartida y tenant context derivado de identidad |
+|   15 | Cloud & Observability | Foundation   | topología Azure, ambientes, telemetría, SLO y runbooks               |
+|   16 | Integrations          | Foundation   | contratos seguros y firma HMAC para webhooks                         |
+|   17 | Compliance & Scale    | Foundation   | gate de seguridad, DR, retención y pruebas de carga                  |
+|   18 | Commercial Pilot      | Implementada | onboarding, métricas, soporte y criterios go/no-go                   |
 
 `Foundation` indica que el producto contiene el contrato, configuración y controles internos necesarios, pero el cierre de la fase productiva depende de infraestructura, proveedores o evidencia externa real. Consulta [`enterprise/README.md`](enterprise/README.md).

@@ -46,6 +46,7 @@ Los tiempos contractuales de respuesta no se fijan hasta conocer capacidad real 
 ## Go / No-Go para v1.0
 
 ### Go
+
 - flujo end-to-end aceptado por usuarios piloto;
 - cero defectos SEV-1 abiertos;
 - seguridad y recuperación aprobadas;
@@ -54,6 +55,7 @@ Los tiempos contractuales de respuesta no se fijan hasta conocer capacidad real 
 - riesgos residuales aceptados formalmente.
 
 ### No-Go
+
 - aislamiento de datos no demostrado;
 - restauración no probada;
 - errores críticos de permisos;

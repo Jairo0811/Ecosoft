@@ -12,16 +12,16 @@ Este directorio documenta la evolución posterior al MVP académico de EcoSoft. 
 
 ## Fases 11–18
 
-| Fase | Nombre | Entregable verificable | Estado en esta rama |
-| ---: | --- | --- | --- |
-| 11 | Productization | límites Academic/Enterprise, posicionamiento, modelo de despliegue y ownership | Implementada |
-| 12 | Production Security | baseline de seguridad productiva, configuración y checklist de hardening | Implementada |
-| 13 | Enterprise Identity | políticas MFA/SSO, configuración OIDC/SAML y contrato de adaptadores | Implementada como foundation |
-| 14 | Multi-Organization | modelo de tenancy sobre el aislamiento organizacional existente y reglas de contexto | Implementada como foundation |
-| 15 | Cloud & Observability | topología Azure, ambientes, SLO/telemetría y runbooks | Implementada como foundation |
-| 16 | Integrations | contratos para correo, webhooks, almacenamiento y firma electrónica/digital | Implementada como foundation |
-| 17 | Compliance & Scale | controles, pruebas de carga, retención, DR, RTO/RPO y evidencias | Implementada como foundation |
-| 18 | Commercial Pilot | onboarding, criterios de aceptación, soporte, métricas y go/no-go | Implementada |
+| Fase | Nombre                | Entregable verificable                                                               | Estado en esta rama          |
+| ---: | --------------------- | ------------------------------------------------------------------------------------ | ---------------------------- |
+|   11 | Productization        | límites Academic/Enterprise, posicionamiento, modelo de despliegue y ownership       | Implementada                 |
+|   12 | Production Security   | baseline de seguridad productiva, configuración y checklist de hardening             | Implementada                 |
+|   13 | Enterprise Identity   | políticas MFA/SSO, configuración OIDC/SAML y contrato de adaptadores                 | Implementada como foundation |
+|   14 | Multi-Organization    | modelo de tenancy sobre el aislamiento organizacional existente y reglas de contexto | Implementada como foundation |
+|   15 | Cloud & Observability | topología Azure, ambientes, SLO/telemetría y runbooks                                | Implementada como foundation |
+|   16 | Integrations          | contratos para correo, webhooks, almacenamiento y firma electrónica/digital          | Implementada como foundation |
+|   17 | Compliance & Scale    | controles, pruebas de carga, retención, DR, RTO/RPO y evidencias                     | Implementada como foundation |
+|   18 | Commercial Pilot      | onboarding, criterios de aceptación, soporte, métricas y go/no-go                    | Implementada                 |
 
 `Foundation` significa que el código, contrato, configuración y documentación necesarios para conectar un proveedor externo están definidos y pueden validarse sin fingir que dicho proveedor ya está contratado o desplegado.
 

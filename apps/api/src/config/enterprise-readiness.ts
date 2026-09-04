@@ -71,7 +71,8 @@ export const evaluateEnterpriseConfiguration = ({
     findings.push({
       code: 'SHARED_TENANCY_REQUIRES_VALIDATION',
       severity: 'blocker',
-      message: 'El SaaS compartido requiere tenantId persistente y pruebas cross-tenant antes de producción.',
+      message:
+        'El SaaS compartido requiere tenantId persistente y pruebas cross-tenant antes de producción.',
     });
   }
 

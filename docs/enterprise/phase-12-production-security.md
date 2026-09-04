@@ -7,6 +7,7 @@ Convertir los controles de seguridad del MVP en un baseline explícito para desp
 ## Baseline obligatorio
 
 ### Borde y transporte
+
 - TLS 1.2+ terminado en servicio administrado o reverse proxy controlado.
 - HSTS habilitado únicamente en producción después de validar HTTPS.
 - CSP explícita y revisada por ambiente.
@@ -14,18 +15,21 @@ Convertir los controles de seguridad del MVP en un baseline explícito para desp
 - `trust proxy` parametrizado según la topología real.
 
 ### Secretos y llaves
+
 - Azure Key Vault o gestor equivalente.
 - Rotación documentada para JWT, credenciales SQL, storage y proveedores.
 - Identidades administradas cuando la plataforma lo permita.
 - Ningún secreto real en repositorio, imagen o log.
 
 ### Documentos
+
 - Blob/almacenamiento privado.
 - URLs de acceso de corta duración cuando sean necesarias.
 - análisis antimalware y, para instalaciones de alto riesgo, CDR antes de marcar un archivo como utilizable.
 - cuarentena y auditoría del resultado de escaneo.
 
 ### Aplicación
+
 - RBAC y alcance organizacional siempre en backend.
 - rate limiting específico para autenticación y operaciones sensibles.
 - validación Zod y límites de payload.
@@ -33,6 +37,7 @@ Convertir los controles de seguridad del MVP en un baseline explícito para desp
 - Swagger deshabilitable en instalaciones que no autoricen documentación pública.
 
 ### Datos y recuperación
+
 - cifrado en tránsito y en reposo administrado por infraestructura.
 - backup automático de SQL y almacenamiento documental.
 - restauración ensayada y registrada.

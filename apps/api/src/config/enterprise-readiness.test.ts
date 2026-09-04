@@ -58,7 +58,10 @@ describe('enterprise configuration readiness', () => {
 
     expect(result.findings).toEqual(
       expect.arrayContaining([
-        expect.objectContaining({ code: 'SHARED_TENANCY_REQUIRES_VALIDATION', severity: 'blocker' }),
+        expect.objectContaining({
+          code: 'SHARED_TENANCY_REQUIRES_VALIDATION',
+          severity: 'blocker',
+        }),
       ]),
     );
   });

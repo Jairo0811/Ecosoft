@@ -537,10 +537,10 @@ La relación es **formativa y cronológica**: los proyectos corresponden a asign
 
 La primera coincidencia documentada ocurrió en **Enero - Abril de 2026** en **Desarrollo de Software con Tecnología Propietaria 1 (ISO-605)** con MediCore. Posteriormente, en **Mayo - Agosto de 2026**, ambos volvieron a formar parte del mismo equipo académico en **Proyecto de Software 1 (ISO-705)** con EcoSoft.
 
-| Orden | Asignatura | Proyecto | Período |
-| ----: | ---------- | -------- | ------- |
-| 1 | Desarrollo de Software con Tecnología Propietaria 1 (ISO-605) | [**MediCore**](https://github.com/Jairo0811/MediCore) | Enero - Abril 2026 |
-| 2 | Proyecto de Software 1 (ISO-705) | **EcoSoft** | Mayo - Agosto 2026 |
+| Orden | Asignatura                                                    | Proyecto                                              | Período            |
+| ----: | ------------------------------------------------------------- | ----------------------------------------------------- | ------------------ |
+|     1 | Desarrollo de Software con Tecnología Propietaria 1 (ISO-605) | [**MediCore**](https://github.com/Jairo0811/MediCore) | Enero - Abril 2026 |
+|     2 | Proyecto de Software 1 (ISO-705)                              | **EcoSoft**                                           | Mayo - Agosto 2026 |
 
 Vistos en conjunto, ambos proyectos documentan una continuidad real entre compañeros a lo largo de dos cuatrimestres consecutivos. La coincidencia se considera verificada porque se mantiene el **mismo nombre completo y la misma matrícula A00110380**; no se infieren relaciones por similitud de nombres o matrículas aisladas.
 

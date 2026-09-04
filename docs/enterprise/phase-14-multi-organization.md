@@ -9,9 +9,11 @@ Formalizar el aislamiento organizacional existente como una estrategia de tenanc
 EcoSoft admite dos topologías comerciales:
 
 ### Instancia dedicada (recomendada inicialmente)
+
 Una instalación por autoridad/cliente, con múltiples organizaciones participantes dentro de esa instancia. Reduce superficie de aislamiento y simplifica residencia de datos, contratos, soporte y recuperación.
 
 ### SaaS compartido
+
 Una plataforma con múltiples tenants raíz. Solo debe habilitarse cuando todas las consultas, jobs, almacenamiento, cache, telemetría y exportaciones incorporen un `tenantId` obligatorio y existan pruebas negativas automatizadas de aislamiento.
 
 ## Modelo actual
