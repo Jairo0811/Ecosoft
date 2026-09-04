@@ -1,5 +1,6 @@
 import { createServer } from 'node:http';
 import { createApp } from './app';
+import { enterpriseConfig } from './config/enterprise';
 import { env } from './config/env';
 import { logger } from './config/logger';
 import { prisma } from './config/prisma';
@@ -7,7 +8,17 @@ import { prisma } from './config/prisma';
 const server = createServer(createApp());
 
 server.listen(env.PORT, () => {
-  logger.info({ port: env.PORT, environment: env.NODE_ENV }, 'EcoSoft API listening');
+  logger.info(
+    {
+      port: env.PORT,
+      environment: env.NODE_ENV,
+      edition: enterpriseConfig.edition,
+      installationId: enterpriseConfig.installationId,
+      tenancyMode: enterpriseConfig.tenancyMode,
+      telemetryEnabled: enterpriseConfig.integrations.telemetryEnabled,
+    },
+    'EcoSoft API listening',
+  );
 });
 
 const shutdown = (signal: string): void => {
