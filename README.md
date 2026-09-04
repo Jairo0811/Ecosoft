@@ -9,17 +9,17 @@
 </p>
 
 <p align="center">
-  Plataforma SaaS para digitalizar, administrar, supervisar y auditar procesos energéticos de la Comisión Nacional de Energía.
+  Plataforma SaaS para digitalizar, administrar, supervisar y auditar procesos regulados del sector energético.
 </p>
 
 <p align="center">
   <img src="https://img.shields.io/badge/Grupo-%234-128C7E?style=for-the-badge" alt="Grupo 4">
-  <img src="https://img.shields.io/badge/estado-MVP_completo-18A96F?style=for-the-badge" alt="MVP completo">
+  <img src="https://img.shields.io/badge/estado-Enterprise_MVP_%C2%B7_Pilot_Ready-18A96F?style=for-the-badge" alt="Enterprise MVP · Pilot Ready">
 </p>
 
 <p align="center">
   <a href="https://github.com/Jairo0811/Ecosoft/actions/workflows/ci.yml"><img src="https://github.com/Jairo0811/Ecosoft/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
-  <img src="https://img.shields.io/badge/fases-0_a_10-18A96F" alt="Fases 0 a 10 implementadas">
+  <img src="https://img.shields.io/badge/roadmap-fases_0_a_18-18A96F" alt="Roadmap fases 0 a 18">
   <img src="https://img.shields.io/badge/arquitectura-Monolito_modular-0F172A" alt="Monolito modular">
   <img src="https://img.shields.io/badge/base_de_datos-SQL_Server_2022-CC2927?logo=microsoftsqlserver&logoColor=white" alt="SQL Server 2022">
   <img src="https://img.shields.io/badge/licencia-MIT-2EA44F" alt="Licencia MIT">
@@ -30,6 +30,8 @@
 </p>
 
 > 🎓 Proyecto académico de **Proyecto de Software 1 (ISO-705)**, desarrollado por el **Grupo #4** de la **Universidad APEC (UNAPEC)** para el caso de estudio de **EcoSoft Solutions S.R.L.** y la **Comisión Nacional de Energía (CNE)**.
+>
+> 🏢 Su evolución posterior se documenta como **EcoSoft Enterprise**, preservando el linaje académico y preparando una edición **Enterprise MVP / Pilot Ready** para autoridades, operadores y organizaciones del sector energético. Consulta [`docs/enterprise/`](docs/enterprise/README.md).
 
 ---
 
@@ -85,9 +87,12 @@ analítica.
 
 ## ✅ Estado actual
 
-Las **Fases 0 a 10** están implementadas como un MVP integral. La entrega incluye dominio,
-autorización, interfaz, migraciones, pruebas, documentación y CI; la publicación en infraestructura
-productiva y los adaptadores cloud requieren credenciales y aprobación del operador.
+Las **Fases 0 a 10** están implementadas como un MVP integral. Las **Fases 11 a 18** añaden la
+productización Enterprise: baseline de seguridad, identidad empresarial configurable, estrategia de
+tenancy, observabilidad, contratos de integración, gates de cumplimiento/escala y plan de piloto.
+Las capacidades que dependen de infraestructura o proveedores externos se mantienen como
+`Foundation` hasta existir credenciales y evidencia real; por eso el estado correcto es
+**Enterprise MVP / Pilot Ready**, no Production Ready.
 
 ### 🔐 Identidad y seguridad
 
@@ -482,6 +487,14 @@ privacidad.
 |    8 | Auditoría ampliada, regulación y notificaciones     | ✅ Implementada |
 |    9 | IA, OCR y análisis asistivo con aprobación humana   | ✅ Implementada |
 |   10 | Hardening, QA, accesibilidad, CI/CD y documentación | ✅ Implementada |
+|   11 | Productization                                      | ✅ Implementada |
+|   12 | Production Security                                 | ✅ Implementada |
+|   13 | Enterprise Identity                                 | 🧱 Foundation   |
+|   14 | Multi-Organization                                  | 🧱 Foundation   |
+|   15 | Cloud & Observability                               | 🧱 Foundation   |
+|   16 | Integrations                                        | 🧱 Foundation   |
+|   17 | Compliance & Scale                                  | 🧱 Foundation   |
+|   18 | Commercial Pilot                                    | ✅ Implementada |
 
 El proyecto utiliza Scrum y trata cada fase como un incremento potencialmente entregable. Su
 diseño considera una duración académica máxima de 12 meses, presupuesto limitado, protección de
@@ -490,18 +503,19 @@ multi-tenancy complejo en el MVP.
 
 ## 📚 Documentación
 
-| Documento                                   | Contenido                                    |
-| ------------------------------------------- | -------------------------------------------- |
-| [Arquitectura](docs/architecture.md)        | Decisiones, módulos y flujo protegido        |
-| [Base de datos](docs/database.md)           | Modelo, convenciones y evolución prevista    |
-| [Seguridad](docs/security.md)               | Controles, amenazas y pendientes productivos |
-| [Contrato API](docs/api.md)                 | Convenciones y endpoints por fase            |
-| [Inteligencia artificial](docs/ai.md)       | Límites, casos de uso y gobernanza           |
-| [Despliegue](docs/deployment.md)            | Estrategia operativa y ambientes             |
-| [MVP y supuestos](docs/requirements/mvp.md) | Alcance funcional y decisiones abiertas      |
-| [Backlog](docs/backlog.md)                  | Épicas priorizadas                           |
-| [Riesgos](docs/risks.md)                    | Riesgos técnicos y de producto               |
-| [ADRs](docs/architecture/)                  | Decisiones de arquitectura documentadas      |
+| Documento                                       | Contenido                                       |
+| ----------------------------------------------- | ----------------------------------------------- |
+| [Arquitectura](docs/architecture.md)            | Decisiones, módulos y flujo protegido           |
+| [Base de datos](docs/database.md)               | Modelo, convenciones y evolución prevista       |
+| [Seguridad](docs/security.md)                   | Controles, amenazas y pendientes productivos    |
+| [Contrato API](docs/api.md)                     | Convenciones y endpoints por fase               |
+| [Inteligencia artificial](docs/ai.md)           | Límites, casos de uso y gobernanza              |
+| [Despliegue](docs/deployment.md)                | Estrategia operativa y ambientes                |
+| [MVP y supuestos](docs/requirements/mvp.md)     | Alcance funcional y decisiones abiertas         |
+| [Backlog](docs/backlog.md)                      | Épicas priorizadas                              |
+| [Riesgos](docs/risks.md)                        | Riesgos técnicos y de producto                  |
+| [ADRs](docs/architecture/)                      | Decisiones de arquitectura documentadas         |
+| [EcoSoft Enterprise](docs/enterprise/README.md) | Productización, fases 11–18 y gates productivos |
 
 ---
 
