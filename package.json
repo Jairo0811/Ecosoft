@@ -19,7 +19,7 @@
     "typecheck": "npm run typecheck --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "format": "prettier --write .",
-    "format:check": "prettier --write . && git diff -- .",
+    "format:check": "prettier --check .",
     "db:generate": "npm run db:generate --workspace @ecosoft/api",
     "db:migrate": "npm run db:migrate --workspace @ecosoft/api",
     "db:seed": "npm run db:seed --workspace @ecosoft/api"
