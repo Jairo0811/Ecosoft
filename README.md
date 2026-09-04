@@ -584,3 +584,51 @@ del Grupo #4.
   <strong>EcoSoft Solutions S.R.L.</strong><br>
   Tecnología · Eficiencia · Sostenibilidad
 </p>
+
+---
+
+## 🏢 EcoSoft Enterprise — Fases 11–18
+
+La evolución posterior al MVP académico conserva íntegramente las **Fases 0–10** y añade una capa de
+productización empresarial orientada a despliegues B2B/B2G, pilotos controlados y futura operación
+productiva. Esta etapa no reemplaza el origen académico de EcoSoft: lo extiende con controles,
+contratos operativos y criterios verificables de preparación Enterprise.
+
+|   Fase | Evolución Enterprise  | Resultado                                                                                                                                                |
+| -----: | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **11** | Productization        | Separación explícita entre linaje académico y edición Enterprise; posicionamiento EnergyTech/GovTech/RegTech y estrategia inicial de instancia dedicada. |
+| **12** | Production Security   | Baseline de seguridad productiva, HSTS/CSP configurables, gestión de secretos, documentos, backups y hardening.                                          |
+| **13** | Enterprise Identity   | Foundation configurable para MFA, OIDC y SAML con validación fail-fast de parámetros mínimos del proveedor de identidad.                                 |
+| **14** | Multi-Organization    | Foundation de tenancy dedicada/compartida y contexto de organización derivado exclusivamente de identidad autenticada.                                   |
+| **15** | Cloud & Observability | Foundation para topología Azure, ambientes, telemetría, SLO, alertas y runbooks operativos.                                                              |
+| **16** | Integrations          | Contratos de integración y primitivas HMAC SHA-256 para webhooks con timestamp y protección contra replay.                                               |
+| **17** | Compliance & Scale    | Gates de readiness, continuidad, RTO/RPO, retención, pruebas de carga y evidencias de cumplimiento.                                                      |
+| **18** | Commercial Pilot      | Onboarding, métricas de adopción, severidades de soporte y criterios Go/No-Go para evolucionar hacia v1.0.                                               |
+
+### Capacidades técnicas añadidas
+
+- Configuración Enterprise tipada y validada mediante `apps/api/src/config/enterprise.ts`.
+- Evaluación explícita de readiness mediante `apps/api/src/config/enterprise-readiness.ts`.
+- Endpoint protegido `GET /api/v1/enterprise/capabilities` para inspeccionar capacidades y
+  configuración sin confundir configuración con certificación productiva.
+- Contexto de tenant/organización derivado de claims confiables, evitando confiar en scopes enviados
+  arbitrariamente por el cliente.
+- Firma y verificación HMAC SHA-256 para integraciones entrantes con tolerancia temporal y mitigación
+  de replay attacks.
+- Controles runtime para HSTS, CSP y exposición de documentación API.
+- Metadata de instalación y configuración preparada para observabilidad y despliegues aislados.
+- Pruebas unitarias específicas para configuración Enterprise, readiness, tenancy y firmas.
+
+### Estado de preparación
+
+**EcoSoft Enterprise** se considera actualmente **Enterprise MVP / Pilot Ready**. Esto significa que
+la base de producto, código, pruebas, documentación y contratos operativos necesarios para iniciar un
+piloto están presentes. No se declara **Production Ready** mientras las capacidades dependientes de
+infraestructura externa no dispongan de credenciales, despliegue y evidencia real.
+
+Requieren cierre con infraestructura/proveedor real antes de producción: Azure Key Vault y recursos
+cloud, SSO OIDC/SAML, MFA corporativo, correo transaccional, almacenamiento documental productivo,
+antimalware/CDR, firma digital externa, DAST/pentest, restore drills y pruebas de carga con objetivos
+acordados.
+
+La especificación completa de esta etapa se mantiene en [`docs/enterprise/`](docs/enterprise/README.md).
