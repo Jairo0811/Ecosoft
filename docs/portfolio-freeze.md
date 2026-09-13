@@ -19,10 +19,10 @@ La evolución posterior no reemplaza ni reescribe la autoría, el contexto, el e
 
 | Snapshot | Referencia | Propósito |
 | --- | --- | --- |
-| Academic baseline | `18032be874c11890d93c89937e300382d646775c` | Último estado anterior a la productización Enterprise; referencia del proyecto académico/portafolio base. |
-| Portfolio freeze | Se fija al cerrar esta fase | Estado final del repositorio como pieza de portafolio con Fases 0–18 documentadas. |
+| Academic baseline | `archive/academic-v1.0.0` → `18032be874c11890d93c89937e300382d646775c` | Estado previo a la productización Enterprise; preserva la referencia académica/base del portafolio. |
+| Portfolio freeze | `archive/portfolio-v2.0.0` | Se fija sobre el commit final de esta fase después de validar y fusionar el cierre. |
 
-Mientras no existan tags/releases formales, estos commits y las ramas de preservación asociadas funcionan como referencias verificables del cierre.
+Las ramas `archive/*` funcionan como referencias históricas de preservación. Si en el futuro se crean tags o GitHub Releases equivalentes, deberán apuntar a los mismos snapshots y no reescribir estas referencias.
 
 ## Política de mantenimiento
 
@@ -61,4 +61,4 @@ El historial del Grupo #4, la información académica, colaboradores, licencia y
 
 ---
 
-**Freeze de portafolio iniciado:** septiembre de 2026.
+**Freeze de portafolio:** septiembre de 2026.
