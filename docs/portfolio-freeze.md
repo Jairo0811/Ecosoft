@@ -17,10 +17,8 @@ La evolución posterior no reemplaza ni reescribe la autoría, el contexto, el e
 
 ## Snapshots de referencia
 
-| Snapshot | Referencia | Propósito |
-| --- | --- | --- |
-| Academic baseline | `archive/academic-v1.0.0` → `18032be874c11890d93c89937e300382d646775c` | Estado previo a la productización Enterprise; preserva la referencia académica/base del portafolio. |
-| Portfolio freeze | `archive/portfolio-v2.0.0` | Se fija sobre el commit final de esta fase después de validar y fusionar el cierre. |
+- **Academic baseline:** `archive/academic-v1.0.0` apunta a `18032be874c11890d93c89937e300382d646775c`, estado previo a la productización Enterprise y referencia académica/base del portafolio.
+- **Portfolio freeze:** `archive/portfolio-v2.0.0` se fija sobre el commit final de esta fase después de validar y fusionar el cierre.
 
 Las ramas `archive/*` funcionan como referencias históricas de preservación. Si en el futuro se crean tags o GitHub Releases equivalentes, deberán apuntar a los mismos snapshots y no reescribir estas referencias.
 
