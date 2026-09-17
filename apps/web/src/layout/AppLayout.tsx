@@ -168,6 +168,36 @@ export function AppLayout() {
         ))}
       </List>
       <Box mt="auto" p={2} zIndex={1}>
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          px={1.5}
+          pb={1.25}
+          aria-label="Proyecto de República Dominicana"
+        >
+          <Box
+            component="img"
+            src="/icons/dominicana/mapa-rd.svg"
+            alt=""
+            aria-hidden="true"
+            sx={{
+              width: 24,
+              height: 24,
+              opacity: 0.72,
+              filter: 'brightness(0) invert(1)',
+            }}
+          />
+          <Box>
+            <Typography variant="caption" display="block" color="rgba(247,251,255,.72)" fontWeight={700}>
+              República Dominicana
+            </Typography>
+            <Typography variant="caption" display="block" color="rgba(247,251,255,.48)" fontSize={10.5}>
+              Identidad visual local
+            </Typography>
+          </Box>
+        </Stack>
+        <Divider sx={{ mb: 1, borderColor: 'rgba(0,183,255,.14)' }} />
         <ListItemButton
           onClick={() => void logout()}
           sx={{
