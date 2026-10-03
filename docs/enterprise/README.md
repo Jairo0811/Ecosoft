@@ -12,16 +12,16 @@ Este directorio documenta la evolución posterior al MVP académico de EcoSoft. 
 
 ## Fases 11–18
 
-| Fase | Nombre                | Entregable verificable                                                               | Estado en esta edición       |
-| ---: | --------------------- | ------------------------------------------------------------------------------------ | ---------------------------- |
-|   11 | Productization        | límites Academic/Enterprise, posicionamiento, modelo de despliegue y ownership       | ✅ Implementada              |
-|   12 | Production Security   | baseline de seguridad productiva, configuración y checklist de hardening             | ✅ Implementada              |
-|   13 | Enterprise Identity   | políticas MFA/SSO, configuración OIDC/SAML y contrato de adaptadores                 | ✅ Foundation completada     |
-|   14 | Multi-Organization    | modelo de tenancy sobre el aislamiento organizacional existente y reglas de contexto | ✅ Foundation completada     |
-|   15 | Cloud & Observability | topología Azure, ambientes, SLO/telemetría y runbooks                                | ✅ Foundation completada     |
-|   16 | Integrations          | contratos para correo, webhooks, almacenamiento y firma electrónica/digital          | ✅ Foundation completada     |
-|   17 | Compliance & Scale    | controles, pruebas de carga, retención, DR, RTO/RPO y evidencias                     | ✅ Foundation completada     |
-|   18 | Commercial Pilot      | onboarding, criterios de aceptación, soporte, métricas y go/no-go                    | ✅ Implementada              |
+| Fase | Nombre                | Entregable verificable                                                               | Estado en esta edición   |
+| ---: | --------------------- | ------------------------------------------------------------------------------------ | ------------------------ |
+|   11 | Productization        | límites Academic/Enterprise, posicionamiento, modelo de despliegue y ownership       | ✅ Implementada          |
+|   12 | Production Security   | baseline de seguridad productiva, configuración y checklist de hardening             | ✅ Implementada          |
+|   13 | Enterprise Identity   | políticas MFA/SSO, configuración OIDC/SAML y contrato de adaptadores                 | ✅ Foundation completada |
+|   14 | Multi-Organization    | modelo de tenancy sobre el aislamiento organizacional existente y reglas de contexto | ✅ Foundation completada |
+|   15 | Cloud & Observability | topología Azure, ambientes, SLO/telemetría y runbooks                                | ✅ Foundation completada |
+|   16 | Integrations          | contratos para correo, webhooks, almacenamiento y firma electrónica/digital          | ✅ Foundation completada |
+|   17 | Compliance & Scale    | controles, pruebas de carga, retención, DR, RTO/RPO y evidencias                     | ✅ Foundation completada |
+|   18 | Commercial Pilot      | onboarding, criterios de aceptación, soporte, métricas y go/no-go                    | ✅ Implementada          |
 
 `Foundation completada` significa que el alcance definido para esta edición de portafolio está cerrado: código, contratos, configuración y documentación necesarios para conectar infraestructura o proveedores reales están preparados y verificables. No significa que dichos proveedores estén contratados, desplegados o certificados en producción.
 
