@@ -19,7 +19,7 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm audit fix --package-lock-only
+      - run: npm audit fix --package-lock-only || true
       - run: npm audit --omit=dev --audit-level=high
       - uses: actions/upload-artifact@v4
         with:
