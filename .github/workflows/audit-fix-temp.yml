@@ -1,12 +1,10 @@
-name: Generate audit fix lockfile
+name: Apply production audit fix
 
 on:
-  push:
-    branches:
-      - docs/clarify-foundation-complete
+  workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   audit-fix:
@@ -14,15 +12,22 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: docs/clarify-foundation-complete
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm audit fix --package-lock-only || true
-      - run: npm audit --omit=dev --audit-level=high
-      - uses: actions/upload-artifact@v4
-        with:
-          name: audit-fixed-lockfile
-          path: package-lock.json
-          if-no-files-found: error
+      - name: Update lockfile within compatible ranges
+        run: npm audit fix --package-lock-only || true
+      - name: Verify production dependencies
+        run: npm audit --omit=dev --audit-level=high
+      - name: Commit only the lockfile
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package-lock.json
+          git diff --cached --quiet && exit 0
+          git commit -m "fix(security): refresh production dependency lockfile"
+          git push origin HEAD:docs/clarify-foundation-complete
