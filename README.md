@@ -476,27 +476,27 @@ privacidad.
 
 ## 🗺️ Roadmap
 
-| Fase | Incremento                                          | Estado                    |
-| ---: | --------------------------------------------------- | ------------------------- |
-|    0 | Análisis, arquitectura, ERD, riesgos y ADRs         | ✅ Completada             |
-|    1 | Foundation, Authentication y RBAC                   | ✅ Completada             |
-|    2 | Organizaciones, participantes y usuarios            | ✅ Completada             |
-|    3 | Licitaciones, subastas y calendario                 | ✅ Completada             |
-|    4 | Ofertas inmutables y documentos                     | ✅ Implementada           |
-|    5 | Evaluaciones configurables y adjudicaciones         | ✅ Implementada           |
-|    6 | Contratos PPA y proyectos energéticos               | ✅ Implementada           |
-|    7 | Dashboard, analítica y reportes                     | ✅ Implementada           |
-|    8 | Auditoría ampliada, regulación y notificaciones     | ✅ Implementada           |
-|    9 | IA, OCR y análisis asistivo con aprobación humana   | ✅ Implementada           |
-|   10 | Hardening, QA, accesibilidad, CI/CD y documentación | ✅ Implementada           |
-|   11 | Productization                                      | ✅ Implementada           |
-|   12 | Production Security                                 | ✅ Implementada           |
-|   13 | Enterprise Identity                                 | ✅ Foundation completada  |
-|   14 | Multi-Organization                                  | ✅ Foundation completada  |
-|   15 | Cloud & Observability                               | ✅ Foundation completada  |
-|   16 | Integrations                                        | ✅ Foundation completada  |
-|   17 | Compliance & Scale                                  | ✅ Foundation completada  |
-|   18 | Commercial Pilot                                    | ✅ Implementada           |
+| Fase | Incremento                                          | Estado                   |
+| ---: | --------------------------------------------------- | ------------------------ |
+|    0 | Análisis, arquitectura, ERD, riesgos y ADRs         | ✅ Completada            |
+|    1 | Foundation, Authentication y RBAC                   | ✅ Completada            |
+|    2 | Organizaciones, participantes y usuarios            | ✅ Completada            |
+|    3 | Licitaciones, subastas y calendario                 | ✅ Completada            |
+|    4 | Ofertas inmutables y documentos                     | ✅ Implementada          |
+|    5 | Evaluaciones configurables y adjudicaciones         | ✅ Implementada          |
+|    6 | Contratos PPA y proyectos energéticos               | ✅ Implementada          |
+|    7 | Dashboard, analítica y reportes                     | ✅ Implementada          |
+|    8 | Auditoría ampliada, regulación y notificaciones     | ✅ Implementada          |
+|    9 | IA, OCR y análisis asistivo con aprobación humana   | ✅ Implementada          |
+|   10 | Hardening, QA, accesibilidad, CI/CD y documentación | ✅ Implementada          |
+|   11 | Productization                                      | ✅ Implementada          |
+|   12 | Production Security                                 | ✅ Implementada          |
+|   13 | Enterprise Identity                                 | ✅ Foundation completada |
+|   14 | Multi-Organization                                  | ✅ Foundation completada |
+|   15 | Cloud & Observability                               | ✅ Foundation completada |
+|   16 | Integrations                                        | ✅ Foundation completada |
+|   17 | Compliance & Scale                                  | ✅ Foundation completada |
+|   18 | Commercial Pilot                                    | ✅ Implementada          |
 
 > **Nota de cierre:** las Fases 13–17 están completadas hasta el alcance Foundation definido para
 > esta edición de portafolio. Su evolución a Production Ready requiere infraestructura, proveedores,
