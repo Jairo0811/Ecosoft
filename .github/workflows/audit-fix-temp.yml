@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   audit-fix:
-    if: github.event.head_commit.message != 'fix(security): refresh production dependency lockfile'
+    if: ${{ github.event.head_commit.message != 'fix(security): refresh production dependency lockfile' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
