@@ -90,9 +90,11 @@ analítica.
 Las **Fases 0 a 10** están implementadas como un MVP integral. Las **Fases 11 a 18** añaden la
 productización Enterprise: baseline de seguridad, identidad empresarial configurable, estrategia de
 tenancy, observabilidad, contratos de integración, gates de cumplimiento/escala y plan de piloto.
-Las capacidades que dependen de infraestructura o proveedores externos se mantienen como
-`Foundation` hasta existir credenciales y evidencia real; por eso el estado correcto es
-**Enterprise MVP / Pilot Ready**, no Production Ready.
+Las **Fases 13 a 17** están cerradas en el alcance **Foundation** definido para esta edición de
+portafolio: código, contratos, configuración y documentación base están implementados y son
+verificables. Su evolución a operación productiva requiere infraestructura, proveedores,
+credenciales y evidencia reales; por eso el estado correcto sigue siendo **Enterprise MVP / Pilot
+Ready**, no Production Ready.
 
 ### 🔐 Identidad y seguridad
 
@@ -474,27 +476,31 @@ privacidad.
 
 ## 🗺️ Roadmap
 
-| Fase | Incremento                                          | Estado          |
-| ---: | --------------------------------------------------- | --------------- |
-|    0 | Análisis, arquitectura, ERD, riesgos y ADRs         | ✅ Completada   |
-|    1 | Foundation, Authentication y RBAC                   | ✅ Completada   |
-|    2 | Organizaciones, participantes y usuarios            | ✅ Completada   |
-|    3 | Licitaciones, subastas y calendario                 | ✅ Completada   |
-|    4 | Ofertas inmutables y documentos                     | ✅ Implementada |
-|    5 | Evaluaciones configurables y adjudicaciones         | ✅ Implementada |
-|    6 | Contratos PPA y proyectos energéticos               | ✅ Implementada |
-|    7 | Dashboard, analítica y reportes                     | ✅ Implementada |
-|    8 | Auditoría ampliada, regulación y notificaciones     | ✅ Implementada |
-|    9 | IA, OCR y análisis asistivo con aprobación humana   | ✅ Implementada |
-|   10 | Hardening, QA, accesibilidad, CI/CD y documentación | ✅ Implementada |
-|   11 | Productization                                      | ✅ Implementada |
-|   12 | Production Security                                 | ✅ Implementada |
-|   13 | Enterprise Identity                                 | 🧱 Foundation   |
-|   14 | Multi-Organization                                  | 🧱 Foundation   |
-|   15 | Cloud & Observability                               | 🧱 Foundation   |
-|   16 | Integrations                                        | 🧱 Foundation   |
-|   17 | Compliance & Scale                                  | 🧱 Foundation   |
-|   18 | Commercial Pilot                                    | ✅ Implementada |
+| Fase | Incremento                                          | Estado                   |
+| ---: | --------------------------------------------------- | ------------------------ |
+|    0 | Análisis, arquitectura, ERD, riesgos y ADRs         | ✅ Completada            |
+|    1 | Foundation, Authentication y RBAC                   | ✅ Completada            |
+|    2 | Organizaciones, participantes y usuarios            | ✅ Completada            |
+|    3 | Licitaciones, subastas y calendario                 | ✅ Completada            |
+|    4 | Ofertas inmutables y documentos                     | ✅ Implementada          |
+|    5 | Evaluaciones configurables y adjudicaciones         | ✅ Implementada          |
+|    6 | Contratos PPA y proyectos energéticos               | ✅ Implementada          |
+|    7 | Dashboard, analítica y reportes                     | ✅ Implementada          |
+|    8 | Auditoría ampliada, regulación y notificaciones     | ✅ Implementada          |
+|    9 | IA, OCR y análisis asistivo con aprobación humana   | ✅ Implementada          |
+|   10 | Hardening, QA, accesibilidad, CI/CD y documentación | ✅ Implementada          |
+|   11 | Productization                                      | ✅ Implementada          |
+|   12 | Production Security                                 | ✅ Implementada          |
+|   13 | Enterprise Identity                                 | ✅ Foundation completada |
+|   14 | Multi-Organization                                  | ✅ Foundation completada |
+|   15 | Cloud & Observability                               | ✅ Foundation completada |
+|   16 | Integrations                                        | ✅ Foundation completada |
+|   17 | Compliance & Scale                                  | ✅ Foundation completada |
+|   18 | Commercial Pilot                                    | ✅ Implementada          |
+
+> **Nota de cierre:** las Fases 13–17 están completadas hasta el alcance Foundation definido para
+> esta edición de portafolio. Su evolución a Production Ready requiere infraestructura, proveedores,
+> credenciales y evidencia operativa reales; por tanto, no representan fases académicas pendientes.
 
 El proyecto utiliza Scrum y trata cada fase como un incremento potencialmente entregable. Su
 diseño considera una duración académica máxima de 12 meses, presupuesto limitado, protección de
@@ -625,6 +631,9 @@ contratos operativos y criterios verificables de preparación Enterprise.
 la base de producto, código, pruebas, documentación y contratos operativos necesarios para iniciar un
 piloto están presentes. No se declara **Production Ready** mientras las capacidades dependientes de
 infraestructura externa no dispongan de credenciales, despliegue y evidencia real.
+
+Las Fases 13–17 están **completadas en alcance Foundation** para esta edición de portafolio. Los
+siguientes pasos pertenecen a una futura operación comercial y no constituyen deuda académica.
 
 Requieren cierre con infraestructura/proveedor real antes de producción: Azure Key Vault y recursos
 cloud, SSO OIDC/SAML, MFA corporativo, correo transaccional, almacenamiento documental productivo,
