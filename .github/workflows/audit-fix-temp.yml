@@ -1,0 +1,28 @@
+name: Generate audit fix lockfile
+
+on:
+  push:
+    branches:
+      - docs/clarify-foundation-complete
+
+permissions:
+  contents: read
+
+jobs:
+  audit-fix:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm audit fix --package-lock-only
+      - run: npm audit --omit=dev --audit-level=high
+      - uses: actions/upload-artifact@v4
+        with:
+          name: audit-fixed-lockfile
+          path: package-lock.json
+          if-no-files-found: error
