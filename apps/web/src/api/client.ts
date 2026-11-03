@@ -6,6 +6,9 @@ const tokenKey = 'ecosoft_access_token';
 const asError = (reason: unknown): Error =>
   reason instanceof Error ? reason : new Error('Error inesperado en la comunicación con la API.');
 
+export const SESSION_EXPIRED_EVENT = 'ecosoft:session-expired';
+export const trustedWebHeaders = { 'X-Requested-With': 'EcoSoftWeb' } as const;
+
 export const authStorage = {
   getToken: () => sessionStorage.getItem(tokenKey),
   setToken: (token: string) => sessionStorage.setItem(tokenKey, token),
@@ -14,13 +17,45 @@ export const authStorage = {
 
 export const apiClient = axios.create({ baseURL: apiUrl, withCredentials: true });
 
-apiClient.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+type RetriableConfig = InternalAxiosRequestConfig & {
+  _retried?: boolean;
+  /** Access token attached when the request was first sent (identity snapshot). */
+  _sentWithToken?: string | null;
+};
+
+apiClient.interceptors.request.use((config: RetriableConfig) => {
   const token = authStorage.getToken();
+  if (!config._retried) config._sentWithToken = token;
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-let refreshInProgress: Promise<string> | null = null;
+/**
+ * Endpoints whose 401 must never trigger a silent refresh: credentials are wrong, the
+ * refresh itself failed or the user is leaving. `/auth/me` is intentionally NOT listed so
+ * that restoring a tab with an expired access token recovers through the refresh cookie.
+ */
+const nonRefreshable = ['/auth/login', '/auth/refresh', '/auth/logout', '/auth/invitations/'];
+
+let refreshInProgress: Promise<{ accessToken: string; user: SessionUser }> | null = null;
+
+/** Rotates the refresh cookie once; concurrent callers share the same in-flight request. */
+export const refreshSession = (): Promise<{ accessToken: string; user: SessionUser }> => {
+  refreshInProgress ??= apiClient
+    .post<{ accessToken: string; user: SessionUser }>(
+      '/auth/refresh',
+      {},
+      { headers: trustedWebHeaders },
+    )
+    .then(({ data }) => {
+      authStorage.setToken(data.accessToken);
+      return data;
+    })
+    .finally(() => {
+      refreshInProgress = null;
+    });
+  return refreshInProgress;
+};
 
 apiClient.interceptors.response.use(
   (response) => response,
@@ -28,31 +63,28 @@ apiClient.interceptors.response.use(
     if (!axios.isAxiosError(error) || error.response?.status !== 401 || !error.config) {
       return Promise.reject(asError(error));
     }
-    const original = error.config as InternalAxiosRequestConfig & { _retried?: boolean };
-    if (original._retried || original.url?.includes('/auth/')) return Promise.reject(error);
+    const original = error.config as RetriableConfig;
+    if (original._retried || nonRefreshable.some((path) => original.url?.includes(path))) {
+      return Promise.reject(error);
+    }
     original._retried = true;
 
-    refreshInProgress ??= apiClient
-      .post<{ accessToken: string; user: SessionUser }>(
-        '/auth/refresh',
-        {},
-        { headers: { 'X-Requested-With': 'EcoSoftWeb' } },
-      )
-      .then(({ data }) => {
-        authStorage.setToken(data.accessToken);
-        return data.accessToken;
-      })
-      .finally(() => {
-        refreshInProgress = null;
-      });
-
+    let accessToken: string;
     try {
-      original.headers.Authorization = `Bearer ${await refreshInProgress}`;
-      return await apiClient.request(original);
+      ({ accessToken } = await refreshSession());
     } catch (refreshError) {
-      authStorage.clear();
-      window.dispatchEvent(new Event('ecosoft:session-expired'));
+      // Only terminate the session that issued this request. A late 401 belonging to a
+      // previous identity must not log out a user who has signed in since then.
+      const current = authStorage.getToken();
+      const sameIdentity = !current || current === original._sentWithToken;
+      if (sameIdentity) {
+        authStorage.clear();
+        window.dispatchEvent(new Event(SESSION_EXPIRED_EVENT));
+      }
       return Promise.reject(asError(refreshError));
     }
+    // Errors of the replayed request (403, 500…) are reported as-is and never end the session.
+    original.headers.Authorization = `Bearer ${accessToken}`;
+    return apiClient.request(original);
   },
 );

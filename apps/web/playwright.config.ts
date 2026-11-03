@@ -10,7 +10,19 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        // Optional: reuse an installed Chrome (e.g. PLAYWRIGHT_CHROME_CHANNEL=chrome) when the
+        // Playwright browser download is unavailable. CI keeps the bundled Chromium.
+        ...(process.env.PLAYWRIGHT_CHROME_CHANNEL
+          ? { channel: process.env.PLAYWRIGHT_CHROME_CHANNEL }
+          : {}),
+      },
+    },
+  ],
   webServer: {
     command: 'npm run dev -- --host 127.0.0.1',
     port: 5173,
