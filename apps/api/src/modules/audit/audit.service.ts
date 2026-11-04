@@ -1,5 +1,9 @@
 import { createHash } from 'node:crypto';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '../../config/prisma';
+
+/** Either the shared client or an interactive transaction, so audit can commit atomically. */
+export type AuditClient = Pick<Prisma.TransactionClient, 'auditLog'>;
 
 export interface AuditEvent {
   userId?: string;
@@ -56,8 +60,8 @@ const hashEvent = (event: AuditEvent): string =>
     .digest('hex');
 
 export const auditService = {
-  async record(event: AuditEvent): Promise<void> {
-    await prisma.auditLog.create({
+  async record(event: AuditEvent, client: AuditClient = prisma): Promise<void> {
+    await client.auditLog.create({
       data: {
         userId: event.userId,
         organizationId: event.organizationId,
