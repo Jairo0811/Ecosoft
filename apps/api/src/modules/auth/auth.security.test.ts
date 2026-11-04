@@ -1,4 +1,5 @@
 import type { Express } from 'express';
+import bcrypt from 'bcryptjs';
 import request from 'supertest';
 import type { SessionUser } from '@ecosoft/shared';
 import type { tokenService as TokenService } from './token.service';
@@ -150,6 +151,18 @@ describe('auth security', () => {
       .set('Cookie', `ecosoft_refresh=${refresh.token}`);
     expect(response.status).toBe(204);
     expect(db.refreshToken.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('spends a bcrypt comparison even when the account does not exist (no timing oracle)', async () => {
+    const compare = jest.spyOn(bcrypt, 'compare');
+    db.user.findUnique.mockResolvedValueOnce(null);
+    const response = await request(app)
+      .post('/api/v1/auth/login')
+      .send({ email: 'nadie@ecosoft.test', password: 'Contraseña-incorrecta-1' });
+    expect(response.status).toBe(401);
+    expect((response.body as { code: string }).code).toBe('INVALID_CREDENTIALS');
+    expect(compare).toHaveBeenCalledTimes(1);
+    compare.mockRestore();
   });
 
   it('rejects expired and tampered access tokens', async () => {

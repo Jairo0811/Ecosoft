@@ -60,6 +60,13 @@ async function issueSession(
   return { accessToken, refreshToken: refresh.token, user: sessionUser };
 }
 
+let timingHash: Promise<string> | undefined;
+/** Same cost as a real password check (bcrypt, 12 rounds) against a throwaway hash. */
+const equalizeTiming = async (password: string): Promise<void> => {
+  timingHash ??= bcrypt.hash('ecosoft-timing-equalizer', 12);
+  await bcrypt.compare(password, await timingHash);
+};
+
 export const authService = {
   async login(email: string, password: string, metadata: RequestMetadata): Promise<AuthResult> {
     const normalizedEmail = email.trim().toLowerCase();
@@ -80,10 +87,20 @@ export const authService = {
       throw new AppError(401, 'INVALID_CREDENTIALS', 'Correo o contraseña incorrectos.');
     };
 
-    if (!user) return denied();
-    if (user.lockedUntil && user.lockedUntil > new Date())
+    // Every rejection path spends one bcrypt comparison, so response time does not reveal
+    // whether an account exists, is locked or is inactive (user enumeration by timing).
+    if (!user) {
+      await equalizeTiming(password);
+      return denied();
+    }
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      await equalizeTiming(password);
       return denied(user.id, user.organizationId ?? undefined);
-    if (user.status !== 'ACTIVE') return denied(user.id, user.organizationId ?? undefined);
+    }
+    if (user.status !== 'ACTIVE') {
+      await equalizeTiming(password);
+      return denied(user.id, user.organizationId ?? undefined);
+    }
 
     const passwordMatches = await bcrypt.compare(password, user.passwordHash);
     if (!passwordMatches) {

@@ -187,3 +187,10 @@ jobs:
               completedModules.some((payload) => !Array.isArray(payload.data))
             ) process.exit(1);
           '
+          # Critical flows against real SQL Server: refresh rotation/replay, IDOR, document
+          # integrity and concurrent versions, report pagination and exports.
+          ADMIN_PASSWORD="$SEED_ADMIN_PASSWORD" node apps/api/scripts/integration-check.mjs || {
+            echo '--- API log ---'
+            tail -n 200 /tmp/ecosoft-api.log
+            exit 1
+          }
