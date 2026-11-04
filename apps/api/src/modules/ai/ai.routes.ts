@@ -4,7 +4,7 @@ import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { AppError } from '../../common/app-error';
 import { asyncHandler } from '../../common/async-handler';
-import { hasInstitutionalAccess } from '../../common/domain-access';
+import { hasInstitutionalAccess, organizationScopeId } from '../../common/domain-access';
 import { prisma } from '../../config/prisma';
 import { auditService } from '../audit/audit.service';
 import { authenticate, requirePermission, requireTrustedWebRequest } from '../auth/auth.middleware';
@@ -19,6 +19,9 @@ import {
 } from './ai.schemas';
 
 const router = Router();
+
+/** Document types the LOCAL_DETERMINISTIC provider can read (documents module accepts .txt). */
+export const TEXT_EXTRACTION_MIME_TYPES = new Set(['text/plain']);
 const parseId = (value: string | string[] | undefined) => z.uuid().parse(value);
 const metadata = (request: Request) => ({
   ipAddress: request.ip,
@@ -28,7 +31,7 @@ const metadata = (request: Request) => ({
 const scope = (request: Request): Prisma.AIAnalysisWhereInput =>
   hasInstitutionalAccess(request.auth!)
     ? {}
-    : { organizationId: request.auth!.organizationId ?? '__none__' };
+    : { organizationId: organizationScopeId(request.auth!) };
 const analysisSelect = {
   id: true,
   documentId: true,
@@ -55,7 +58,7 @@ const getDocument = async (documentId: string, request: Request) => {
       status: 'ACTIVE',
       ...(hasInstitutionalAccess(request.auth!)
         ? {}
-        : { organizationId: request.auth!.organizationId ?? '__none__' }),
+        : { organizationId: organizationScopeId(request.auth!) }),
     },
     include: { versions: { orderBy: { versionNumber: 'desc' }, take: 1 } },
   });
@@ -156,7 +159,15 @@ router.post(
   asyncHandler(async (request, response) => {
     const input = aiOcrCreateSchema.parse(request.body);
     const { document, version } = await getDocument(input.documentId, request);
-    const content = await documentStorage.read(version.storageKey);
+    // The configured provider decodes UTF-8 text only; it is not OCR. Say so up front instead
+    // of letting the request fail downstream as a generic service error.
+    if (!TEXT_EXTRACTION_MIME_TYPES.has(version.mimeType))
+      throw new AppError(
+        422,
+        'TEXT_EXTRACTION_UNSUPPORTED',
+        'El proveedor configurado solo extrae texto de archivos .txt (UTF-8). No realiza OCR de imágenes ni de PDF escaneados.',
+      );
+    const content = await documentStorage.readVerified(version.storageKey, version.sha256);
     const result = await aiClient.ocr(content.toString('base64'), version.mimeType);
     const extractedText = typeof result.result.text === 'string' ? result.result.text.trim() : '';
     if (!extractedText)

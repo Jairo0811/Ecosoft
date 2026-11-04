@@ -15,10 +15,13 @@ describe('LoginPage', () => {
         </MemoryRouter>
       </EcoSoftThemeProvider>,
     );
-    expect(screen.getByRole('heading', { name: 'Bienvenido' })).toBeInTheDocument();
-    expect(screen.getByRole('img', { name: 'EcoSoft Solutions S.R.L.' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { level: 1, name: 'Iniciar sesión' })).toBeInTheDocument();
+    expect(screen.getAllByRole('img', { name: 'EcoSoft Solutions S.R.L.' }).length).toBeGreaterThan(
+      0,
+    );
     expect(screen.getByLabelText('Correo electrónico')).toBeInTheDocument();
-    expect(screen.getByLabelText('Contraseña')).toBeInTheDocument();
+    expect(screen.getByLabelText('Contraseña')).toHaveAttribute('type', 'password');
+    expect(screen.getByRole('button', { name: 'Mostrar contraseña' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Iniciar sesión' })).toBeInTheDocument();
   });
 });

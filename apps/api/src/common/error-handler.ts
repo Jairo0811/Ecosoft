@@ -22,6 +22,25 @@ export const errorHandler: ErrorRequestHandler = (error, request, response, _nex
     return;
   }
 
+  // body-parser errors carry an HTTP status and a `type`; they are client errors, not faults.
+  const parserType = (error as { type?: unknown } | null)?.type;
+  if (parserType === 'entity.too.large') {
+    response.status(413).json({
+      code: 'PAYLOAD_TOO_LARGE',
+      message: 'La solicitud excede el tamaño máximo permitido.',
+      correlationId: request.correlationId,
+    });
+    return;
+  }
+  if (parserType === 'entity.parse.failed' || parserType === 'encoding.unsupported') {
+    response.status(400).json({
+      code: 'MALFORMED_REQUEST',
+      message: 'El cuerpo de la solicitud no es un JSON válido.',
+      correlationId: request.correlationId,
+    });
+    return;
+  }
+
   const appError = error instanceof AppError ? error : null;
   const status = appError?.statusCode ?? 500;
   if (status >= 500) {

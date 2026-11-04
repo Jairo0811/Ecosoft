@@ -13,7 +13,7 @@
   },
   "scripts": {
     "postinstall": "npm run build --workspace @ecosoft/shared && npm run db:generate",
-    "dev": "npm run dev --workspace @ecosoft/api & npm run dev --workspace @ecosoft/web",
+    "dev": "node scripts/dev.mjs",
     "build": "npm run build --workspace @ecosoft/shared && npm run build --workspace @ecosoft/api && npm run build --workspace @ecosoft/web",
     "lint": "npm run lint --workspaces --if-present",
     "typecheck": "npm run typecheck --workspaces --if-present",

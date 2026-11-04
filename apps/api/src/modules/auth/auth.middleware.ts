@@ -22,6 +22,28 @@ export const authenticate: RequestHandler = async (request, _response, next) => 
   next();
 };
 
+/** Attaches `request.auth` when a valid, non-revoked bearer token is present; never rejects. */
+export const optionalAuthenticate: RequestHandler = async (request, _response, next) => {
+  const authorization = request.header('authorization');
+  if (!authorization?.startsWith('Bearer ')) {
+    next();
+    return;
+  }
+  try {
+    const claims = tokenService.verifyAccessToken(authorization.slice(7));
+    const current = await prisma.user.findUnique({
+      where: { id: claims.id },
+      select: { status: true, authVersion: true },
+    });
+    if (current?.status === 'ACTIVE' && current.authVersion === claims.authVersion) {
+      request.auth = claims;
+    }
+  } catch {
+    // Expired or invalid access token: continue anonymously.
+  }
+  next();
+};
+
 export const requirePermission =
   (...required: string[]): RequestHandler =>
   (request, _response, next) => {

@@ -4,7 +4,11 @@ import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { AppError } from '../../common/app-error';
 import { asyncHandler } from '../../common/async-handler';
-import { hasInstitutionalAccess, requireOrganization } from '../../common/domain-access';
+import {
+  hasInstitutionalAccess,
+  requireOrganization,
+  organizationScopeId,
+} from '../../common/domain-access';
 import { prisma } from '../../config/prisma';
 import { auditService } from '../audit/audit.service';
 import { authenticate, requirePermission, requireTrustedWebRequest } from '../auth/auth.middleware';
@@ -55,7 +59,7 @@ const select = {
 const scope = (request: Request): Prisma.EnergyProjectWhereInput =>
   hasInstitutionalAccess(request.auth!)
     ? {}
-    : { organizationId: request.auth!.organizationId ?? '__none__' };
+    : { organizationId: organizationScopeId(request.auth!) };
 const getProject = async (id: string, request: Request) => {
   const project = await prisma.energyProject.findFirst({
     where: { id, ...scope(request) },

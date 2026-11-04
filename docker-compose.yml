@@ -5,8 +5,9 @@ services:
       ACCEPT_EULA: 'Y'
       MSSQL_PID: Developer
       MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:-YourStrong!Passw0rd}
+    # Local edition only: published on loopback so the database is not reachable from the LAN.
     ports:
-      - '14330:1433'
+      - '127.0.0.1:14330:1433'
     volumes:
       - ecosoft-sqlserver:/var/opt/mssql
     healthcheck:
@@ -21,8 +22,10 @@ services:
 
   ai-service:
     build: ./apps/ai-service
+    # Internal service consumed only by the API (AI_SERVICE_URL=http://localhost:8000).
+    # Loopback binding keeps it off external networks; it has no authentication of its own.
     ports:
-      - '8000:8000'
+      - '127.0.0.1:8000:8000'
     healthcheck:
       test:
         [

@@ -17,6 +17,30 @@ const envSchema = z.object({
   DOCUMENT_STORAGE_PATH: z.string().min(1).default('.data/documents'),
   AI_SERVICE_URL: z.string().url().default('http://localhost:8000'),
   AI_SERVICE_TIMEOUT_MS: z.coerce.number().int().min(500).max(60_000).default(10_000),
+  /**
+   * Express `trust proxy`. Default `false`: X-Forwarded-For is ignored and `request.ip` is the
+   * socket peer, so clients cannot spoof their IP to evade rate limits or forge audit IPs.
+   * Set it only to match the real topology: a hop count ("1") or the proxy addresses/subnets
+   * ("loopback", "10.0.0.0/8,172.16.0.0/12").
+   */
+  TRUST_PROXY: z
+    .string()
+    .trim()
+    .default('false')
+    .transform((value, context): boolean | number | string => {
+      const normalized = value.toLowerCase();
+      if (normalized === '' || normalized === 'false' || normalized === '0') return false;
+      if (normalized === 'true') {
+        context.addIssue({
+          code: 'custom',
+          message:
+            'TRUST_PROXY=true confía en cualquier cliente; use un número de saltos o subredes.',
+        });
+        return z.NEVER;
+      }
+      if (/^\d+$/.test(normalized)) return Number(normalized);
+      return value;
+    }),
 });
 
 const result = envSchema.safeParse(process.env);

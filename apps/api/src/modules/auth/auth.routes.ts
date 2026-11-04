@@ -3,7 +3,7 @@ import { rateLimit } from 'express-rate-limit';
 import { z } from 'zod';
 import { asyncHandler } from '../../common/async-handler';
 import { env } from '../../config/env';
-import { authenticate, requireTrustedWebRequest } from './auth.middleware';
+import { authenticate, optionalAuthenticate, requireTrustedWebRequest } from './auth.middleware';
 import { authService } from './auth.service';
 import { invitationService } from '../users/invitations.service';
 import { acceptInvitationSchema, invitationTokenSchema } from '../users/users.schemas';
@@ -14,9 +14,21 @@ const credentialsSchema = z.object({
   password: z.string().min(8).max(128),
 });
 
+/** Credential and invitation endpoints: brute-force protection per client IP. */
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   limit: env.NODE_ENV === 'test' ? 1000 : 20,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+});
+
+/**
+ * Session maintenance (refresh/logout) has its own budget: silent refreshes from several tabs
+ * must not exhaust the login budget and lock users out of their own session.
+ */
+const sessionLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: env.NODE_ENV === 'test' ? 1000 : 120,
   standardHeaders: 'draft-8',
   legacyHeaders: false,
 });
@@ -67,7 +79,7 @@ router.post(
 
 router.post(
   '/refresh',
-  authLimiter,
+  sessionLimiter,
   requireTrustedWebRequest,
   asyncHandler(async (request, response) => {
     const rawToken = request.cookies.ecosoft_refresh as string | undefined;
@@ -87,11 +99,12 @@ router.post(
 
 router.post(
   '/logout',
-  authenticate,
+  sessionLimiter,
   requireTrustedWebRequest,
+  optionalAuthenticate,
   asyncHandler(async (request, response) => {
     const rawToken = request.cookies.ecosoft_refresh as string | undefined;
-    await authService.logout(rawToken, request.auth!, metadata(request));
+    await authService.logout(rawToken, request.auth, metadata(request));
     response.clearCookie('ecosoft_refresh', cookieOptions);
     response.status(204).send();
   }),

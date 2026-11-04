@@ -30,7 +30,8 @@ export const reportQuerySchema = z
   });
 
 export const exportQuerySchema = reportQuerySchema.and(
-  z.object({ format: z.enum(['csv', 'xls', 'pdf']).default('csv') }),
+  // `xls` is a deprecated alias of `xlsx`, kept so existing links and clients keep working.
+  z.object({ format: z.enum(['csv', 'xlsx', 'xls', 'pdf']).default('csv') }),
 );
 
 export type ReportQuery = z.infer<typeof reportQuerySchema>;
