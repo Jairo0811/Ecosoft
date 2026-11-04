@@ -4,7 +4,7 @@ import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { AppError } from '../../common/app-error';
 import { asyncHandler } from '../../common/async-handler';
-import { hasInstitutionalAccess } from '../../common/domain-access';
+import { hasInstitutionalAccess, organizationScopeId } from '../../common/domain-access';
 import { createSnapshot } from '../../common/snapshot';
 import { prisma } from '../../config/prisma';
 import { auditService } from '../audit/audit.service';
@@ -73,7 +73,7 @@ const select = {
 const scope = (request: Request): Prisma.PPAContractWhereInput =>
   hasInstitutionalAccess(request.auth!)
     ? {}
-    : { organizationId: request.auth!.organizationId ?? '__none__' };
+    : { organizationId: organizationScopeId(request.auth!) };
 const getContract = async (id: string, request: Request) => {
   const contract = await prisma.pPAContract.findFirst({ where: { id, ...scope(request) }, select });
   if (!contract)

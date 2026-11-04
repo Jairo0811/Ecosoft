@@ -4,7 +4,7 @@ import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { AppError } from '../../common/app-error';
 import { asyncHandler } from '../../common/async-handler';
-import { hasInstitutionalAccess } from '../../common/domain-access';
+import { hasInstitutionalAccess, organizationScopeId } from '../../common/domain-access';
 import { prisma } from '../../config/prisma';
 import { auditService } from '../audit/audit.service';
 import { authenticate, requirePermission, requireTrustedWebRequest } from '../auth/auth.middleware';
@@ -28,7 +28,7 @@ const metadata = (request: Request) => ({
 const scope = (request: Request): Prisma.AIAnalysisWhereInput =>
   hasInstitutionalAccess(request.auth!)
     ? {}
-    : { organizationId: request.auth!.organizationId ?? '__none__' };
+    : { organizationId: organizationScopeId(request.auth!) };
 const analysisSelect = {
   id: true,
   documentId: true,
@@ -55,7 +55,7 @@ const getDocument = async (documentId: string, request: Request) => {
       status: 'ACTIVE',
       ...(hasInstitutionalAccess(request.auth!)
         ? {}
-        : { organizationId: request.auth!.organizationId ?? '__none__' }),
+        : { organizationId: organizationScopeId(request.auth!) }),
     },
     include: { versions: { orderBy: { versionNumber: 'desc' }, take: 1 } },
   });

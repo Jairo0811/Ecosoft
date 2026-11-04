@@ -123,4 +123,23 @@ describe('apiClient session handling', () => {
     expect(refreshes).toBe(0);
     expect(expired).not.toHaveBeenCalled();
   });
+
+  it('retries once when another tab rotated the refresh cookie at the same time', async () => {
+    authStorage.setToken('old');
+    let refreshes = 0;
+    useServer((config) => {
+      if (config.url === '/auth/refresh') {
+        refreshes += 1;
+        return refreshes === 1
+          ? { status: 401, data: { code: 'REFRESH_CONFLICT' } }
+          : { status: 200, data: { accessToken: 'new', user: user('a') } };
+      }
+      return AxiosHeaders.from(config.headers).get('Authorization') === 'Bearer new'
+        ? { status: 200, data: { ok: true } }
+        : { status: 401 };
+    });
+    await expect(apiClient.get('/bids')).resolves.toMatchObject({ data: { ok: true } });
+    expect(refreshes).toBe(2);
+    expect(expired).not.toHaveBeenCalled();
+  });
 });

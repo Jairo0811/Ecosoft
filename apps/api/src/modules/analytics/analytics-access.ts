@@ -1,5 +1,6 @@
 import type { Prisma } from '@prisma/client';
 import type { SessionUser } from '@ecosoft/shared';
+import { NO_ORGANIZATION_SCOPE } from '../../common/domain-access';
 import type { AnalyticsQuery } from './analytics.schemas';
 
 const institutionalRoles = new Set([
@@ -21,7 +22,9 @@ export const analyticsOrganizationId = (
 ): string | undefined =>
   hasInstitutionalAnalyticsAccess(actor)
     ? query.organizationId
-    : (actor.organizationId ?? undefined);
+    : // Fail closed: a non-institutional actor without organization must never get the
+      // unscoped (installation-wide) dataset.
+      (actor.organizationId ?? NO_ORGANIZATION_SCOPE);
 
 const dateFilter = (query: AnalyticsQuery): Prisma.DateTimeFilter | undefined =>
   query.from || query.to ? { gte: query.from, lte: query.to } : undefined;

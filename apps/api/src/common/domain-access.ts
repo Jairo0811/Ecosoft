@@ -26,3 +26,15 @@ export const assertOrganizationScope = (actor: SessionUser, organizationId: stri
     throw new AppError(404, 'RESOURCE_NOT_FOUND', 'El recurso no existe o no está disponible.');
   }
 };
+
+/**
+ * Scope value for actors without an organization that must see no organization-owned rows.
+ * It is a syntactically valid UNIQUEIDENTIFIER (the nil UUID, never assigned to a real row):
+ * a non-UUID sentinel such as '__none__' makes SQL Server fail the conversion with HTTP 500
+ * instead of returning an empty result.
+ */
+export const NO_ORGANIZATION_SCOPE = '00000000-0000-0000-0000-000000000000';
+
+/** Organization filter value for a non-institutional actor (fails closed when absent). */
+export const organizationScopeId = (actor: SessionUser): string =>
+  actor.organizationId ?? NO_ORGANIZATION_SCOPE;

@@ -39,14 +39,28 @@ const nonRefreshable = ['/auth/login', '/auth/refresh', '/auth/logout', '/auth/i
 
 let refreshInProgress: Promise<{ accessToken: string; user: SessionUser }> | null = null;
 
-/** Rotates the refresh cookie once; concurrent callers share the same in-flight request. */
+const isRefreshConflict = (error: unknown) =>
+  axios.isAxiosError<{ code?: string }>(error) && error.response?.data?.code === 'REFRESH_CONFLICT';
+
+const postRefresh = () =>
+  apiClient.post<{ accessToken: string; user: SessionUser }>(
+    '/auth/refresh',
+    {},
+    { headers: trustedWebHeaders },
+  );
+
+/**
+ * Rotates the refresh cookie once; concurrent callers in this tab share the same request.
+ * If another tab rotated the shared cookie at the same instant the server answers
+ * REFRESH_CONFLICT: the browser already holds the winner's cookie, so one retry recovers.
+ */
 export const refreshSession = (): Promise<{ accessToken: string; user: SessionUser }> => {
-  refreshInProgress ??= apiClient
-    .post<{ accessToken: string; user: SessionUser }>(
-      '/auth/refresh',
-      {},
-      { headers: trustedWebHeaders },
-    )
+  refreshInProgress ??= postRefresh()
+    .catch(async (error: unknown) => {
+      if (!isRefreshConflict(error)) throw error;
+      await new Promise((resolve) => setTimeout(resolve, 250));
+      return postRefresh();
+    })
     .then(({ data }) => {
       authStorage.setToken(data.accessToken);
       return data;

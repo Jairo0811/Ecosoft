@@ -135,24 +135,53 @@ export const authService = {
       throw new AppError(401, 'SESSION_EXPIRED', 'La sesión expiró.');
     }
 
-    await prisma.refreshToken.update({ where: { id: stored.id }, data: { revokedAt: new Date() } });
+    // Atomic rotation (compare-and-set): only one request may consume this refresh token.
+    // Two simultaneous refreshes used to both succeed and fork the token family.
+    const consumed = await prisma.refreshToken.updateMany({
+      where: { id: stored.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    if (consumed.count !== 1) {
+      throw new AppError(
+        401,
+        'REFRESH_CONFLICT',
+        'La sesión se renovó en otra pestaña. Reintente la operación.',
+      );
+    }
     return issueSession(stored.user, metadata, stored.familyId);
   },
 
+  /**
+   * Revokes the refresh token presented in the cookie. It does not require a valid access token:
+   * an expired access token must not leave a live refresh session behind after "Cerrar sesión".
+   */
   async logout(
     rawToken: string | undefined,
-    user: SessionUser,
+    actor: SessionUser | undefined,
     metadata: RequestMetadata,
   ): Promise<void> {
+    let userId = actor?.id;
+    let organizationId = actor?.organizationId ?? undefined;
     if (rawToken) {
-      await prisma.refreshToken.updateMany({
-        where: { userId: user.id, tokenHash: tokenService.hash(rawToken), revokedAt: null },
-        data: { revokedAt: new Date() },
+      const tokenHash = tokenService.hash(rawToken);
+      const stored = await prisma.refreshToken.findUnique({
+        where: { tokenHash },
+        select: { userId: true, user: { select: { organizationId: true } } },
       });
+      // A token that belongs to someone else than the bearer identity is left untouched.
+      if (stored && (!actor || stored.userId === actor.id)) {
+        await prisma.refreshToken.updateMany({
+          where: { tokenHash, revokedAt: null },
+          data: { revokedAt: new Date() },
+        });
+        userId ??= stored.userId;
+        organizationId ??= stored.user.organizationId ?? undefined;
+      }
     }
+    if (!userId) return;
     await auditService.record({
-      userId: user.id,
-      organizationId: user.organizationId ?? undefined,
+      userId,
+      organizationId,
       action: 'LOGOUT',
       module: 'Identity',
       result: 'SUCCESS',
