@@ -42,12 +42,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const establish = useCallback(async (next: SessionUser) => {
     if (identityRef.current !== next.id) await resetSessionCache();
     identityRef.current = next.id;
+    authStorage.setSessionHint(true);
     setEndReason(null);
     setUser(next);
   }, []);
 
   const endSession = useCallback(async (reason: SessionEndReason) => {
     authStorage.clear();
+    authStorage.setSessionHint(false);
     identityRef.current = null;
     // Unmount protected screens first so no query re-subscribes while the cache is purged.
     setUser(null);
@@ -61,12 +63,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         // With a token, /auth/me validates it (and refreshes it once if expired).
         // Without one (new tab), try the httpOnly refresh cookie silently.
+        // A cold visit with no session hint has no refresh cookie to try.
+        if (!authStorage.getToken() && !authStorage.hasSessionHint()) return;
         const restored = authStorage.getToken()
           ? (await apiClient.get<{ user: SessionUser }>('/auth/me')).data.user
           : (await refreshSession()).user;
         if (active) await establish(restored);
       } catch {
         authStorage.clear();
+        authStorage.setSessionHint(false);
       } finally {
         if (active) setLoading(false);
       }

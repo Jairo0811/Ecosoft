@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router';
 import { App } from './App';
 import { queryClient } from './api/queryClient';
 import { AuthProvider } from './auth/AuthContext';
+import { FeedbackProvider } from './components/Feedback';
 import { EcoSoftThemeProvider } from './theme/ThemeContext';
 
 createRoot(document.getElementById('root')!).render(
@@ -13,7 +14,9 @@ createRoot(document.getElementById('root')!).render(
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
-            <App />
+            <FeedbackProvider>
+              <App />
+            </FeedbackProvider>
           </AuthProvider>
         </BrowserRouter>
       </QueryClientProvider>

@@ -91,8 +91,6 @@ router.get(
         'X-Report-Total': String(report.total),
         'X-Report-Rows': String(report.rows.length),
         'X-Report-Truncated': String(meta.truncated),
-        'Access-Control-Expose-Headers':
-          'Content-Disposition, X-Report-Total, X-Report-Rows, X-Report-Truncated',
       })
       .send(generated.body);
   }),

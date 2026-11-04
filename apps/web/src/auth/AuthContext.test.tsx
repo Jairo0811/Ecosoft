@@ -97,6 +97,26 @@ describe('AuthProvider session isolation', () => {
     installServer();
   });
 
+  it('skips the silent refresh on a cold visit and tries it when a session hint exists', async () => {
+    const calls: string[] = [];
+    const adapter = apiClient.defaults.adapter as (config: InternalAxiosRequestConfig) => unknown;
+    apiClient.defaults.adapter = (config: InternalAxiosRequestConfig) => {
+      calls.push(String(config.url));
+      return adapter(config) as Promise<AxiosResponse>;
+    };
+    authStorage.setSessionHint(false);
+    const cold = renderHarness();
+    await screen.findByText('usuario: ninguno');
+    expect(calls).not.toContain('/auth/refresh');
+    cold.unmount();
+
+    authStorage.setSessionHint(true);
+    renderHarness();
+    await waitFor(() => expect(calls).toContain('/auth/refresh'));
+    // The failed refresh clears the stale hint so the next cold visit stays quiet.
+    await waitFor(() => expect(authStorage.hasSessionHint()).toBe(false));
+  });
+
   it('never shows data of user A to user B after logout, not even from cache', async () => {
     renderHarness();
     await screen.findByText('usuario: ninguno');

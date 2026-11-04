@@ -9,10 +9,33 @@ const asError = (reason: unknown): Error =>
 export const SESSION_EXPIRED_EVENT = 'ecosoft:session-expired';
 export const trustedWebHeaders = { 'X-Requested-With': 'EcoSoftWeb' } as const;
 
+const sessionHintKey = 'ecosoft_session_hint';
+
+/**
+ * The access token lives in sessionStorage (per tab). The session hint is a non-sensitive flag
+ * in localStorage (no token, no identity) meaning "a refresh cookie may exist": without it a
+ * cold visit skips the silent refresh that would only produce a 401. If storage is blocked the
+ * hint reads as present, preserving the previous behaviour.
+ */
 export const authStorage = {
   getToken: () => sessionStorage.getItem(tokenKey),
   setToken: (token: string) => sessionStorage.setItem(tokenKey, token),
   clear: () => sessionStorage.removeItem(tokenKey),
+  hasSessionHint: () => {
+    try {
+      return localStorage.getItem(sessionHintKey) === '1';
+    } catch {
+      return true;
+    }
+  },
+  setSessionHint: (present: boolean) => {
+    try {
+      if (present) localStorage.setItem(sessionHintKey, '1');
+      else localStorage.removeItem(sessionHintKey);
+    } catch {
+      // Storage unavailable: the hint is only an optimization.
+    }
+  },
 };
 
 export const apiClient = axios.create({ baseURL: apiUrl, withCredentials: true });

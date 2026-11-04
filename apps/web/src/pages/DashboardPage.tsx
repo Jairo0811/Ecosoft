@@ -1,35 +1,47 @@
+import type { ReactNode } from 'react';
 import {
-  BusinessOutlined,
+  AssessmentOutlined,
+  CalendarMonthOutlined,
   DescriptionOutlined,
-  ElectricBoltOutlined,
+  EventOutlined,
   GavelOutlined,
-  LocalOfferOutlined,
-  ScheduleOutlined,
-  SolarPowerOutlined,
   WarningAmberOutlined,
 } from '@mui/icons-material';
 import {
-  Alert,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
-  CircularProgress,
+  Divider,
+  Link,
   List,
   ListItem,
   ListItemText,
+  Skeleton,
   Stack,
   Typography,
 } from '@mui/material';
 import { useQuery } from '@tanstack/react-query';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
-import ReactApexChart from 'react-apexcharts';
+import { Link as RouterLink } from 'react-router';
 import { apiClient } from '../api/client';
-import { getApiErrorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
+import { Chart } from '../components/Chart';
+import { ErrorState, PageHeader } from '../components/PageState';
+import { brandGradients } from '../theme/brand';
+import {
+  formatAuditAction,
+  formatAuditModule,
+  formatAuditResult,
+  formatDateTime,
+  formatNumber,
+  formatTechnology,
+} from '../utils/format';
 
 interface DashboardAnalytics {
+  filters: { organizationId: string | null };
   kpis: {
     activeAuctions: number;
     pendingAuctions: number;
@@ -46,14 +58,8 @@ interface DashboardAnalytics {
     approvedAwards: number;
     expiringContracts: number;
   };
-  capacityByTechnology: {
-    technology: string;
-    installedMw: number;
-    contractedMw: number;
-  }[];
+  capacityByTechnology: { technology: string; installedMw: number; contractedMw: number }[];
   auctionsByStatus: { status: string; auctions: number; capacityMw: number }[];
-  averageAwardPriceByCurrency: { currency: string; price: number }[];
-  contractedValueByCurrency: { currency: string; value: number; contracts: number }[];
   trend: { month: string; auctionedMw: number; awardedMw: number }[];
   upcomingEvents: { id: string; title: string; type: string; startsAt: string }[];
   alerts: {
@@ -76,17 +82,232 @@ interface DashboardAnalytics {
   }[];
 }
 
-const integer = new Intl.NumberFormat('es-DO', { maximumFractionDigits: 0 });
-const decimal = new Intl.NumberFormat('es-DO', { maximumFractionDigits: 2 });
-const technologyLabels: Record<string, string> = {
-  SOLAR: 'Solar',
-  WIND: 'Eólica',
-  HYDRO: 'Hidroeléctrica',
-  BIOMASS: 'Biomasa',
+const statusLabels: Record<string, string> = {
+  BORRADOR: 'Borrador',
+  PROGRAMADA: 'Programada',
+  PUBLICADA: 'Publicada',
+  ABIERTA: 'Abierta',
+  EN_EVALUACION: 'En evaluación',
+  ADJUDICADA: 'Adjudicada',
+  CANCELADA: 'Cancelada',
+  CERRADA: 'Cerrada',
+  FINALIZADA: 'Finalizada',
+};
+const eventLabels: Record<string, string> = {
+  APERTURA: 'Apertura',
+  CIERRE: 'Cierre',
+  EVALUACION: 'Evaluación',
+  ADJUDICACION: 'Adjudicación',
+  REUNION: 'Reunión',
+  VENCIMIENTO: 'Vencimiento',
+  FIRMA: 'Firma',
+  RENOVACION: 'Renovación',
+  HITO: 'Hito',
 };
 
+const greeting = (date = new Date()) => {
+  const hour = date.getHours();
+  if (hour < 12) return 'Buenos días';
+  if (hour < 19) return 'Buenas tardes';
+  return 'Buenas noches';
+};
+
+const monthLabel = (month: string) => {
+  const [year, value] = month.split('-').map(Number);
+  if (!year || !value) return month;
+  return new Intl.DateTimeFormat('es-DO', { month: 'short', year: '2-digit', timeZone: 'UTC' })
+    .format(new Date(Date.UTC(year, value - 1, 1)))
+    .replace('.', '');
+};
+
+const relative = (value: string) =>
+  formatDistanceToNow(new Date(value), { locale: es, addSuffix: true });
+
+function Section({
+  title,
+  description,
+  action,
+  children,
+}: {
+  title: string;
+  description?: string;
+  action?: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <Card component="section" aria-label={title} sx={{ height: '100%' }}>
+      <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
+        <Stack direction="row" justifyContent="space-between" alignItems="flex-start" gap={1}>
+          <Box minWidth={0}>
+            <Typography variant="h6" component="h2">
+              {title}
+            </Typography>
+            {description && (
+              <Typography variant="body2" color="text.secondary">
+                {description}
+              </Typography>
+            )}
+          </Box>
+          {action}
+        </Stack>
+        <Box mt={2}>{children}</Box>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Capacity moves through a real sequence (tendered → offered → awarded → operating), so it is
+ * drawn as a connected flow; each bar is relative to the largest stage.
+ */
+function CapacityFlow({
+  kpis,
+  totalAuctions,
+}: {
+  kpis: DashboardAnalytics['kpis'];
+  totalAuctions: number;
+}) {
+  const stages = [
+    {
+      label: 'Licitada',
+      value: kpis.auctionedMw,
+      note: `${formatNumber(totalAuctions)} procesos registrados`,
+    },
+    {
+      label: 'Ofertada',
+      value: kpis.offeredMw,
+      note: `${formatNumber(kpis.bidsReceived)} ofertas recibidas`,
+    },
+    {
+      label: 'Adjudicada',
+      value: kpis.awardedMw,
+      note: `${formatNumber(kpis.approvedAwards)} adjudicaciones aprobadas`,
+    },
+    {
+      label: 'Operativa',
+      value: kpis.operationalMw,
+      note: `${formatNumber(kpis.operationalProjects)} proyectos en operación`,
+    },
+  ];
+  const max = Math.max(...stages.map((stage) => stage.value), 0);
+  return (
+    <Card component="section" aria-labelledby="capacity-flow-title">
+      <CardContent sx={{ p: { xs: 2, sm: 3 } }}>
+        <Typography id="capacity-flow-title" variant="h6" component="h2">
+          Capacidad del portafolio
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          Megavatios en cada etapa, desde la licitación hasta la operación.
+        </Typography>
+        <Box
+          component="ol"
+          sx={{
+            listStyle: 'none',
+            p: 0,
+            m: 0,
+            mt: 2.5,
+            display: 'grid',
+            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' },
+            gap: { xs: 2.5, lg: 0 },
+          }}
+        >
+          {stages.map((stage, index) => (
+            <Box
+              component="li"
+              key={stage.label}
+              sx={{
+                pr: { lg: 3 },
+                pl: { lg: index ? 3 : 0 },
+                borderLeft: { lg: index ? 1 : 0 },
+                borderColor: { lg: 'divider' },
+              }}
+            >
+              <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                {stage.label}
+              </Typography>
+              <Typography
+                className="tabular"
+                component="p"
+                sx={{ fontSize: { xs: 28, sm: 32 }, fontWeight: 600, lineHeight: 1.2, mt: 0.5 }}
+              >
+                {formatNumber(stage.value)}
+                <Box
+                  component="span"
+                  sx={{ fontSize: 15, fontWeight: 500, color: 'text.secondary', ml: 0.75 }}
+                >
+                  MW
+                </Box>
+              </Typography>
+              <Box
+                aria-hidden
+                sx={{
+                  mt: 1.25,
+                  height: 6,
+                  borderRadius: 3,
+                  bgcolor: 'action.hover',
+                  overflow: 'hidden',
+                }}
+              >
+                <Box
+                  sx={{
+                    height: '100%',
+                    width: `${max ? Math.max((stage.value / max) * 100, stage.value ? 2 : 0) : 0}%`,
+                    background: brandGradients.conductor,
+                  }}
+                />
+              </Box>
+              <Typography variant="caption" color="text.secondary" display="block" mt={1}>
+                {stage.note}
+              </Typography>
+            </Box>
+          ))}
+        </Box>
+      </CardContent>
+    </Card>
+  );
+}
+
+function Indicator({ label, value, note }: { label: string; value: number; note: string }) {
+  return (
+    <Card>
+      <CardContent sx={{ p: { xs: 2, sm: 2.5 }, '&:last-child': { pb: { xs: 2, sm: 2.5 } } }}>
+        <Typography variant="body2" color="text.secondary" fontWeight={500}>
+          {label}
+        </Typography>
+        <Typography
+          className="tabular"
+          component="p"
+          sx={{ fontSize: 26, fontWeight: 600, mt: 0.5 }}
+        >
+          {formatNumber(value)}
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          {note}
+        </Typography>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <Stack spacing={2.5} role="status" aria-label="Cargando indicadores">
+      <Skeleton variant="rounded" height={168} />
+      <Box display="grid" gridTemplateColumns={{ xs: '1fr 1fr', lg: 'repeat(4, 1fr)' }} gap={2}>
+        {[0, 1, 2, 3].map((key) => (
+          <Skeleton key={key} variant="rounded" height={104} />
+        ))}
+      </Box>
+      <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1fr 1fr' }} gap={2}>
+        <Skeleton variant="rounded" height={220} />
+        <Skeleton variant="rounded" height={220} />
+      </Box>
+    </Stack>
+  );
+}
+
 export function DashboardPage() {
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const analytics = useQuery({
     queryKey: ['analytics', 'dashboard'],
     queryFn: () =>
@@ -95,331 +316,327 @@ export function DashboardPage() {
         .then((response) => response.data.data),
   });
   const data = analytics.data;
-  const currentDate = format(new Date(), "EEEE, d 'de' MMMM 'de' yyyy", { locale: es });
-  const kpis = [
+  const canReadAudit = hasPermission('audit.read');
+
+  const quickActions = [
+    { label: 'Subastas', to: '/subastas', icon: <GavelOutlined />, permission: 'auctions.read' },
     {
-      label: 'Subastas activas',
-      value: data?.kpis.activeAuctions ?? 0,
-      note: `${data?.kpis.pendingAuctions ?? 0} pendientes`,
-      icon: <GavelOutlined />,
-      color: '#0A5C73',
-    },
-    {
-      label: 'Empresas participantes',
-      value: data?.kpis.participantOrganizations ?? 0,
-      note: 'Organizaciones habilitadas',
-      icon: <BusinessOutlined />,
-      color: '#28A96B',
-    },
-    {
-      label: 'Ofertas recibidas',
-      value: data?.kpis.bidsReceived ?? 0,
-      note: `${decimal.format(data?.kpis.offeredMw ?? 0)} MW ofertados`,
-      icon: <LocalOfferOutlined />,
-      color: '#3C78C4',
-    },
-    {
-      label: 'Contratos PPA',
-      value: data?.kpis.contracts ?? 0,
-      note: `${data?.kpis.activeContracts ?? 0} vigentes`,
+      label: 'Documentos',
+      to: '/ofertas',
       icon: <DescriptionOutlined />,
-      color: '#6657C8',
+      permission: 'documents.manage',
     },
     {
-      label: 'MW licitados',
-      value: decimal.format(data?.kpis.auctionedMw ?? 0),
-      note: 'Capacidad total de procesos',
-      icon: <ElectricBoltOutlined />,
-      color: '#D8891C',
+      label: 'Reportes',
+      to: '/reportes',
+      icon: <AssessmentOutlined />,
+      permission: 'reports.read',
     },
     {
-      label: 'MW adjudicados',
-      value: decimal.format(data?.kpis.awardedMw ?? 0),
-      note: `${data?.kpis.approvedAwards ?? 0} adjudicaciones aprobadas`,
-      icon: <GavelOutlined />,
-      color: '#128C7E',
+      label: 'Calendario',
+      to: '/calendario',
+      icon: <CalendarMonthOutlined />,
+      permission: 'auctions.read',
     },
-    {
-      label: 'MW operativos',
-      value: decimal.format(data?.kpis.operationalMw ?? 0),
-      note: `${data?.kpis.operationalProjects ?? 0} proyectos operativos`,
-      icon: <SolarPowerOutlined />,
-      color: '#168D4E',
-    },
-    {
-      label: 'Vencen en 90 días',
-      value: data?.kpis.expiringContracts ?? 0,
-      note: 'Contratos que requieren seguimiento',
-      icon: <WarningAmberOutlined />,
-      color: '#C96C1D',
-    },
-  ];
-  const eventItems = data?.upcomingEvents ?? [];
-  const alerts = [
-    ...(data?.alerts.closingAuctions.map((item) => ({
-      id: `auction-${item.id}`,
-      title: `${item.code} cierra ${formatDistanceToNow(new Date(item.closeAt), { locale: es, addSuffix: true })}`,
-      type: 'Cierre de subasta',
-    })) ?? []),
-    ...(data?.alerts.expiringContracts.map((item) => ({
-      id: `contract-${item.id}`,
-      title: `${item.contractNumber} vence ${formatDistanceToNow(new Date(item.endDate), { locale: es, addSuffix: true })}`,
-      type: item.organization.commercialName ?? item.organization.legalName,
-    })) ?? []),
-  ];
+  ].filter((action) => hasPermission(action.permission));
+
+  const alerts = data
+    ? [
+        ...data.alerts.closingAuctions.map((item) => ({
+          id: `auction-${item.id}`,
+          title: `${item.code} cierra ${relative(item.closeAt)}`,
+          detail: `${item.title} · ${formatDateTime(item.closeAt)}`,
+          to: '/subastas',
+        })),
+        ...data.alerts.expiringContracts.map((item) => ({
+          id: `contract-${item.id}`,
+          title: `${item.contractNumber} vence ${relative(item.endDate)}`,
+          detail: item.organization.commercialName ?? item.organization.legalName,
+          to: '/contratos',
+        })),
+      ]
+    : [];
 
   return (
-    <Stack spacing={3}>
-      <Box>
-        <Typography variant="overline" color="primary" fontWeight={800}>
-          {currentDate}
-        </Typography>
-        <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-          Buenos días, {user?.firstName}
-        </Typography>
-        <Typography color="text.secondary" mt={0.5}>
-          Panorama del portafolio energético según tu ámbito y permisos.
-        </Typography>
-      </Box>
-      {analytics.isLoading && (
-        <Stack alignItems="center" py={4}>
-          <CircularProgress aria-label="Cargando indicadores" />
-        </Stack>
-      )}
-      {analytics.error && <Alert severity="error">{getApiErrorMessage(analytics.error)}</Alert>}
-      <Box
-        display="grid"
-        gridTemplateColumns={{ xs: '1fr', sm: 'repeat(2, 1fr)', xl: 'repeat(4, 1fr)' }}
-        gap={2.5}
-      >
-        {kpis.map((kpi) => (
-          <Card key={kpi.label}>
-            <CardContent>
-              <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
-                <Box>
-                  <Typography color="text.secondary" variant="body2" fontWeight={650}>
-                    {kpi.label}
-                  </Typography>
-                  <Typography variant="h4" mt={1}>
-                    {typeof kpi.value === 'number' ? integer.format(kpi.value) : kpi.value}
-                  </Typography>
-                </Box>
-                <Box
-                  display="grid"
-                  sx={{
-                    placeItems: 'center',
-                    width: 46,
-                    height: 46,
-                    borderRadius: 2.5,
-                    color: kpi.color,
-                    bgcolor: `${kpi.color}16`,
-                  }}
-                >
-                  {kpi.icon}
-                </Box>
-              </Stack>
-              <Typography variant="caption" color="text.secondary">
-                {kpi.note}
-              </Typography>
-            </CardContent>
-          </Card>
+    <Stack spacing={2.5}>
+      <PageHeader
+        title={`${greeting()}, ${user?.firstName ?? ''}`.trim()}
+        description={
+          data
+            ? data.filters.organizationId
+              ? 'Indicadores de su organización.'
+              : 'Indicadores de toda la instalación.'
+            : 'Resumen del portafolio energético según su ámbito y permisos.'
+        }
+        actions={quickActions.map((action) => (
+          <Button
+            key={action.to + action.label}
+            component={RouterLink}
+            to={action.to}
+            variant="outlined"
+            size="small"
+            startIcon={action.icon}
+          >
+            {action.label}
+          </Button>
         ))}
-      </Box>
-      <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1.45fr 1fr' }} gap={2.5}>
-        <Card>
-          <CardContent sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight={750}>
-              Tendencia de capacidad
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              MW licitados y adjudicados por mes
-            </Typography>
-            <ReactApexChart
-              type="area"
-              height={320}
-              series={[
-                { name: 'MW licitados', data: data?.trend.map((item) => item.auctionedMw) ?? [] },
-                { name: 'MW adjudicados', data: data?.trend.map((item) => item.awardedMw) ?? [] },
-              ]}
-              options={{
-                chart: { toolbar: { show: false }, fontFamily: 'inherit' },
-                colors: ['#0A5C73', '#28A96B'],
-                dataLabels: { enabled: false },
-                stroke: { curve: 'smooth', width: 3 },
-                xaxis: { categories: data?.trend.map((item) => item.month) ?? [] },
-                yaxis: { labels: { formatter: (value) => `${integer.format(value)} MW` } },
-                noData: { text: 'Sin datos para el período' },
-              }}
+      />
+
+      {analytics.isLoading && <DashboardSkeleton />}
+      {analytics.isError && (
+        <ErrorState
+          error={analytics.error}
+          title="No fue posible cargar los indicadores"
+          onRetry={() => void analytics.refetch()}
+        />
+      )}
+
+      {data && (
+        <>
+          <CapacityFlow
+            kpis={data.kpis}
+            totalAuctions={data.auctionsByStatus.reduce((sum, item) => sum + item.auctions, 0)}
+          />
+
+          <Box
+            display="grid"
+            gridTemplateColumns={{ xs: 'repeat(2, minmax(0, 1fr))', lg: 'repeat(4, 1fr)' }}
+            gap={2}
+          >
+            <Indicator
+              label="Subastas activas"
+              value={data.kpis.activeAuctions}
+              note={`${formatNumber(data.kpis.pendingAuctions)} en preparación`}
             />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight={750}>
-              Subastas por estado
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Distribución del portafolio visible
-            </Typography>
-            <ReactApexChart
-              type="donut"
-              height={320}
-              series={data?.auctionsByStatus.map((item) => item.auctions) ?? []}
-              options={{
-                labels:
-                  data?.auctionsByStatus.map((item) => item.status.replaceAll('_', ' ')) ?? [],
-                legend: { position: 'bottom' },
-                dataLabels: { enabled: true },
-                noData: { text: 'Sin subastas' },
-              }}
+            <Indicator
+              label="Empresas participantes"
+              value={data.kpis.participantOrganizations}
+              note="Habilitadas en al menos una subasta"
             />
-          </CardContent>
-        </Card>
-      </Box>
-      <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1.45fr 1fr' }} gap={2.5}>
-        <Card>
-          <CardContent sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight={750}>
-              Capacidad de proyectos por tecnología
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              Comparación entre capacidad instalada y contratada
-            </Typography>
-            <ReactApexChart
-              type="bar"
-              height={310}
-              series={[
-                {
-                  name: 'Instalada',
-                  data: data?.capacityByTechnology.map((item) => item.installedMw) ?? [],
-                },
-                {
-                  name: 'Contratada',
-                  data: data?.capacityByTechnology.map((item) => item.contractedMw) ?? [],
-                },
-              ]}
-              options={{
-                chart: { toolbar: { show: false }, fontFamily: 'inherit' },
-                colors: ['#0A5C73', '#28A96B'],
-                plotOptions: { bar: { borderRadius: 5, columnWidth: '48%' } },
-                dataLabels: { enabled: false },
-                xaxis: {
-                  categories:
-                    data?.capacityByTechnology.map(
-                      (item) => technologyLabels[item.technology] ?? item.technology,
-                    ) ?? [],
-                },
-                yaxis: { labels: { formatter: (value) => `${integer.format(value)} MW` } },
-                noData: { text: 'Sin proyectos registrados' },
-              }}
+            <Indicator
+              label="Contratos PPA"
+              value={data.kpis.contracts}
+              note={`${formatNumber(data.kpis.activeContracts)} vigentes`}
             />
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent sx={{ p: 3 }}>
-            <Stack direction="row" alignItems="center" spacing={1} mb={1}>
-              <ScheduleOutlined color="primary" />
-              <Typography variant="h6" fontWeight={750}>
-                Próximos eventos
-              </Typography>
-            </Stack>
-            {eventItems.length === 0 ? (
-              <Typography color="text.secondary" py={3}>
-                No hay eventos próximos en tu ámbito.
-              </Typography>
-            ) : (
-              <List disablePadding>
-                {eventItems.map((event, index) => (
-                  <ListItem
-                    key={event.id}
-                    disableGutters
-                    divider={index < eventItems.length - 1}
-                    sx={{ py: 1.4 }}
-                  >
-                    <Box mr={2} bgcolor="action.hover" borderRadius={2} p={1} minWidth={64}>
-                      <Typography variant="caption" fontWeight={800} color="primary">
-                        {format(new Date(event.startsAt), 'dd MMM', { locale: es }).toUpperCase()}
-                      </Typography>
-                    </Box>
-                    <ListItemText
-                      primary={event.title}
-                      secondary={event.type}
-                      primaryTypographyProps={{ fontWeight: 650, fontSize: 14 }}
-                    />
-                  </ListItem>
-                ))}
-              </List>
-            )}
-          </CardContent>
-        </Card>
-      </Box>
-      <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1fr 1fr' }} gap={2.5}>
-        <Card>
-          <CardContent sx={{ p: 3 }}>
-            <Stack direction="row" alignItems="center" spacing={1} mb={2}>
-              <WarningAmberOutlined color="warning" />
-              <Typography variant="h6" fontWeight={750}>
-                Alertas operativas
-              </Typography>
-              <Chip size="small" label={alerts.length} color="warning" variant="outlined" />
-            </Stack>
-            <Stack spacing={1.5}>
+            <Indicator
+              label="Vencen en 90 días"
+              value={data.kpis.expiringContracts}
+              note="Contratos vigentes que requieren seguimiento"
+            />
+          </Box>
+
+          <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1fr 1fr' }} gap={2}>
+            <Section
+              title="Alertas operativas"
+              description="Subastas que cierran en 7 días y contratos que vencen en 90."
+              action={
+                alerts.length > 0 && (
+                  <Chip size="small" color="warning" variant="outlined" label={alerts.length} />
+                )
+              }
+            >
               {alerts.length ? (
-                alerts.map((item) => (
-                  <Box key={item.id}>
-                    <Typography variant="body2" fontWeight={700}>
-                      {item.title}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {item.type}
-                    </Typography>
-                  </Box>
-                ))
+                <List disablePadding dense>
+                  {alerts.map((item, index) => (
+                    <ListItem key={item.id} disableGutters divider={index < alerts.length - 1}>
+                      <WarningAmberOutlined
+                        color="warning"
+                        fontSize="small"
+                        sx={{ mr: 1.5 }}
+                        aria-hidden
+                      />
+                      <ListItemText
+                        primary={
+                          <Link
+                            component={RouterLink}
+                            to={item.to}
+                            color="text.primary"
+                            underline="hover"
+                          >
+                            {item.title}
+                          </Link>
+                        }
+                        secondary={item.detail}
+                        slotProps={{ primary: { fontWeight: 500 } }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
               ) : (
-                <Typography color="text.secondary">No hay alertas próximas.</Typography>
+                <Typography color="text.secondary" variant="body2">
+                  No hay cierres ni vencimientos próximos.
+                </Typography>
               )}
-            </Stack>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent sx={{ p: 3 }}>
-            <Typography variant="h6" fontWeight={750}>
-              Actividad reciente
-            </Typography>
-            <Typography color="text.secondary" variant="body2" mb={2}>
-              Acciones registradas en auditoría
-            </Typography>
-            <Stack spacing={1.5}>
-              {data?.recentActivity.length ? (
-                data.recentActivity.map((item) => (
-                  <Stack key={item.id} direction="row" spacing={1.5} alignItems="center">
-                    <Box
-                      width={9}
-                      height={9}
-                      borderRadius="50%"
-                      bgcolor={item.result === 'SUCCESS' ? 'success.main' : 'warning.main'}
-                    />
-                    <Box>
-                      <Typography variant="body2" fontWeight={700}>
-                        {item.action} · {item.module}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {item.user ? `${item.user.firstName} ${item.user.lastName}` : 'Sistema'} ·{' '}
-                        {formatDistanceToNow(new Date(item.createdAt), {
-                          locale: es,
-                          addSuffix: true,
-                        })}
-                      </Typography>
-                    </Box>
+            </Section>
+            <Section title="Próximos eventos" description="Calendario de subastas en su ámbito.">
+              {data.upcomingEvents.length ? (
+                <List disablePadding dense>
+                  {data.upcomingEvents.map((event, index) => (
+                    <ListItem
+                      key={event.id}
+                      disableGutters
+                      divider={index < data.upcomingEvents.length - 1}
+                    >
+                      <EventOutlined color="info" fontSize="small" sx={{ mr: 1.5 }} aria-hidden />
+                      <ListItemText
+                        primary={event.title}
+                        secondary={`${eventLabels[event.type] ?? event.type} · ${formatDateTime(event.startsAt)}`}
+                        slotProps={{ primary: { fontWeight: 500 } }}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              ) : (
+                <Typography color="text.secondary" variant="body2">
+                  No hay eventos programados.
+                </Typography>
+              )}
+            </Section>
+          </Box>
+
+          <Box display="grid" gridTemplateColumns={{ xs: '1fr', lg: '1.5fr 1fr' }} gap={2}>
+            <Section
+              title="Tendencia de capacidad"
+              description="MW licitados y adjudicados por mes (UTC)."
+            >
+              <Chart
+                type="area"
+                height={280}
+                label="Gráfico de área con MW licitados y adjudicados por mes"
+                series={[
+                  { name: 'MW licitados', data: data.trend.map((item) => item.auctionedMw) },
+                  { name: 'MW adjudicados', data: data.trend.map((item) => item.awardedMw) },
+                ]}
+                options={{
+                  dataLabels: { enabled: false },
+                  stroke: { curve: 'straight', width: 2 },
+                  fill: { type: 'solid', opacity: 0.12 },
+                  xaxis: { categories: data.trend.map((item) => monthLabel(item.month)) },
+                  yaxis: { labels: { formatter: (value) => `${formatNumber(value)} MW` } },
+                  legend: { position: 'top', horizontalAlign: 'left' },
+                  noData: { text: 'Sin datos para el período' },
+                }}
+              />
+            </Section>
+            <Section title="Subastas por estado" description="Cantidad de procesos en cada estado.">
+              {data.auctionsByStatus.length ? (
+                <Chart
+                  type="bar"
+                  height={280}
+                  label="Gráfico de barras con la cantidad de subastas por estado"
+                  series={[
+                    { name: 'Subastas', data: data.auctionsByStatus.map((item) => item.auctions) },
+                  ]}
+                  options={{
+                    plotOptions: { bar: { horizontal: true, borderRadius: 3, barHeight: '55%' } },
+                    dataLabels: { enabled: false },
+                    xaxis: {
+                      categories: data.auctionsByStatus.map(
+                        (item) => statusLabels[item.status] ?? item.status,
+                      ),
+                      // Counts are whole processes: no fractional ticks.
+                      tickAmount: Math.max(
+                        1,
+                        Math.max(...data.auctionsByStatus.map((item) => item.auctions)),
+                      ),
+                      labels: { formatter: (value) => formatNumber(Math.round(Number(value))) },
+                    },
+                  }}
+                />
+              ) : (
+                <Typography color="text.secondary" variant="body2">
+                  Aún no hay subastas en su ámbito.
+                </Typography>
+              )}
+            </Section>
+          </Box>
+
+          <Box
+            display="grid"
+            gridTemplateColumns={{ xs: '1fr', lg: canReadAudit ? '1.5fr 1fr' : '1fr' }}
+            gap={2}
+          >
+            <Section
+              title="Capacidad por tecnología"
+              description="Instalada y contratada en proyectos registrados."
+            >
+              {data.capacityByTechnology.length ? (
+                <Chart
+                  type="bar"
+                  height={280}
+                  label="Gráfico de barras con capacidad instalada y contratada por tecnología"
+                  series={[
+                    {
+                      name: 'Instalada',
+                      data: data.capacityByTechnology.map((item) => item.installedMw),
+                    },
+                    {
+                      name: 'Contratada',
+                      data: data.capacityByTechnology.map((item) => item.contractedMw),
+                    },
+                  ]}
+                  options={{
+                    plotOptions: { bar: { borderRadius: 3, columnWidth: '45%' } },
+                    dataLabels: { enabled: false },
+                    xaxis: {
+                      categories: data.capacityByTechnology.map((item) =>
+                        formatTechnology(item.technology),
+                      ),
+                    },
+                    yaxis: { labels: { formatter: (value) => `${formatNumber(value)} MW` } },
+                    legend: { position: 'top', horizontalAlign: 'left' },
+                  }}
+                />
+              ) : (
+                <Typography color="text.secondary" variant="body2">
+                  Aún no hay proyectos registrados.
+                </Typography>
+              )}
+            </Section>
+            {canReadAudit && (
+              <Section
+                title="Actividad reciente"
+                description="Últimas acciones registradas en auditoría."
+                action={
+                  <Button component={RouterLink} to="/auditoria" size="small">
+                    Ver auditoría
+                  </Button>
+                }
+              >
+                {data.recentActivity.length ? (
+                  <Stack divider={<Divider flexItem />} spacing={1.25}>
+                    {data.recentActivity.map((item) => (
+                      <Box key={item.id}>
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <Typography variant="body2" fontWeight={500}>
+                            {formatAuditAction(item.action)} · {formatAuditModule(item.module)}
+                          </Typography>
+                          {item.result !== 'SUCCESS' && (
+                            <Chip
+                              size="small"
+                              color="warning"
+                              variant="outlined"
+                              label={formatAuditResult(item.result)}
+                            />
+                          )}
+                        </Stack>
+                        <Typography variant="caption" color="text.secondary">
+                          {item.user ? `${item.user.firstName} ${item.user.lastName}` : 'Sistema'},{' '}
+                          {relative(item.createdAt)}
+                        </Typography>
+                      </Box>
+                    ))}
                   </Stack>
-                ))
-              ) : (
-                <Typography color="text.secondary">Sin actividad reciente.</Typography>
-              )}
-            </Stack>
-          </CardContent>
-        </Card>
-      </Box>
+                ) : (
+                  <Typography color="text.secondary" variant="body2">
+                    Sin actividad registrada.
+                  </Typography>
+                )}
+              </Section>
+            )}
+          </Box>
+        </>
+      )}
     </Stack>
   );
 }

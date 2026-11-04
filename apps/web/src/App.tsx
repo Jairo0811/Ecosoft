@@ -1,5 +1,7 @@
 import { Suspense, lazy, type ComponentType, type LazyExoticComponent } from 'react';
 import { Navigate, Route, Routes } from 'react-router';
+import { useAuth } from './auth/AuthContext';
+import { canAccess, navigationItems } from './navigation';
 import { ProtectedRoute, RequirePermission } from './auth/ProtectedRoute';
 import { LoadingState } from './components/PageState';
 import { AppLayout } from './layout/AppLayout';
@@ -42,6 +44,20 @@ const guarded = (permission: string, Element: ComponentType) => (
   </RequirePermission>
 );
 
+/**
+ * The dashboard is the home page for roles with analytics.read; any other role lands on the
+ * first module it can open instead of an "access restricted" screen.
+ */
+function Home() {
+  const { user } = useAuth();
+  if (canAccess(user?.permissions, 'analytics.read'))
+    return guarded('analytics.read', DashboardPage);
+  const first = navigationItems.find(
+    (item) => item.path !== '/' && canAccess(user?.permissions, item.permission),
+  );
+  return first ? <Navigate to={first.path} replace /> : guarded('analytics.read', DashboardPage);
+}
+
 export function App() {
   return (
     <Routes>
@@ -49,7 +65,7 @@ export function App() {
       <Route path="/activar-cuenta" element={<ActivateAccountPage />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
-          <Route index element={guarded('analytics.read', DashboardPage)} />
+          <Route index element={<Home />} />
           <Route path="subastas" element={guarded('auctions.read', AuctionsPage)} />
           <Route path="ofertas" element={guarded('bids.read', OffersDocumentsPage)} />
           <Route path="evaluaciones" element={guarded('evaluations.read', EvaluationsPage)} />

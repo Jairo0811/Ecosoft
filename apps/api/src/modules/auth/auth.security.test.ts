@@ -253,6 +253,16 @@ describe('HTTP hardening', () => {
       .set('Access-Control-Request-Method', 'POST');
     expect(denied.headers['access-control-allow-origin']).not.toBe('https://evil.example');
   });
+
+  it('exposes download and report headers to the web origin', async () => {
+    const response = await request(app)
+      .get('/api/v1/health/live')
+      .set('Origin', 'http://localhost:5173');
+    const exposed = String(response.headers['access-control-expose-headers']);
+    for (const header of ['Content-Disposition', 'X-Content-SHA256', 'X-Report-Truncated']) {
+      expect(exposed).toContain(header);
+    }
+  });
 });
 
 describe('TRUST_PROXY parsing', () => {

@@ -20,6 +20,8 @@ import {
   Toolbar,
   Tooltip,
   Typography,
+  useMediaQuery,
+  type Theme,
 } from '@mui/material';
 import {
   DarkModeOutlined,
@@ -34,11 +36,11 @@ import { apiClient } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
 import { BrandLogo } from '../branding/BrandLogo';
 import { canAccess, findNavigationItem, navigationGroups } from '../navigation';
-import { brandColors, brandGradients } from '../theme/brand';
+import { brandColors, brandGradients, radii } from '../theme/brand';
 import { useThemeMode } from '../theme/ThemeContext';
 import { formatRole } from '../utils/format';
 
-const drawerWidth = 280;
+const drawerWidth = 272;
 
 export function AppLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -46,6 +48,7 @@ export function AppLayout() {
   const { user, logout } = useAuth();
   const { mode, toggleMode } = useThemeMode();
   const location = useLocation();
+  const compactHeader = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
   const canReadNotifications = canAccess(user?.permissions, 'notifications.read');
   const unread = useQuery({
     queryKey: ['notifications-unread'],
@@ -63,41 +66,56 @@ export function AppLayout() {
     }))
     .filter((group) => group.items.length > 0);
   const current = findNavigationItem(location.pathname);
+  const currentGroup = navigationGroups.find((group) =>
+    group.items.some((item) => item.path === current?.path),
+  )?.label;
   const unreadCount = unread.data ?? 0;
 
   const drawer = (
     <Box
       sx={{
         height: '100%',
-        color: 'white',
-        background: brandGradients.sidebar,
+        color: brandColors.white,
+        bgcolor: brandColors.navy900,
         display: 'flex',
         flexDirection: 'column',
         overflowY: 'auto',
       }}
     >
-      <Box px={2.5} py={2} minHeight={96} display="flex" alignItems="center">
-        <BrandLogo maxWidth={220} />
+      {/* The official logo has dark lettering, so it sits on a white plate to stay legible. */}
+      <Box px={2} pt={2} pb={1.5}>
+        <Box
+          component={RouterLink}
+          to="/"
+          aria-label="EcoSoft, ir al panel de control"
+          sx={{
+            display: 'block',
+            bgcolor: brandColors.white,
+            borderRadius: `${radii.card}px`,
+            px: 1.75,
+            py: 1.25,
+            '&:focus-visible': { outline: `2px solid ${brandColors.teal300}`, outlineOffset: 2 },
+          }}
+        >
+          <BrandLogo maxWidth={208} decorative />
+        </Box>
       </Box>
-      <Divider sx={{ borderColor: 'rgba(0,183,255,.16)' }} />
-      <Box component="nav" aria-label="Navegación principal" sx={{ px: 1.5, py: 1.5, flex: 1 }}>
+      <Box component="nav" aria-label="Navegación principal" sx={{ px: 1.5, pb: 1.5, flex: 1 }}>
         {groups.map((group) => (
           <List
             key={group.label}
             dense
             disablePadding
-            sx={{ mb: 1 }}
+            sx={{ mt: 1.5 }}
             subheader={
               <ListSubheader
                 disableSticky
                 sx={{
                   bgcolor: 'transparent',
-                  color: 'rgba(175,193,216,.82)',
-                  fontSize: 11,
-                  fontWeight: 800,
-                  letterSpacing: '.08em',
-                  textTransform: 'uppercase',
-                  lineHeight: '32px',
+                  color: '#8EA3BC',
+                  fontSize: 12.5,
+                  fontWeight: 500,
+                  lineHeight: '28px',
                   px: 1.5,
                 }}
               >
@@ -113,46 +131,52 @@ export function AppLayout() {
                 end={item.path === '/'}
                 onClick={() => setMobileOpen(false)}
                 sx={{
-                  mb: 0.4,
-                  minHeight: 42,
-                  borderRadius: 2,
-                  color: 'rgba(247,251,255,.80)',
+                  mb: 0.25,
+                  minHeight: 40,
+                  borderRadius: `${radii.control}px`,
+                  color: '#C9D6E5',
                   position: 'relative',
                   '&.active': {
-                    bgcolor: 'rgba(0,183,255,.14)',
-                    color: 'white',
-                    '& .MuiListItemIcon-root': { color: brandColors.lime500 },
+                    bgcolor: 'rgba(255,255,255,.08)',
+                    color: brandColors.white,
+                    '& .MuiListItemIcon-root': { color: brandColors.teal300 },
+                    // The conductor line: the one brand flourish in the interface.
                     '&::before': {
                       content: '""',
                       position: 'absolute',
-                      left: 0,
-                      top: 8,
-                      bottom: 8,
-                      width: 3,
-                      borderRadius: 3,
-                      background: brandGradients.primary,
+                      left: -12,
+                      top: 6,
+                      bottom: 6,
+                      width: 4,
+                      borderRadius: '0 3px 3px 0',
+                      background: brandGradients.conductorVertical,
                     },
                   },
-                  '&:hover': { bgcolor: 'rgba(0,183,255,.10)', color: 'white' },
+                  '&:hover': { bgcolor: 'rgba(255,255,255,.06)', color: brandColors.white },
                   '&.Mui-focusVisible': {
-                    outline: `2px solid ${brandColors.cyan500}`,
+                    outline: `2px solid ${brandColors.teal300}`,
                     outlineOffset: -2,
                   },
                 }}
               >
-                <ListItemIcon sx={{ minWidth: 38, color: 'inherit' }}>{item.icon}</ListItemIcon>
+                <ListItemIcon sx={{ minWidth: 36, color: 'inherit', '& svg': { fontSize: 20 } }}>
+                  {item.icon}
+                </ListItemIcon>
                 <ListItemText
                   primary={item.label}
-                  slotProps={{ primary: { fontWeight: 650, fontSize: 14 } }}
+                  slotProps={{ primary: { fontWeight: 500, fontSize: 14 } }}
                 />
               </ListItemButton>
             ))}
           </List>
         ))}
       </Box>
-      <Box px={2.5} py={2} sx={{ borderTop: '1px solid rgba(0,183,255,.12)' }}>
-        <Typography variant="caption" sx={{ color: 'rgba(175,193,216,.75)' }}>
-          EcoSoft · Enterprise MVP / Pilot Ready
+      <Box px={2.5} py={1.75} sx={{ borderTop: '1px solid rgba(201,214,229,.12)' }}>
+        <Typography variant="caption" component="p" sx={{ color: '#8EA3BC' }}>
+          Edición Enterprise MVP / Piloto
+        </Typography>
+        <Typography variant="caption" component="p" sx={{ color: '#6F86A1' }}>
+          Origen académico UNAPEC · ISO-705
         </Typography>
       </Box>
     </Box>
@@ -187,18 +211,31 @@ export function AppLayout() {
           <Box flexGrow={1} minWidth={0}>
             <Breadcrumbs aria-label="Ruta de navegación" sx={{ fontSize: 13 }}>
               <Link component={RouterLink} to="/" underline="hover" color="text.secondary">
-                CNE · EcoSoft
+                Inicio
               </Link>
+              {current && current.path !== '/' && currentGroup && !compactHeader && (
+                <Typography color="text.secondary" fontSize={13} noWrap>
+                  {currentGroup}
+                </Typography>
+              )}
               {current && current.path !== '/' && (
-                <Typography color="text.primary" fontSize={13} fontWeight={700} noWrap>
+                <Typography
+                  color="text.primary"
+                  fontSize={13}
+                  fontWeight={600}
+                  noWrap
+                  aria-current="page"
+                >
                   {current.label}
                 </Typography>
               )}
             </Breadcrumbs>
             <Typography
-              fontWeight={800}
+              component="p"
+              fontWeight={600}
+              fontSize={16}
               noWrap
-              sx={{ display: { xs: 'none', sm: 'block' }, lineHeight: 1.3 }}
+              sx={{ display: { xs: 'none', sm: 'block' }, lineHeight: 1.35 }}
             >
               {current?.label ?? 'Comisión Nacional de Energía'}
             </Typography>
@@ -213,7 +250,6 @@ export function AppLayout() {
                     ? 'Notificaciones (estado no disponible)'
                     : `${unreadCount} notificaciones sin leer`
                 }
-                color="primary"
               >
                 <Badge badgeContent={unreadCount} color="error" max={99}>
                   <NotificationsOutlined />
@@ -237,11 +273,12 @@ export function AppLayout() {
               <Stack direction="row" spacing={1.25} alignItems="center">
                 <Avatar
                   sx={{
-                    bgcolor: 'primary.main',
-                    color: 'white',
-                    width: 36,
-                    height: 36,
-                    fontSize: 15,
+                    bgcolor: brandColors.navy800,
+                    color: brandColors.white,
+                    width: 34,
+                    height: 34,
+                    fontSize: 14,
+                    fontWeight: 600,
                   }}
                 >
                   {user?.firstName[0]}
@@ -250,7 +287,7 @@ export function AppLayout() {
                 <Box sx={{ display: { xs: 'none', lg: 'block' }, textAlign: 'left' }}>
                   <Typography
                     variant="body2"
-                    fontWeight={700}
+                    fontWeight={600}
                     color="text.primary"
                     lineHeight={1.2}
                   >
@@ -272,14 +309,14 @@ export function AppLayout() {
             slotProps={{ paper: { sx: { minWidth: 260, mt: 1 } } }}
           >
             <Box px={2} py={1.25}>
-              <Typography fontWeight={800}>
+              <Typography fontWeight={600}>
                 {user?.firstName} {user?.lastName}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ overflowWrap: 'anywhere' }}>
                 {user?.email}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {user?.roles.map(formatRole).join(' · ')}
+                {user?.roles.map(formatRole).join(', ')}
               </Typography>
             </Box>
             <Divider />

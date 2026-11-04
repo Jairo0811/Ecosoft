@@ -1,380 +1,523 @@
-import { CloudUploadOutlined, SendOutlined, UndoOutlined } from '@mui/icons-material';
+import { useState } from 'react';
 import {
-  Alert,
+  AddOutlined,
+  CloudUploadOutlined,
+  DownloadOutlined,
+  NoteAddOutlined,
+  SendOutlined,
+  UndoOutlined,
+} from '@mui/icons-material';
+import {
   Box,
   Button,
   Card,
   Chip,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   Stack,
   Tab,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TablePagination,
+  TableRow,
   Tabs,
-  TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState, type FormEvent } from 'react';
+import { bidStatuses, type BidStatus } from '@ecosoft/shared';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
-import { getApiErrorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { useNotify } from '../components/Feedback';
+import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/PageState';
+import { formatDateTime, formatNumber } from '../utils/format';
+import { getApiErrorMessage } from '../api/errors';
+import { NewBidDialog } from './offers/NewBidDialog';
+import { UploadDocumentDialog } from './offers/UploadDocumentDialog';
+import {
+  bidStatusColor,
+  bidStatusLabels,
+  entityTypeLabels,
+  fileNameFromDisposition,
+  formatBytes,
+  trustedHeaders,
+  type Bid,
+  type DocumentItem,
+  type Paginated,
+} from './offers/model';
 
-interface Bid {
-  id: string;
-  projectName: string;
-  status: string;
-  offeredPowerMw: string;
-  offeredPrice: string | null;
-  currencyCode: string | null;
-  auction: { code: string; title: string };
-  organization: { legalName: string };
-}
-interface DocumentItem {
-  id: string;
-  title: string;
-  documentType: string;
-  entityType: string;
-  status: string;
-  currentVersionNumber: number;
-  createdAt: string;
-}
-interface ListResponse<T> {
-  data: T[];
-  pagination: { total: number };
-}
-const trustedHeaders = { 'X-Requested-With': 'EcoSoftWeb' };
-const fileToBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () =>
-      resolve(typeof reader.result === 'string' ? (reader.result.split(',')[1] ?? '') : '');
-    reader.onerror = () => reject(reader.error ?? new Error('No se pudo leer el archivo.'));
-    reader.readAsDataURL(file);
-  });
-
-export function OffersDocumentsPage() {
-  const { user } = useAuth();
+function BidsPanel() {
+  const { hasPermission } = useAuth();
+  const canSubmit = hasPermission('bids.submit');
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState(0);
-  const [bidOpen, setBidOpen] = useState(false);
-  const [documentOpen, setDocumentOpen] = useState(false);
-  const [bid, setBid] = useState({
-    auctionId: '',
-    projectName: '',
-    renewableTechnologyCode: 'SOLAR',
-    projectLocation: '',
-    offeredPowerMw: '',
-    estimatedEnergyMwh: '',
-    offeredPrice: '',
-    currencyCode: 'USD',
-    validUntil: '',
-  });
-  const [document, setDocument] = useState({
-    entityType: 'BID',
-    entityId: '',
-    documentType: 'TECHNICAL_PROPOSAL',
-    title: '',
-  });
-  const [file, setFile] = useState<File | null>(null);
-  const canSubmit = user?.permissions.includes('bids.submit') ?? false;
-  const canManageDocuments = user?.permissions.includes('documents.manage') ?? false;
+  const notify = useNotify();
+  const [status, setStatus] = useState<BidStatus | ''>('');
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+  const [creating, setCreating] = useState(false);
+  const [action, setAction] = useState<{ bid: Bid; kind: 'submit' | 'withdraw' } | null>(null);
+
   const bids = useQuery({
-    queryKey: ['bids'],
-    queryFn: () => apiClient.get<ListResponse<Bid>>('/bids').then(({ data }) => data),
+    queryKey: ['bids', { status, page, pageSize }],
+    queryFn: () =>
+      apiClient
+        .get<Paginated<Bid>>('/bids', {
+          params: { ...(status ? { status } : {}), page: page + 1, pageSize },
+        })
+        .then(({ data }) => data),
+    placeholderData: keepPreviousData,
   });
-  const documents = useQuery({
-    queryKey: ['documents'],
-    queryFn: () => apiClient.get<ListResponse<DocumentItem>>('/documents').then(({ data }) => data),
-  });
-  const createBid = useMutation({
-    mutationFn: () => apiClient.post('/bids', bid, { headers: trustedHeaders }),
-    onSuccess: async () => {
-      setBidOpen(false);
+  const bidAction = useMutation({
+    mutationFn: ({
+      bid,
+      kind,
+      reason,
+    }: {
+      bid: Bid;
+      kind: 'submit' | 'withdraw';
+      reason: string;
+    }) => apiClient.post(`/bids/${bid.id}/${kind}`, { reason }, { headers: trustedHeaders }),
+    onSuccess: async (_response, { bid, kind }) => {
+      setAction(null);
+      notify(
+        kind === 'submit'
+          ? `Oferta «${bid.projectName}» enviada.`
+          : `Oferta «${bid.projectName}» retirada.`,
+      );
       await queryClient.invalidateQueries({ queryKey: ['bids'] });
     },
   });
-  const bidAction = useMutation({
-    mutationFn: ({ id, action }: { id: string; action: 'submit' | 'withdraw' }) =>
-      apiClient.post(
-        `/bids/${id}/${action}`,
-        {
-          reason:
-            action === 'submit'
-              ? 'Envío formal de la oferta para evaluación.'
-              : 'Retiro formal solicitado por el oferente.',
-        },
-        { headers: trustedHeaders },
-      ),
-    onSuccess: async () => queryClient.invalidateQueries({ queryKey: ['bids'] }),
-  });
-  const upload = useMutation({
-    mutationFn: async () => {
-      if (!file) throw new Error('Seleccione un archivo.');
-      return apiClient.post(
-        '/documents',
-        {
-          ...document,
-          fileName: file.name,
-          mimeType: file.type || 'application/octet-stream',
-          contentBase64: await fileToBase64(file),
-          confidentiality: 'PRIVATE',
-        },
-        { headers: trustedHeaders },
-      );
-    },
-    onSuccess: async () => {
-      setDocumentOpen(false);
-      setFile(null);
-      await queryClient.invalidateQueries({ queryKey: ['documents'] });
-    },
+
+  return (
+    <Stack spacing={2}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between">
+        <FormControl size="small" sx={{ minWidth: 220 }}>
+          <InputLabel id="bid-status-label">Estado</InputLabel>
+          <Select
+            labelId="bid-status-label"
+            label="Estado"
+            value={status}
+            onChange={(event) => {
+              setStatus(event.target.value);
+              setPage(0);
+            }}
+          >
+            <MenuItem value="">Todos</MenuItem>
+            {bidStatuses.map((item) => (
+              <MenuItem key={item} value={item}>
+                {bidStatusLabels[item]}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {canSubmit && (
+          <Button variant="contained" startIcon={<AddOutlined />} onClick={() => setCreating(true)}>
+            Nueva oferta
+          </Button>
+        )}
+      </Stack>
+      <Card>
+        {bids.isLoading ? (
+          <Box p={2}>
+            <LoadingState rows={4} label="Cargando ofertas" />
+          </Box>
+        ) : bids.isError ? (
+          <Box p={2}>
+            <ErrorState error={bids.error} onRetry={() => void bids.refetch()} />
+          </Box>
+        ) : !bids.data?.data.length ? (
+          <Box p={2}>
+            <EmptyState
+              title={status ? 'Ninguna oferta en este estado' : 'Aún no hay ofertas'}
+              description={
+                canSubmit
+                  ? 'Cree un borrador, adjunte los documentos obligatorios y envíelo antes del cierre.'
+                  : 'Las ofertas de su ámbito aparecerán aquí.'
+              }
+            />
+          </Box>
+        ) : (
+          <TableContainer>
+            <Table size="small" aria-label="Ofertas" sx={{ minWidth: 760 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Proyecto</TableCell>
+                  <TableCell>Subasta</TableCell>
+                  <TableCell align="right">Potencia</TableCell>
+                  <TableCell align="right">Precio</TableCell>
+                  <TableCell>Estado</TableCell>
+                  {canSubmit && <TableCell align="right">Acciones</TableCell>}
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {bids.data.data.map((bid) => (
+                  <TableRow key={bid.id} hover>
+                    <TableCell>
+                      <Typography variant="body2" fontWeight={600}>
+                        {bid.projectName}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        {bid.organization.commercialName ?? bid.organization.legalName}
+                      </Typography>
+                    </TableCell>
+                    <TableCell>
+                      <Typography variant="body2">{bid.auction.code}</Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        Cierra {formatDateTime(bid.auction.closeAt)}
+                      </Typography>
+                    </TableCell>
+                    <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                      {formatNumber(bid.offeredPowerMw)} MW
+                    </TableCell>
+                    <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                      {bid.offeredPrice === null ? (
+                        <Tooltip title="Información financiera no disponible para su rol">
+                          <span>Reservado</span>
+                        </Tooltip>
+                      ) : (
+                        `${formatNumber(bid.offeredPrice)} ${bid.currencyCode ?? ''}/MWh`
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <Chip
+                        size="small"
+                        label={bidStatusLabels[bid.status]}
+                        color={bidStatusColor(bid.status)}
+                        variant="outlined"
+                      />
+                    </TableCell>
+                    {canSubmit && (
+                      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                        {bid.status === 'BORRADOR' && (
+                          <Button
+                            size="small"
+                            startIcon={<SendOutlined />}
+                            onClick={() => {
+                              bidAction.reset();
+                              setAction({ bid, kind: 'submit' });
+                            }}
+                          >
+                            Enviar
+                          </Button>
+                        )}
+                        {bid.status === 'ENVIADA' && (
+                          <Button
+                            size="small"
+                            color="error"
+                            startIcon={<UndoOutlined />}
+                            onClick={() => {
+                              bidAction.reset();
+                              setAction({ bid, kind: 'withdraw' });
+                            }}
+                          >
+                            Retirar
+                          </Button>
+                        )}
+                      </TableCell>
+                    )}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <TablePagination
+              component="div"
+              count={bids.data.pagination.total}
+              page={page}
+              rowsPerPage={pageSize}
+              rowsPerPageOptions={[10, 20, 50]}
+              onPageChange={(_event, next) => setPage(next)}
+              onRowsPerPageChange={(event) => {
+                setPageSize(Number(event.target.value));
+                setPage(0);
+              }}
+            />
+          </TableContainer>
+        )}
+      </Card>
+      <NewBidDialog
+        open={creating}
+        onClose={() => setCreating(false)}
+        onCreated={(name) => {
+          setCreating(false);
+          notify(
+            `Borrador «${name}» guardado. Adjunte los documentos obligatorios antes de enviarlo.`,
+          );
+          void queryClient.invalidateQueries({ queryKey: ['bids'] });
+        }}
+      />
+      <ConfirmDialog
+        open={Boolean(action)}
+        title={action?.kind === 'submit' ? 'Enviar oferta' : 'Retirar oferta'}
+        description={
+          action?.kind === 'submit'
+            ? 'Al enviarla, la oferta queda sellada con su huella de integridad y pasa a evaluación. Se verificará que estén cargados los documentos obligatorios de la subasta.'
+            : 'La oferta dejará de participar en la subasta. Esta acción queda registrada en la auditoría.'
+        }
+        summary={
+          action && (
+            <Typography variant="body2">
+              <strong>{action.bid.projectName}</strong> · {action.bid.auction.code} ·{' '}
+              {formatNumber(action.bid.offeredPowerMw)} MW
+            </Typography>
+          )
+        }
+        confirmLabel={action?.kind === 'submit' ? 'Enviar oferta' : 'Retirar oferta'}
+        destructive={action?.kind === 'withdraw'}
+        reason={
+          action?.kind === 'withdraw' ? { label: 'Motivo del retiro', minLength: 10 } : undefined
+        }
+        pending={bidAction.isPending}
+        error={bidAction.error}
+        onConfirm={(reason) =>
+          action &&
+          bidAction.mutate({
+            ...action,
+            reason: reason ?? 'Envío formal de la oferta para evaluación.',
+          })
+        }
+        onClose={() => setAction(null)}
+      />
+    </Stack>
+  );
+}
+
+function DocumentsPanel() {
+  const { hasPermission } = useAuth();
+  const canManage = hasPermission('documents.manage');
+  const queryClient = useQueryClient();
+  const notify = useNotify();
+  const [entityType, setEntityType] = useState('');
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+  const [uploading, setUploading] = useState(false);
+  const [versionOf, setVersionOf] = useState<DocumentItem | null>(null);
+
+  const documents = useQuery({
+    queryKey: ['documents', { entityType, page, pageSize }],
+    queryFn: () =>
+      apiClient
+        .get<Paginated<DocumentItem>>('/documents', {
+          params: { ...(entityType ? { entityType } : {}), page: page + 1, pageSize },
+        })
+        .then(({ data }) => data),
+    placeholderData: keepPreviousData,
   });
   const download = useMutation({
     mutationFn: async (item: DocumentItem) => {
       const response = await apiClient.get<Blob>(`/documents/${item.id}/download`, {
         responseType: 'blob',
       });
+      const latest = item.versions[0];
+      const name = fileNameFromDisposition(
+        response.headers['content-disposition'] as string | undefined,
+        latest?.originalFileName ?? item.title,
+      );
       const url = URL.createObjectURL(response.data);
       const anchor = window.document.createElement('a');
       anchor.href = url;
-      anchor.download = item.title;
+      anchor.download = name;
       anchor.click();
       URL.revokeObjectURL(url);
+      return name;
     },
+    onSuccess: (name) => notify(`Descarga de «${name}» iniciada.`, 'info'),
+    onError: (error) => notify(getApiErrorMessage(error), 'error'),
   });
-  const error =
-    bids.error ||
-    documents.error ||
-    createBid.error ||
-    bidAction.error ||
-    upload.error ||
-    download.error;
-  const submitBid = (event: FormEvent) => {
-    event.preventDefault();
-    createBid.mutate();
-  };
-  const submitDocument = (event: FormEvent) => {
-    event.preventDefault();
-    upload.mutate();
+  const uploaded = (message: string) => {
+    setUploading(false);
+    setVersionOf(null);
+    notify(message);
+    void queryClient.invalidateQueries({ queryKey: ['documents'] });
   };
 
   return (
-    <Stack spacing={3}>
-      <Box>
-        <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-          Ofertas y documentos
-        </Typography>
-        <Typography color="text.secondary">
-          Expediente digital versionado, trazable y aislado por organización.
-        </Typography>
-      </Box>
-      {error && <Alert severity="error">{getApiErrorMessage(error)}</Alert>}
+    <Stack spacing={2}>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} justifyContent="space-between">
+        <FormControl size="small" sx={{ minWidth: 220 }}>
+          <InputLabel id="doc-entity-label">Asociado a</InputLabel>
+          <Select
+            labelId="doc-entity-label"
+            label="Asociado a"
+            value={entityType}
+            onChange={(event) => {
+              setEntityType(event.target.value);
+              setPage(0);
+            }}
+          >
+            <MenuItem value="">Todos</MenuItem>
+            {Object.entries(entityTypeLabels).map(([value, label]) => (
+              <MenuItem key={value} value={value}>
+                {label}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
+        {canManage && (
+          <Button
+            variant="contained"
+            startIcon={<CloudUploadOutlined />}
+            onClick={() => setUploading(true)}
+          >
+            Cargar documento
+          </Button>
+        )}
+      </Stack>
       <Card>
-        <Tabs
-          value={tab}
-          onChange={(_, value: number) => setTab(value)}
-          aria-label="Módulos de ofertas y documentos"
-        >
-          <Tab label={`Ofertas (${bids.data?.pagination.total ?? 0})`} />
-          <Tab label={`Documentos (${documents.data?.pagination.total ?? 0})`} />
-        </Tabs>
+        {documents.isLoading ? (
+          <Box p={2}>
+            <LoadingState rows={4} label="Cargando documentos" />
+          </Box>
+        ) : documents.isError ? (
+          <Box p={2}>
+            <ErrorState error={documents.error} onRetry={() => void documents.refetch()} />
+          </Box>
+        ) : !documents.data?.data.length ? (
+          <Box p={2}>
+            <EmptyState
+              title={entityType ? 'No hay documentos de este tipo' : 'Aún no hay documentos'}
+              description="Los expedientes cargados aparecerán aquí con su versión vigente y huella de integridad."
+            />
+          </Box>
+        ) : (
+          <TableContainer>
+            <Table size="small" aria-label="Documentos" sx={{ minWidth: 720 }}>
+              <TableHead>
+                <TableRow>
+                  <TableCell>Documento</TableCell>
+                  <TableCell>Asociado a</TableCell>
+                  <TableCell>Versión vigente</TableCell>
+                  <TableCell>Actualizado</TableCell>
+                  <TableCell align="right">Acciones</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {documents.data.data.map((item) => {
+                  const latest = item.versions[0];
+                  return (
+                    <TableRow key={item.id} hover>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight={600}>
+                          {item.title}
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                          {item.documentType}
+                        </Typography>
+                      </TableCell>
+                      <TableCell>{entityTypeLabels[item.entityType] ?? item.entityType}</TableCell>
+                      <TableCell>
+                        <Typography variant="body2">
+                          v{item.currentVersionNumber}
+                          {latest ? ` · ${formatBytes(latest.sizeBytes)}` : ''}
+                        </Typography>
+                        {latest && (
+                          <Tooltip title={`SHA-256 ${latest.sha256}`}>
+                            <Typography
+                              variant="caption"
+                              color="text.secondary"
+                              sx={{ cursor: 'help' }}
+                            >
+                              SHA-256 {latest.sha256.slice(0, 12)}…
+                            </Typography>
+                          </Tooltip>
+                        )}
+                      </TableCell>
+                      <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                        {formatDateTime(item.updatedAt)}
+                      </TableCell>
+                      <TableCell align="right" sx={{ whiteSpace: 'nowrap' }}>
+                        <Button
+                          size="small"
+                          startIcon={<DownloadOutlined />}
+                          onClick={() => download.mutate(item)}
+                          disabled={download.isPending && download.variables.id === item.id}
+                        >
+                          Descargar
+                        </Button>
+                        {canManage && item.status === 'ACTIVE' && (
+                          <Button
+                            size="small"
+                            startIcon={<NoteAddOutlined />}
+                            onClick={() => setVersionOf(item)}
+                          >
+                            Nueva versión
+                          </Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </Table>
+            <TablePagination
+              component="div"
+              count={documents.data.pagination.total}
+              page={page}
+              rowsPerPage={pageSize}
+              rowsPerPageOptions={[10, 20, 50]}
+              onPageChange={(_event, next) => setPage(next)}
+              onRowsPerPageChange={(event) => {
+                setPageSize(Number(event.target.value));
+                setPage(0);
+              }}
+            />
+          </TableContainer>
+        )}
       </Card>
-      {tab === 0 && (
-        <Stack spacing={2}>
-          {canSubmit && (
-            <Box>
-              <Button variant="contained" onClick={() => setBidOpen(true)}>
-                Nueva oferta
-              </Button>
-            </Box>
-          )}
-          {bids.isLoading ? (
-            <CircularProgress />
-          ) : (
-            bids.data?.data.map((item) => (
-              <Card key={item.id} sx={{ p: 2.5 }}>
-                <Stack
-                  direction={{ xs: 'column', sm: 'row' }}
-                  justifyContent="space-between"
-                  gap={2}
-                >
-                  <Box>
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography fontWeight={800}>{item.projectName}</Typography>
-                      <Chip size="small" label={item.status} />
-                    </Stack>
-                    <Typography color="text.secondary">
-                      {item.auction.code} · {item.organization.legalName}
-                    </Typography>
-                    <Typography>
-                      {String(item.offeredPowerMw)} MW
-                      {item.offeredPrice
-                        ? ` · ${String(item.offeredPrice)} ${item.currencyCode}`
-                        : ''}
-                    </Typography>
-                  </Box>
-                  {canSubmit && (
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      {item.status === 'BORRADOR' && (
-                        <Button
-                          startIcon={<SendOutlined />}
-                          onClick={() => bidAction.mutate({ id: item.id, action: 'submit' })}
-                        >
-                          Enviar
-                        </Button>
-                      )}
-                      {item.status === 'ENVIADA' && (
-                        <Button
-                          color="warning"
-                          startIcon={<UndoOutlined />}
-                          onClick={() => bidAction.mutate({ id: item.id, action: 'withdraw' })}
-                        >
-                          Retirar
-                        </Button>
-                      )}
-                    </Stack>
-                  )}
-                </Stack>
-              </Card>
-            ))
-          )}
-          {!bids.isLoading && !bids.data?.data.length && (
-            <Card sx={{ p: 4, textAlign: 'center' }}>
-              <Typography color="text.secondary">No hay ofertas disponibles.</Typography>
-            </Card>
-          )}
-        </Stack>
-      )}
-      {tab === 1 && (
-        <Stack spacing={2}>
-          {canManageDocuments && (
-            <Box>
-              <Button
-                variant="contained"
-                startIcon={<CloudUploadOutlined />}
-                onClick={() => setDocumentOpen(true)}
-              >
-                Cargar documento
-              </Button>
-            </Box>
-          )}
-          {documents.isLoading ? (
-            <CircularProgress />
-          ) : (
-            documents.data?.data.map((item) => (
-              <Card key={item.id} sx={{ p: 2.5 }}>
-                <Stack direction="row" justifyContent="space-between">
-                  <Box>
-                    <Typography fontWeight={800}>{item.title}</Typography>
-                    <Typography color="text.secondary">
-                      {item.documentType} · {item.entityType} · versión {item.currentVersionNumber}
-                    </Typography>
-                  </Box>
-                  <Button onClick={() => download.mutate(item)} disabled={download.isPending}>
-                    Descargar
-                  </Button>
-                </Stack>
-              </Card>
-            ))
-          )}
-        </Stack>
-      )}
-      <Dialog open={bidOpen} onClose={() => setBidOpen(false)} fullWidth maxWidth="sm">
-        <Box component="form" onSubmit={submitBid}>
-          <DialogTitle>Nueva oferta</DialogTitle>
-          <DialogContent>
-            <Stack spacing={2} mt={1}>
-              {Object.entries(bid).map(([key, value]) => (
-                <TextField
-                  key={key}
-                  required={key !== 'projectLocation'}
-                  label={
-                    (
-                      {
-                        auctionId: 'ID de subasta',
-                        projectName: 'Proyecto',
-                        renewableTechnologyCode: 'Tecnología',
-                        projectLocation: 'Ubicación',
-                        offeredPowerMw: 'Potencia MW',
-                        estimatedEnergyMwh: 'Energía MWh',
-                        offeredPrice: 'Precio',
-                        currencyCode: 'Moneda',
-                        validUntil: 'Válida hasta (ISO)',
-                      } as Record<string, string>
-                    )[key]
-                  }
-                  value={value}
-                  onChange={(event) =>
-                    setBid((current) => ({ ...current, [key]: event.target.value }))
-                  }
-                />
-              ))}
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setBidOpen(false)}>Cancelar</Button>
-            <Button type="submit" variant="contained" disabled={createBid.isPending}>
-              Guardar borrador
-            </Button>
-          </DialogActions>
-        </Box>
-      </Dialog>
-      <Dialog open={documentOpen} onClose={() => setDocumentOpen(false)} fullWidth maxWidth="sm">
-        <Box component="form" onSubmit={submitDocument}>
-          <DialogTitle>Cargar documento</DialogTitle>
-          <DialogContent>
-            <Stack spacing={2} mt={1}>
-              <TextField
-                label="Tipo de entidad"
-                value={document.entityType}
-                onChange={(event) =>
-                  setDocument((current) => ({ ...current, entityType: event.target.value }))
-                }
-              />
-              <TextField
-                required
-                label="ID de la entidad"
-                value={document.entityId}
-                onChange={(event) =>
-                  setDocument((current) => ({ ...current, entityId: event.target.value }))
-                }
-              />
-              <TextField
-                required
-                label="Tipo documental"
-                value={document.documentType}
-                onChange={(event) =>
-                  setDocument((current) => ({ ...current, documentType: event.target.value }))
-                }
-              />
-              <TextField
-                required
-                label="Título"
-                value={document.title}
-                onChange={(event) =>
-                  setDocument((current) => ({ ...current, title: event.target.value }))
-                }
-              />
-              <Button component="label" variant="outlined">
-                {file?.name ?? 'Seleccionar archivo'}
-                <input
-                  hidden
-                  type="file"
-                  onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-                />
-              </Button>
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setDocumentOpen(false)}>Cancelar</Button>
-            <Button type="submit" variant="contained" disabled={!file || upload.isPending}>
-              Cargar
-            </Button>
-          </DialogActions>
-        </Box>
-      </Dialog>
+      <UploadDocumentDialog
+        open={uploading || Boolean(versionOf)}
+        versionOf={versionOf}
+        onClose={() => {
+          setUploading(false);
+          setVersionOf(null);
+        }}
+        onUploaded={(title) =>
+          uploaded(
+            versionOf ? `Nueva versión de «${title}» cargada.` : `Documento «${title}» cargado.`,
+          )
+        }
+      />
+    </Stack>
+  );
+}
+
+export function OffersDocumentsPage() {
+  const { hasPermission } = useAuth();
+  const tabs = [
+    { key: 'bids', label: 'Ofertas', visible: hasPermission('bids.read') },
+    { key: 'documents', label: 'Documentos', visible: hasPermission('documents.read') },
+  ].filter((tab) => tab.visible);
+  const [tab, setTab] = useState(tabs[0]?.key ?? 'bids');
+
+  return (
+    <Stack spacing={2.5}>
+      <PageHeader
+        title="Ofertas y documentos"
+        description="Ofertas por subasta y expediente digital versionado, con integridad verificable y aislado por organización."
+      />
+      <Tabs
+        value={tab}
+        onChange={(_event, value: string) => setTab(value)}
+        aria-label="Ofertas y documentos"
+      >
+        {tabs.map((item) => (
+          <Tab
+            key={item.key}
+            value={item.key}
+            label={item.label}
+            id={`tab-${item.key}`}
+            aria-controls={`panel-${item.key}`}
+          />
+        ))}
+      </Tabs>
+      <Box role="tabpanel" id={`panel-${tab}`} aria-labelledby={`tab-${tab}`}>
+        {tab === 'bids' ? <BidsPanel /> : <DocumentsPanel />}
+      </Box>
     </Stack>
   );
 }
