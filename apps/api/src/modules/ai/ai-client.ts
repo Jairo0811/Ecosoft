@@ -10,6 +10,13 @@ const call = async (path: string, body: unknown): Promise<AIServiceResult> => {
       body: JSON.stringify(body),
       signal: AbortSignal.timeout(env.AI_SERVICE_TIMEOUT_MS),
     });
+    if (response.status === 422) {
+      throw new AppError(
+        422,
+        'AI_INPUT_REJECTED',
+        'El servicio de IA rechazó el contenido: formato o tamaño no admitido por el proveedor.',
+      );
+    }
     if (!response.ok) {
       throw new AppError(
         502,
