@@ -212,7 +212,19 @@ export function AppLayout() {
             <MenuOutlined />
           </IconButton>
           <Box flexGrow={1} minWidth={0}>
-            <Breadcrumbs aria-label="Ruta de navegación" sx={{ fontSize: 13 }}>
+            <Breadcrumbs
+              aria-label="Ruta de navegación"
+              sx={{
+                fontSize: 13,
+                // One line on narrow screens: the current page ellipsizes instead of wrapping
+                // below a dangling "Inicio /".
+                '& .MuiBreadcrumbs-ol': { flexWrap: 'nowrap' },
+                '& .MuiBreadcrumbs-li': { minWidth: 0 },
+                '& .MuiBreadcrumbs-li:first-of-type, & .MuiBreadcrumbs-separator': {
+                  flexShrink: 0,
+                },
+              }}
+            >
               <Link component={RouterLink} to="/" underline="hover" color="text.secondary">
                 Inicio
               </Link>
