@@ -120,7 +120,13 @@ test.describe('autenticación', () => {
     await expect(page.getByRole('heading', { level: 1, name: /Ana/ })).toBeVisible();
     api.expireAccessTokens();
     api.refreshFails = true;
-    await page.getByRole('link', { name: 'Subastas', exact: true }).first().click();
+    // The next protected request must end the session: either this navigation or a background
+    // refetch (e.g. the unread-count poll) that happens to run first and removes the link.
+    await page
+      .getByRole('link', { name: 'Subastas', exact: true })
+      .first()
+      .click({ timeout: 3000 })
+      .catch(() => undefined);
     await expect(page).toHaveURL(/\/login/);
     await expect(page.getByText(/Su sesión expiró o fue revocada/)).toBeVisible();
     await expect(page.getByText('Subasta solar región norte')).toHaveCount(0);
