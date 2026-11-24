@@ -33,6 +33,10 @@ import {
 } from '@mui/icons-material';
 import { apiClient } from '../api/client';
 import { getApiErrorMessage } from '../api/errors';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { useNotify } from '../components/Feedback';
+import { PageHeader } from '../components/PageState';
+import { formatDateTime } from '../utils/format';
 
 interface Role {
   id: string;
@@ -100,6 +104,14 @@ export function UsersPage() {
     [query, status],
   );
 
+  const notify = useNotify();
+  /** Sensitive account changes wait here for explicit confirmation. */
+  const [pendingAction, setPendingAction] = useState<
+    | { kind: 'suspend' | 'reactivate'; user: User }
+    | { kind: 'revoke'; invitation: Invitation }
+    | null
+  >(null);
+
   const usersQuery = useQuery({
     queryKey: ['users', params],
     queryFn: () => apiClient.get<ListResponse<User>>('/users', { params }).then(({ data }) => data),
@@ -144,13 +156,24 @@ export function UsersPage() {
     },
   });
   const statusMutation = useMutation({
-    mutationFn: ({ user, nextStatus }: { user: User; nextStatus: string }) =>
+    mutationFn: ({ user, nextStatus }: { user: User; nextStatus: 'ACTIVE' | 'SUSPENDED' }) =>
       apiClient.patch(`/users/${user.id}/status`, { status: nextStatus }),
-    onSuccess: refresh,
+    onSuccess: async (_, { user, nextStatus }) => {
+      setPendingAction(null);
+      notify(
+        nextStatus === 'SUSPENDED'
+          ? `Cuenta de ${user.email} suspendida. Sus sesiones dejan de ser válidas.`
+          : `Cuenta de ${user.email} reactivada.`,
+      );
+      await refresh();
+    },
   });
   const unlockMutation = useMutation({
     mutationFn: (user: User) => apiClient.patch(`/users/${user.id}/unlock`),
-    onSuccess: refresh,
+    onSuccess: async (_, user) => {
+      notify(`Cuenta de ${user.email} desbloqueada.`);
+      await refresh();
+    },
   });
   const rolesMutation = useMutation({
     mutationFn: () => {
@@ -158,6 +181,7 @@ export function UsersPage() {
       return apiClient.put(`/users/${roleTarget.id}/roles`, { roleCodes: selectedRoles });
     },
     onSuccess: async () => {
+      notify(`Roles de ${roleTarget?.email ?? 'la cuenta'} actualizados.`);
       setRoleTarget(null);
       await refresh();
     },
@@ -165,15 +189,15 @@ export function UsersPage() {
   const revokeMutation = useMutation({
     mutationFn: (invitation: Invitation) =>
       apiClient.patch(`/users/invitations/${invitation.id}/revoke`),
-    onSuccess: refresh,
+    onSuccess: async (_, invitation) => {
+      setPendingAction(null);
+      notify(`Invitación para ${invitation.email} revocada. El enlace ya no es válido.`);
+      await refresh();
+    },
   });
 
-  const mutationError =
-    inviteMutation.error ||
-    statusMutation.error ||
-    unlockMutation.error ||
-    rolesMutation.error ||
-    revokeMutation.error;
+  // Status and revocation errors are shown inside their confirmation dialog.
+  const mutationError = inviteMutation.error || unlockMutation.error || rolesMutation.error;
 
   const openRoles = (user: User) => {
     setRoleTarget(user);
@@ -182,19 +206,21 @@ export function UsersPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={2}>
-        <Box>
-          <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-            Usuarios
-          </Typography>
-          <Typography color="text.secondary" mt={0.5}>
-            Invitaciones, roles, acceso y estado de las cuentas por organización.
-          </Typography>
-        </Box>
-        <Button variant="contained" startIcon={<AddOutlined />} onClick={() => setInviteOpen(true)}>
-          Invitar usuario
-        </Button>
-      </Stack>
+      <PageHeader
+        title="Usuarios"
+        description="Invitaciones, roles, acceso y estado de las cuentas por organización."
+        actions={
+          <>
+            <Button
+              variant="contained"
+              startIcon={<AddOutlined />}
+              onClick={() => setInviteOpen(true)}
+            >
+              Invitar usuario
+            </Button>
+          </>
+        }
+      />
 
       {mutationError && <Alert severity="error">{getApiErrorMessage(mutationError)}</Alert>}
       <Card sx={{ p: 2.5 }}>
@@ -210,8 +236,9 @@ export function UsersPage() {
             fullWidth
           />
           <FormControl sx={{ minWidth: 190 }}>
-            <InputLabel>Estado</InputLabel>
+            <InputLabel id="users-status-filter">Estado</InputLabel>
             <Select
+              labelId="users-status-filter"
               value={status}
               label="Estado"
               onChange={(event) => setStatus(event.target.value)}
@@ -287,6 +314,7 @@ export function UsersPage() {
                           <Button
                             size="small"
                             startIcon={<LockOpenOutlined />}
+                            disabled={unlockMutation.isPending}
                             onClick={() => unlockMutation.mutate(user)}
                           >
                             Desbloquear
@@ -296,7 +324,10 @@ export function UsersPage() {
                           <Button
                             size="small"
                             color="error"
-                            onClick={() => statusMutation.mutate({ user, nextStatus: 'SUSPENDED' })}
+                            onClick={() => {
+                              statusMutation.reset();
+                              setPendingAction({ kind: 'suspend', user });
+                            }}
                           >
                             Suspender
                           </Button>
@@ -305,7 +336,10 @@ export function UsersPage() {
                           <Button
                             size="small"
                             color="success"
-                            onClick={() => statusMutation.mutate({ user, nextStatus: 'ACTIVE' })}
+                            onClick={() => {
+                              statusMutation.reset();
+                              setPendingAction({ kind: 'reactivate', user });
+                            }}
                           >
                             Reactivar
                           </Button>
@@ -314,6 +348,11 @@ export function UsersPage() {
                     </TableCell>
                   </TableRow>
                 ))}
+                {usersQuery.data?.data.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={5}>No hay usuarios con estos filtros.</TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>
@@ -343,17 +382,15 @@ export function UsersPage() {
                         {item.email}
                       </Typography>
                     </TableCell>
-                    <TableCell>
-                      {new Intl.DateTimeFormat('es-DO', {
-                        dateStyle: 'medium',
-                        timeStyle: 'short',
-                      }).format(new Date(item.expiresAt))}
-                    </TableCell>
+                    <TableCell>{formatDateTime(item.expiresAt)}</TableCell>
                     <TableCell align="right">
                       <Button
                         size="small"
                         color="error"
-                        onClick={() => revokeMutation.mutate(item)}
+                        onClick={() => {
+                          revokeMutation.reset();
+                          setPendingAction({ kind: 'revoke', invitation: item });
+                        }}
                       >
                         Revocar
                       </Button>
@@ -370,6 +407,63 @@ export function UsersPage() {
           </TableContainer>
         </Card>
       </Box>
+
+      <ConfirmDialog
+        open={pendingAction !== null}
+        title={
+          pendingAction?.kind === 'suspend'
+            ? 'Suspender cuenta'
+            : pendingAction?.kind === 'reactivate'
+              ? 'Reactivar cuenta'
+              : 'Revocar invitación'
+        }
+        description={
+          pendingAction?.kind === 'suspend'
+            ? 'La persona no podrá iniciar sesión y sus sesiones activas quedarán revocadas. Puede reactivarse más adelante.'
+            : pendingAction?.kind === 'reactivate'
+              ? 'La persona podrá volver a iniciar sesión con sus roles actuales.'
+              : 'El enlace de activación dejará de funcionar. Para dar acceso habrá que enviar una invitación nueva.'
+        }
+        summary={
+          pendingAction &&
+          (pendingAction.kind === 'revoke' ? (
+            <>
+              <strong>
+                {pendingAction.invitation.user.firstName} {pendingAction.invitation.user.lastName}
+              </strong>{' '}
+              · {pendingAction.invitation.email}
+            </>
+          ) : (
+            <>
+              <strong>
+                {pendingAction.user.firstName} {pendingAction.user.lastName}
+              </strong>{' '}
+              · {pendingAction.user.email} ·{' '}
+              {statusLabel[pendingAction.user.status] ?? pendingAction.user.status}
+            </>
+          ))
+        }
+        confirmLabel={
+          pendingAction?.kind === 'suspend'
+            ? 'Suspender cuenta'
+            : pendingAction?.kind === 'reactivate'
+              ? 'Reactivar cuenta'
+              : 'Revocar invitación'
+        }
+        destructive={pendingAction?.kind !== 'reactivate'}
+        pending={statusMutation.isPending || revokeMutation.isPending}
+        error={pendingAction?.kind === 'revoke' ? revokeMutation.error : statusMutation.error}
+        onConfirm={() => {
+          if (!pendingAction) return;
+          if (pendingAction.kind === 'revoke') revokeMutation.mutate(pendingAction.invitation);
+          else
+            statusMutation.mutate({
+              user: pendingAction.user,
+              nextStatus: pendingAction.kind === 'suspend' ? 'SUSPENDED' : 'ACTIVE',
+            });
+        }}
+        onClose={() => setPendingAction(null)}
+      />
 
       <Dialog open={inviteOpen} onClose={() => setInviteOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Invitar usuario</DialogTitle>

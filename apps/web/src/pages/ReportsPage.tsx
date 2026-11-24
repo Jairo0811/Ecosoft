@@ -24,6 +24,8 @@ import { useMemo, useState } from 'react';
 import { apiClient } from '../api/client';
 import { getApiErrorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
+import { PageHeader } from '../components/PageState';
+import { saveBlob } from '../utils/download';
 
 type ReportType =
   'auctions' | 'participants' | 'bids' | 'awards' | 'contracts' | 'projects' | 'capacity' | 'audit';
@@ -123,14 +125,7 @@ export function ReportsPage() {
         params: { ...params, format },
         responseType: 'blob',
       });
-      const url = URL.createObjectURL(response.data);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `ecosoft-${type}.${format}`;
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(url);
+      saveBlob(response.data, `ecosoft-${type}.${format}`);
     },
   });
   const error = report.error || exportReport.error;
@@ -138,14 +133,10 @@ export function ReportsPage() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-          Reportes y analítica
-        </Typography>
-        <Typography color="text.secondary">
-          Información trazable, filtrada por permisos y preparada para exportación institucional.
-        </Typography>
-      </Box>
+      <PageHeader
+        title="Reportes y analítica"
+        description="Información trazable, filtrada por permisos y preparada para exportación institucional."
+      />
       {error && <Alert severity="error">{getApiErrorMessage(error)}</Alert>}
       <Card sx={{ p: 2.5 }}>
         <Stack direction="row" spacing={1} alignItems="center" mb={2}>

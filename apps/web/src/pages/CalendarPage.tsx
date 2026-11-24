@@ -39,6 +39,7 @@ import { calendarEventTypes, type CalendarEventType } from '@ecosoft/shared';
 import { apiClient } from '../api/client';
 import { getApiErrorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
+import { PageHeader } from '../components/PageState';
 
 interface CalendarEvent {
   id: string;
@@ -127,25 +128,23 @@ export function CalendarPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={2}>
-        <Box>
-          <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-            Calendario energético
-          </Typography>
-          <Typography color="text.secondary" mt={0.5}>
-            Aperturas, cierres, evaluaciones, reuniones, adjudicaciones e hitos.
-          </Typography>
-        </Box>
-        {canManage && (
-          <Button
-            variant="contained"
-            startIcon={<AddOutlined />}
-            onClick={() => setCreateOpen(true)}
-          >
-            Nuevo evento
-          </Button>
-        )}
-      </Stack>
+      <PageHeader
+        title="Calendario energético"
+        description="Aperturas, cierres, evaluaciones, reuniones, adjudicaciones e hitos."
+        actions={
+          <>
+            {canManage && (
+              <Button
+                variant="contained"
+                startIcon={<AddOutlined />}
+                onClick={() => setCreateOpen(true)}
+              >
+                Nuevo evento
+              </Button>
+            )}
+          </>
+        }
+      />
       {eventsQuery.isError && (
         <Alert severity="error">{getApiErrorMessage(eventsQuery.error)}</Alert>
       )}

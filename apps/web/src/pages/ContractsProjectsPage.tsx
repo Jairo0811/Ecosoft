@@ -20,6 +20,7 @@ import { useState, type FormEvent } from 'react';
 import { apiClient } from '../api/client';
 import { getApiErrorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
+import { PageHeader } from '../components/PageState';
 
 interface Project {
   id: string;
@@ -151,14 +152,10 @@ export function ContractsProjectsPage() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-          Proyectos y contratos PPA
-        </Typography>
-        <Typography color="text.secondary">
-          Seguimiento desde la adjudicación hasta la operación y vigencia contractual.
-        </Typography>
-      </Box>
+      <PageHeader
+        title="Proyectos y contratos PPA"
+        description="Seguimiento desde la adjudicación hasta la operación y vigencia contractual."
+      />
       {error && <Alert severity="error">{getApiErrorMessage(error)}</Alert>}
       <Card>
         <Tabs value={tab} onChange={(_, value: number) => setTab(value)}>

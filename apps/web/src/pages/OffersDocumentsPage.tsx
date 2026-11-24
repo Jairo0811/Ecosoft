@@ -51,6 +51,7 @@ import {
   type DocumentItem,
   type Paginated,
 } from './offers/model';
+import { saveBlob } from '../utils/download';
 
 function BidsPanel() {
   const { hasPermission } = useAuth();
@@ -318,12 +319,7 @@ function DocumentsPanel() {
         response.headers['content-disposition'] as string | undefined,
         latest?.originalFileName ?? item.title,
       );
-      const url = URL.createObjectURL(response.data);
-      const anchor = window.document.createElement('a');
-      anchor.href = url;
-      anchor.download = name;
-      anchor.click();
-      URL.revokeObjectURL(url);
+      saveBlob(response.data, name);
       return name;
     },
     onSuccess: (name) => notify(`Descarga de «${name}» iniciada.`, 'info'),

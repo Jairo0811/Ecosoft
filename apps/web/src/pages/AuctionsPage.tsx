@@ -33,7 +33,13 @@ import { useAuth } from '../auth/AuthContext';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useNotify } from '../components/Feedback';
 import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/PageState';
-import { formatDateTime, formatNumber, formatTechnology } from '../utils/format';
+import {
+  formatDateTime,
+  formatNumber,
+  formatTechnology,
+  fromDateTimeLocalInput,
+  viewerTimeZoneLabel,
+} from '../utils/format';
 
 interface Organization {
   id: string;
@@ -221,16 +227,14 @@ export function AuctionsPage() {
         ...form,
         capacityMw: Number(form.capacityMw),
         maximumPrice: form.maximumPrice ? Number(form.maximumPrice) : undefined,
-        openAt: new Date(form.openAt).toISOString(),
-        closeAt: new Date(form.closeAt).toISOString(),
-        evaluationStartAt: form.evaluationStartAt
-          ? new Date(form.evaluationStartAt).toISOString()
-          : undefined,
-        awardPlannedAt: form.awardPlannedAt
-          ? new Date(form.awardPlannedAt).toISOString()
-          : undefined,
+        // datetime-local values are the viewer's wall clock; the API stores UTC instants.
+        openAt: fromDateTimeLocalInput(form.openAt),
+        closeAt: fromDateTimeLocalInput(form.closeAt),
+        evaluationStartAt: fromDateTimeLocalInput(form.evaluationStartAt),
+        awardPlannedAt: fromDateTimeLocalInput(form.awardPlannedAt),
       }),
     onSuccess: async () => {
+      notify(`Borrador ${form.code} creado.`);
       setCreateOpen(false);
       setForm(emptyForm);
       await refresh();
@@ -295,6 +299,33 @@ export function AuctionsPage() {
     );
     setParticipantsOpen(true);
   };
+  /** Mirrors auctions.schemas.ts so problems show inline before the request is sent. */
+  const createErrors: Partial<Record<keyof typeof emptyForm, string>> = {};
+  if (form.code && !/^[A-Z0-9-]{4,40}$/.test(form.code))
+    createErrors.code = 'De 4 a 40 caracteres: letras, números y guiones.';
+  if (form.title && form.title.trim().length < 5) createErrors.title = 'Mínimo 5 caracteres.';
+  if (form.capacityMw && !(Number(form.capacityMw) > 0))
+    createErrors.capacityMw = 'Debe ser mayor que cero.';
+  if (form.maximumPrice && !(Number(form.maximumPrice) > 0))
+    createErrors.maximumPrice = 'Debe ser mayor que cero.';
+  const instant = (value: string) => {
+    const iso = fromDateTimeLocalInput(value);
+    return iso ? new Date(iso).getTime() : undefined;
+  };
+  const [openTime, closeTime, evaluationTime, awardTime] = [
+    instant(form.openAt),
+    instant(form.closeAt),
+    instant(form.evaluationStartAt),
+    instant(form.awardPlannedAt),
+  ];
+  if (openTime && closeTime && closeTime <= openTime)
+    createErrors.closeAt = 'Debe ser posterior a la apertura.';
+  if (closeTime && evaluationTime && evaluationTime < closeTime)
+    createErrors.evaluationStartAt = 'No puede comenzar antes del cierre.';
+  if (evaluationTime && awardTime && awardTime < evaluationTime)
+    createErrors.awardPlannedAt = 'Debe ser posterior al inicio de evaluación.';
+  const zoneLabel = viewerTimeZoneLabel();
+
   const regulatoryOrganizations =
     organizationsQuery.data?.filter((item) => item.type === 'REGULATORY_AUTHORITY') ?? [];
   const participantOrganizations =
@@ -334,8 +365,9 @@ export function AuctionsPage() {
             fullWidth
           />
           <FormControl sx={{ minWidth: 210 }}>
-            <InputLabel>Estado</InputLabel>
+            <InputLabel id="auction-select-1">Estado</InputLabel>
             <Select
+              labelId="auction-select-1"
               value={status}
               label="Estado"
               onChange={(event) => {
@@ -498,6 +530,8 @@ export function AuctionsPage() {
                 label="Código"
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+                error={Boolean(createErrors.code)}
+                helperText={createErrors.code ?? 'Ejemplo: SUB-2027-001'}
                 fullWidth
                 required
               />
@@ -505,6 +539,8 @@ export function AuctionsPage() {
                 label="Título"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
+                error={Boolean(createErrors.title)}
+                helperText={createErrors.title}
                 fullWidth
                 required
               />
@@ -519,8 +555,9 @@ export function AuctionsPage() {
             />
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <FormControl fullWidth required>
-                <InputLabel>Autoridad administradora</InputLabel>
+                <InputLabel id="auction-select-2">Autoridad administradora</InputLabel>
                 <Select
+                  labelId="auction-select-2"
                   value={form.managingOrganizationId}
                   label="Autoridad administradora"
                   onChange={(e) => setForm({ ...form, managingOrganizationId: e.target.value })}
@@ -533,8 +570,9 @@ export function AuctionsPage() {
                 </Select>
               </FormControl>
               <FormControl fullWidth required>
-                <InputLabel>Tecnología</InputLabel>
+                <InputLabel id="auction-select-3">Tecnología</InputLabel>
                 <Select
+                  labelId="auction-select-3"
                   value={form.renewableTechnologyCode}
                   label="Tecnología"
                   onChange={(e) => setForm({ ...form, renewableTechnologyCode: e.target.value })}
@@ -553,6 +591,8 @@ export function AuctionsPage() {
                 type="number"
                 value={form.capacityMw}
                 onChange={(e) => setForm({ ...form, capacityMw: e.target.value })}
+                error={Boolean(createErrors.capacityMw)}
+                helperText={createErrors.capacityMw}
                 fullWidth
                 required
               />
@@ -561,12 +601,14 @@ export function AuctionsPage() {
                 type="number"
                 value={form.maximumPrice}
                 onChange={(e) => setForm({ ...form, maximumPrice: e.target.value })}
+                error={Boolean(createErrors.maximumPrice)}
+                helperText={createErrors.maximumPrice ?? 'Opcional, por MWh'}
                 fullWidth
-                required
               />
               <FormControl sx={{ minWidth: 150 }}>
-                <InputLabel>Moneda</InputLabel>
+                <InputLabel id="auction-select-4">Moneda</InputLabel>
                 <Select
+                  labelId="auction-select-4"
                   value={form.currencyCode}
                   label="Moneda"
                   onChange={(e) => setForm({ ...form, currencyCode: e.target.value })}
@@ -595,6 +637,8 @@ export function AuctionsPage() {
                     type="datetime-local"
                     value={form[field]}
                     onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+                    error={Boolean(createErrors[field])}
+                    helperText={createErrors[field] ?? `Hora local (${zoneLabel})`}
                     slotProps={{ inputLabel: { shrink: true } }}
                     fullWidth
                     required={field === 'openAt' || field === 'closeAt'}
@@ -615,13 +659,13 @@ export function AuctionsPage() {
               !form.managingOrganizationId ||
               !form.renewableTechnologyCode ||
               !form.capacityMw ||
-              !form.maximumPrice ||
               !form.openAt ||
-              !form.closeAt
+              !form.closeAt ||
+              Object.keys(createErrors).length > 0
             }
             onClick={() => createMutation.mutate()}
           >
-            Crear borrador
+            {createMutation.isPending ? 'Creando…' : 'Crear borrador'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -662,8 +706,9 @@ export function AuctionsPage() {
                     fullWidth
                   />
                   <FormControl sx={{ minWidth: 160 }}>
-                    <InputLabel>Categoría</InputLabel>
+                    <InputLabel id="auction-select-5">Categoría</InputLabel>
                     <Select
+                      labelId="auction-select-5"
                       value={item.category}
                       label="Categoría"
                       onChange={(e) =>
@@ -731,8 +776,9 @@ export function AuctionsPage() {
         <DialogTitle>Participantes habilitados · {selected?.code}</DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 1 }}>
-            <InputLabel>Organizaciones</InputLabel>
+            <InputLabel id="auction-select-6">Organizaciones</InputLabel>
             <Select
+              labelId="auction-select-6"
               multiple
               value={participantIds}
               label="Organizaciones"

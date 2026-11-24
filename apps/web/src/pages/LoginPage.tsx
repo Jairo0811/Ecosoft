@@ -54,7 +54,7 @@ const loginErrorMessage = (error: unknown): string => {
 };
 
 export function LoginPage() {
-  const { user, login } = useAuth();
+  const { user, login, endReason } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [serverError, setServerError] = useState('');
@@ -175,6 +175,16 @@ export function LoginPage() {
             <Typography color="text.secondary" mt={1} mb={3.5}>
               Use la cuenta institucional que le asignó su organización o la CNE.
             </Typography>
+            {!serverError && endReason === 'expired' && (
+              <Alert severity="info" sx={{ mb: 2.5 }} role="status">
+                Su sesión expiró o fue revocada. Inicie sesión nuevamente para continuar.
+              </Alert>
+            )}
+            {!serverError && endReason === 'logout' && (
+              <Alert severity="success" sx={{ mb: 2.5 }} role="status">
+                Sesión cerrada correctamente.
+              </Alert>
+            )}
             {serverError && (
               <Alert severity="error" sx={{ mb: 2.5 }} role="alert">
                 {serverError}

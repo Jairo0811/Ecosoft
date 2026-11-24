@@ -18,6 +18,7 @@ import { useState } from 'react';
 import { apiClient } from '../api/client';
 import { getApiErrorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
+import { PageHeader } from '../components/PageState';
 
 interface Analysis {
   id: string;
@@ -73,14 +74,10 @@ export function AIPage() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-          Asistencia de IA
-        </Typography>
-        <Typography color="text.secondary">
-          Extracción y análisis con fuentes, confianza y revisión humana obligatoria.
-        </Typography>
-      </Box>
+      <PageHeader
+        title="Asistencia de IA"
+        description="Extracción y análisis con fuentes, confianza y revisión humana obligatoria."
+      />
       <Alert severity="info">
         La IA es asistiva: sus resultados no adjudican, aprueban ni modifican contratos
         automáticamente.

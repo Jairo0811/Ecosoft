@@ -10,6 +10,7 @@ import {
   IconButton,
   Link,
   List,
+  ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
@@ -124,49 +125,51 @@ export function AppLayout() {
             }
           >
             {group.items.map((item) => (
-              <ListItemButton
-                key={item.path}
-                component={NavLink}
-                to={item.path}
-                end={item.path === '/'}
-                onClick={() => setMobileOpen(false)}
-                sx={{
-                  mb: 0.25,
-                  minHeight: 40,
-                  borderRadius: `${radii.control}px`,
-                  color: '#C9D6E5',
-                  position: 'relative',
-                  '&.active': {
-                    bgcolor: 'rgba(255,255,255,.08)',
-                    color: brandColors.white,
-                    '& .MuiListItemIcon-root': { color: brandColors.teal300 },
-                    // The conductor line: the one brand flourish in the interface.
-                    '&::before': {
-                      content: '""',
-                      position: 'absolute',
-                      left: -12,
-                      top: 6,
-                      bottom: 6,
-                      width: 4,
-                      borderRadius: '0 3px 3px 0',
-                      background: brandGradients.conductorVertical,
+              // Each link sits in its own <li> so the <ul> only contains list items (axe: list).
+              <ListItem key={item.path} disablePadding>
+                <ListItemButton
+                  component={NavLink}
+                  to={item.path}
+                  end={item.path === '/'}
+                  onClick={() => setMobileOpen(false)}
+                  sx={{
+                    mb: 0.25,
+                    minHeight: 40,
+                    borderRadius: `${radii.control}px`,
+                    color: '#C9D6E5',
+                    position: 'relative',
+                    '&.active': {
+                      bgcolor: 'rgba(255,255,255,.08)',
+                      color: brandColors.white,
+                      '& .MuiListItemIcon-root': { color: brandColors.teal300 },
+                      // The conductor line: the one brand flourish in the interface.
+                      '&::before': {
+                        content: '""',
+                        position: 'absolute',
+                        left: -12,
+                        top: 6,
+                        bottom: 6,
+                        width: 4,
+                        borderRadius: '0 3px 3px 0',
+                        background: brandGradients.conductorVertical,
+                      },
                     },
-                  },
-                  '&:hover': { bgcolor: 'rgba(255,255,255,.06)', color: brandColors.white },
-                  '&.Mui-focusVisible': {
-                    outline: `2px solid ${brandColors.teal300}`,
-                    outlineOffset: -2,
-                  },
-                }}
-              >
-                <ListItemIcon sx={{ minWidth: 36, color: 'inherit', '& svg': { fontSize: 20 } }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.label}
-                  slotProps={{ primary: { fontWeight: 500, fontSize: 14 } }}
-                />
-              </ListItemButton>
+                    '&:hover': { bgcolor: 'rgba(255,255,255,.06)', color: brandColors.white },
+                    '&.Mui-focusVisible': {
+                      outline: `2px solid ${brandColors.teal300}`,
+                      outlineOffset: -2,
+                    },
+                  }}
+                >
+                  <ListItemIcon sx={{ minWidth: 36, color: 'inherit', '& svg': { fontSize: 20 } }}>
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.label}
+                    slotProps={{ primary: { fontWeight: 500, fontSize: 14 } }}
+                  />
+                </ListItemButton>
+              </ListItem>
             ))}
           </List>
         ))}
