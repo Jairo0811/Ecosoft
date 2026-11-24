@@ -9,6 +9,15 @@ const booleanFromEnvironment = z.preprocess((value) => {
   return value;
 }, z.boolean());
 
+// `.env.example` ships optional identity settings as `NAME=` and dotenv loads them as "".
+// An empty value means "not configured", not "invalid URL": the API must start from the example
+// file, and the provider-specific checks below still fail fast when OIDC or SAML is selected.
+const optionalSetting = <T extends z.ZodTypeAny>(schema: T) =>
+  z.preprocess(
+    (value) => (typeof value === 'string' && value.trim() === '' ? undefined : value),
+    schema.optional(),
+  );
+
 const enterpriseSchema = z
   .object({
     PRODUCT_EDITION: z.enum(['academic', 'enterprise']).default('academic'),
@@ -20,9 +29,9 @@ const enterpriseSchema = z
     SECURITY_CSP_ENABLED: booleanFromEnvironment.default(false),
     MFA_REQUIRED: booleanFromEnvironment.default(false),
     SSO_PROVIDER: z.enum(['local', 'oidc', 'saml']).default('local'),
-    OIDC_ISSUER_URL: z.string().url().optional(),
-    OIDC_CLIENT_ID: z.string().trim().min(2).optional(),
-    SAML_ENTRYPOINT_URL: z.string().url().optional(),
+    OIDC_ISSUER_URL: optionalSetting(z.string().url()),
+    OIDC_CLIENT_ID: optionalSetting(z.string().trim().min(2)),
+    SAML_ENTRYPOINT_URL: optionalSetting(z.string().url()),
     TELEMETRY_ENABLED: booleanFromEnvironment.default(false),
     EMAIL_PROVIDER: z.enum(['console', 'external']).default('console'),
     WEBHOOKS_ENABLED: booleanFromEnvironment.default(false),
