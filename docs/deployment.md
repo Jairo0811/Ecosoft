@@ -2,8 +2,20 @@
 
 ## Desarrollo
 
-Docker Compose inicia SQL Server 2022 y FastAPI. La API y la web se ejecutan con hot reload
-mediante npm. Los documentos se guardan fuera del repositorio en `DOCUMENT_STORAGE_PATH`.
+Docker Compose inicia SQL Server 2022 y FastAPI, publicados solo en `127.0.0.1` (SQL Server en
+`127.0.0.1:14330`, FastAPI en `127.0.0.1:8000`). La API y la web se ejecutan con hot reload mediante
+`npm run dev`, que funciona igual en Windows, Linux y macOS. Los documentos se guardan fuera del
+repositorio en `DOCUMENT_STORAGE_PATH`.
+
+Esta configuración es para la edición local: credenciales de ejemplo, sin TLS y sin autenticación
+en el servicio IA. No es una configuración segura de producción.
+
+## Proxy inverso
+
+`TRUST_PROXY` debe reflejar la topología real. Sin proxy, `false` (valor por defecto). Detrás de un
+balanceador o App Service, indique el número de saltos de proxies propios (por ejemplo `1`) o sus
+subredes; nunca `true`, que la API rechaza al arrancar porque permitiría a cualquier cliente
+falsificar su IP para evadir el rate limiting o alterar la auditoría.
 
 ## Objetivo Azure
 
