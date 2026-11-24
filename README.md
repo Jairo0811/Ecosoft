@@ -169,18 +169,18 @@ Ready**, no Production Ready.
 
 ## 🧩 Módulos del producto
 
-| Módulo                            | Responsabilidad                                      |        Fase | Estado          |
-| --------------------------------- | ---------------------------------------------------- | ----------: | --------------- |
-| Auth, Users, Roles y Permissions  | Identidad, sesiones, RBAC y administración           |         1–2 | ✅ Implementado |
-| Organizations y Participants      | CNE, empresas y participantes autorizados            |           2 | ✅ Implementado |
-| Auctions y Calendar               | Licitaciones, reglas, cronograma y eventos auditados |           3 | ✅ Implementado |
-| Bids y Documents                  | Ofertas, versiones, confidencialidad y documentos    |           4 | ✅ Implementado |
-| Evaluations y Awards              | Matrices configurables, puntuación y adjudicación    |           5 | ✅ Implementado |
-| PPAContracts y EnergyProjects     | Contratos, versiones, estados y proyectos renovables |           6 | ✅ Implementado |
-| Reports y Analytics               | KPIs, tendencias, filtros y exportaciones            |           7 | ✅ Implementado |
-| Audit, Regulatory y Notifications | Gobierno, normativa, trazabilidad y alertas          |           8 | ✅ Implementado |
-| AI y OCR                          | Análisis consultivo, anomalías, resumen y extracción |           9 | ✅ Implementado |
-| Administration                    | Configuración operativa y catálogos                  | Transversal | ✅ Implementado |
+| Módulo                            | Responsabilidad                                                                           |        Fase | Estado          |
+| --------------------------------- | ----------------------------------------------------------------------------------------- | ----------: | --------------- |
+| Auth, Users, Roles y Permissions  | Identidad, sesiones, RBAC y administración                                                |         1–2 | ✅ Implementado |
+| Organizations y Participants      | CNE, empresas y participantes autorizados                                                 |           2 | ✅ Implementado |
+| Auctions y Calendar               | Licitaciones, reglas, cronograma y eventos auditados                                      |           3 | ✅ Implementado |
+| Bids y Documents                  | Ofertas, versiones, confidencialidad y documentos                                         |           4 | ✅ Implementado |
+| Evaluations y Awards              | Matrices configurables, puntuación y adjudicación                                         |           5 | ✅ Implementado |
+| PPAContracts y EnergyProjects     | Contratos, versiones, estados y proyectos renovables                                      |           6 | ✅ Implementado |
+| Reports y Analytics               | KPIs, tendencias, filtros y exportaciones                                                 |           7 | ✅ Implementado |
+| Audit, Regulatory y Notifications | Gobierno, normativa, trazabilidad y alertas                                               |           8 | ✅ Implementado |
+| AI y OCR                          | Análisis consultivo determinista, anomalías, resumen y extracción de texto (sin OCR real) |           9 | ✅ Implementado |
+| Administration                    | Configuración operativa y catálogos                                                       | Transversal | ✅ Implementado |
 
 ## 👥 Roles iniciales
 
@@ -324,14 +324,15 @@ EcoSoft/
 ├── docs/
 │   ├── architecture/        # ADRs
 │   └── requirements/        # Alcance y supuestos del MVP
-├── docker-compose.yml       # SQL Server para desarrollo
+├── docker-compose.yml       # SQL Server y servicio IA (solo loopback) para desarrollo
 ├── CONTRIBUTING.md
 ├── LICENSE
 └── README.md
 ```
 
-`apps/ai-service` expone contratos concretos de OCR, resumen y revisión de anomalías, sin autoridad
-para modificar decisiones oficiales.
+`apps/ai-service` expone contratos de extracción de texto (operación histórica `OCR`; el proveedor
+local no hace OCR de imágenes ni PDF escaneados), resumen extractivo y revisión heurística de
+anomalías, sin autoridad para modificar decisiones oficiales.
 
 ## 🧩 Principios de ingeniería
 
