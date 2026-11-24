@@ -21,5 +21,6 @@ reales se verifican en el job `sqlserver-integration` de la CI.
 | Usuarios                  | ![](before-usuarios-light-1440.webp) suspensión sin confirmar | ![](after-usuarios-suspender-dark-1440.webp)                             |
 | Asistencia documental     | ![](before-ia-light-1440.webp) UUID manual, JSON crudo        | ![](after-ia-light-1440.webp) ![](after-ia-dark-390.webp)                |
 
-El `main` anterior forzaba el tema oscuro; la versión nueva sigue la preferencia del sistema y
+El `main` anterior arrancaba siempre en tema oscuro, sin considerar la preferencia del sistema
+(se podía alternar manualmente); la versión nueva parte de la preferencia del sistema y también
 permite alternarla.
