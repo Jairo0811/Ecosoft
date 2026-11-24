@@ -8,6 +8,33 @@ from .schemas import AnalysisResponse
 
 PROVIDER = "LOCAL_DETERMINISTIC"
 
+# The API accepts at most 100 source references per result; larger documents are capped
+# explicitly (and flagged) instead of failing validation downstream.
+MAX_SIGNALS = 100
+
+# Formats the local provider can read. It decodes UTF-8 text; it does NOT perform OCR on
+# images or scanned PDFs and does not parse PDF/DOCX/XLSX containers.
+TEXT_MIME_TYPES = frozenset({"text/plain", "text/csv", "application/json", "text/markdown"})
+
+CAPABILITIES: dict[str, object] = {
+    "provider": PROVIDER,
+    "processing": "deterministic",
+    "generative_ai": False,
+    "ocr": False,
+    "operations": {
+        "SUMMARY": "Resumen extractivo: primeras oraciones del texto, sin generación.",
+        "ANOMALY_REVIEW": "Señales heurísticas por palabras clave y montos repetidos.",
+        "TEXT_EXTRACTION": "Decodificación de texto UTF-8 de archivos textuales.",
+    },
+    "text_extraction_mime_types": sorted(TEXT_MIME_TYPES),
+    "unsupported": [
+        "OCR de imágenes (PNG/JPEG)",
+        "PDF escaneados o PDF con texto",
+        "DOCX/XLSX",
+    ],
+    "human_review_required": True,
+}
+
 
 def _sentences(text: str) -> list[str]:
     return [item.strip() for item in re.split(r"(?<=[.!?])\s+|[\r\n]+", text) if item.strip()]
@@ -37,11 +64,15 @@ def review_anomalies(text: str) -> AnalysisResponse:
     for index, sentence in enumerate(sentences):
         if re.search(r"\b(?:inconsistente|pendiente|faltante|error|excede|incumpl)\w*\b", sentence, re.IGNORECASE):
             signals.append({"source": f"sentence:{index + 1}", "text": sentence})
+    total_signals = len(signals)
+    signals = signals[:MAX_SIGNALS]
     return AnalysisResponse(
         provider=PROVIDER,
         result={
             "signals": signals,
-            "repeated_amounts": repeated,
+            "total_signals": total_signals,
+            "truncated": total_signals > MAX_SIGNALS,
+            "repeated_amounts": repeated[:MAX_SIGNALS],
             "inferences": [],
             "notice": "Señales heurísticas; no constituyen una decisión regulatoria.",
         },
@@ -57,8 +88,11 @@ def extract_text(content_base64: str, mime_type: str) -> AnalysisResponse:
         raise ValueError("Contenido base64 inválido.") from error
     if not content:
         raise ValueError("El documento está vacío.")
-    if mime_type not in {"text/plain", "text/csv", "application/json", "text/markdown"}:
-        raise ValueError("El proveedor local solo extrae texto de archivos textuales.")
+    if mime_type not in TEXT_MIME_TYPES:
+        raise ValueError(
+            "El proveedor local solo extrae texto de archivos textuales; no realiza OCR de "
+            "imágenes ni de PDF escaneados."
+        )
     try:
         text = content.decode("utf-8-sig").strip()
     except UnicodeDecodeError as error:
@@ -67,7 +101,13 @@ def extract_text(content_base64: str, mime_type: str) -> AnalysisResponse:
         raise ValueError("No se encontró texto verificable.")
     return AnalysisResponse(
         provider=PROVIDER,
-        result={"text": text, "language": "und", "pages": 1},
+        result={
+            "text": text,
+            "language": "und",
+            "pages": 1,
+            "method": "UTF8_TEXT_DECODE",
+            "notice": "Extracción de texto UTF-8; no es OCR.",
+        },
         source_references=["document:1"],
         confidence=1.0,
     )

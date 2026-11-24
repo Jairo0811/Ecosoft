@@ -27,3 +27,17 @@ export const aiServiceResultSchema = z.object({
 });
 
 export type AIServiceResult = z.infer<typeof aiServiceResultSchema>;
+
+/** What the configured AI provider really does (FastAPI `/v1/capabilities`). */
+export const aiServiceCapabilitiesSchema = z.object({
+  provider: z.string().min(1).max(60),
+  processing: z.string().min(1).max(60),
+  generative_ai: z.boolean(),
+  ocr: z.boolean(),
+  operations: z.record(z.string(), z.string().max(300)),
+  text_extraction_mime_types: z.array(z.string().max(100)).max(50),
+  unsupported: z.array(z.string().max(200)).max(50),
+  human_review_required: z.boolean(),
+});
+
+export type AIServiceCapabilities = z.infer<typeof aiServiceCapabilitiesSchema>;

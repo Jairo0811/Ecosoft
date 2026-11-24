@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
-  Box,
   Button,
   Card,
   Chip,
@@ -30,6 +29,7 @@ import { catalogTypes, type CatalogType } from '@ecosoft/shared';
 import { apiClient } from '../api/client';
 import { getApiErrorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
+import { PageHeader } from '../components/PageState';
 
 interface CatalogItem {
   id: string;
@@ -111,21 +111,19 @@ export function CatalogsPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={2}>
-        <Box>
-          <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-            Catálogos
-          </Typography>
-          <Typography color="text.secondary" mt={0.5}>
-            Valores controlados que mantienen consistente el dominio energético.
-          </Typography>
-        </Box>
-        {canManage && (
-          <Button variant="contained" startIcon={<AddOutlined />} onClick={openCreate}>
-            Nuevo elemento
-          </Button>
-        )}
-      </Stack>
+      <PageHeader
+        title="Catálogos"
+        description="Valores controlados que mantienen consistente el dominio energético."
+        actions={
+          <>
+            {canManage && (
+              <Button variant="contained" startIcon={<AddOutlined />} onClick={openCreate}>
+                Nuevo elemento
+              </Button>
+            )}
+          </>
+        }
+      />
       <Card sx={{ p: 2.5 }}>
         <FormControl fullWidth>
           <InputLabel>Catálogo</InputLabel>

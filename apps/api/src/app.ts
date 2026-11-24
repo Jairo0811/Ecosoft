@@ -34,7 +34,7 @@ import { openApiDocument } from './openapi';
 export const createApp = () => {
   const app = express();
   app.disable('x-powered-by');
-  app.set('trust proxy', 1);
+  app.set('trust proxy', env.TRUST_PROXY);
   app.use(correlationId);
   app.use(
     pinoHttp({ logger, customProps: (request) => ({ correlationId: request.correlationId }) }),
@@ -52,6 +52,16 @@ export const createApp = () => {
       origin: env.WEB_ORIGIN,
       credentials: true,
       methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+      // Readable by the web app across origins: real download names, integrity hash, report
+      // truncation flags and the correlation id users quote to support.
+      exposedHeaders: [
+        'Content-Disposition',
+        'X-Content-SHA256',
+        'X-Correlation-Id',
+        'X-Report-Total',
+        'X-Report-Rows',
+        'X-Report-Truncated',
+      ],
     }),
   );
   app.use(express.json({ limit: '8mb' }));

@@ -60,6 +60,13 @@ async function issueSession(
   return { accessToken, refreshToken: refresh.token, user: sessionUser };
 }
 
+let timingHash: Promise<string> | undefined;
+/** Same cost as a real password check (bcrypt, 12 rounds) against a throwaway hash. */
+const equalizeTiming = async (password: string): Promise<void> => {
+  timingHash ??= bcrypt.hash('ecosoft-timing-equalizer', 12);
+  await bcrypt.compare(password, await timingHash);
+};
+
 export const authService = {
   async login(email: string, password: string, metadata: RequestMetadata): Promise<AuthResult> {
     const normalizedEmail = email.trim().toLowerCase();
@@ -80,10 +87,20 @@ export const authService = {
       throw new AppError(401, 'INVALID_CREDENTIALS', 'Correo o contraseña incorrectos.');
     };
 
-    if (!user) return denied();
-    if (user.lockedUntil && user.lockedUntil > new Date())
+    // Every rejection path spends one bcrypt comparison, so response time does not reveal
+    // whether an account exists, is locked or is inactive (user enumeration by timing).
+    if (!user) {
+      await equalizeTiming(password);
+      return denied();
+    }
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      await equalizeTiming(password);
       return denied(user.id, user.organizationId ?? undefined);
-    if (user.status !== 'ACTIVE') return denied(user.id, user.organizationId ?? undefined);
+    }
+    if (user.status !== 'ACTIVE') {
+      await equalizeTiming(password);
+      return denied(user.id, user.organizationId ?? undefined);
+    }
 
     const passwordMatches = await bcrypt.compare(password, user.passwordHash);
     if (!passwordMatches) {
@@ -135,24 +152,53 @@ export const authService = {
       throw new AppError(401, 'SESSION_EXPIRED', 'La sesión expiró.');
     }
 
-    await prisma.refreshToken.update({ where: { id: stored.id }, data: { revokedAt: new Date() } });
+    // Atomic rotation (compare-and-set): only one request may consume this refresh token.
+    // Two simultaneous refreshes used to both succeed and fork the token family.
+    const consumed = await prisma.refreshToken.updateMany({
+      where: { id: stored.id, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    if (consumed.count !== 1) {
+      throw new AppError(
+        401,
+        'REFRESH_CONFLICT',
+        'La sesión se renovó en otra pestaña. Reintente la operación.',
+      );
+    }
     return issueSession(stored.user, metadata, stored.familyId);
   },
 
+  /**
+   * Revokes the refresh token presented in the cookie. It does not require a valid access token:
+   * an expired access token must not leave a live refresh session behind after "Cerrar sesión".
+   */
   async logout(
     rawToken: string | undefined,
-    user: SessionUser,
+    actor: SessionUser | undefined,
     metadata: RequestMetadata,
   ): Promise<void> {
+    let userId = actor?.id;
+    let organizationId = actor?.organizationId ?? undefined;
     if (rawToken) {
-      await prisma.refreshToken.updateMany({
-        where: { userId: user.id, tokenHash: tokenService.hash(rawToken), revokedAt: null },
-        data: { revokedAt: new Date() },
+      const tokenHash = tokenService.hash(rawToken);
+      const stored = await prisma.refreshToken.findUnique({
+        where: { tokenHash },
+        select: { userId: true, user: { select: { organizationId: true } } },
       });
+      // A token that belongs to someone else than the bearer identity is left untouched.
+      if (stored && (!actor || stored.userId === actor.id)) {
+        await prisma.refreshToken.updateMany({
+          where: { tokenHash, revokedAt: null },
+          data: { revokedAt: new Date() },
+        });
+        userId ??= stored.userId;
+        organizationId ??= stored.user.organizationId ?? undefined;
+      }
     }
+    if (!userId) return;
     await auditService.record({
-      userId: user.id,
-      organizationId: user.organizationId ?? undefined,
+      userId,
+      organizationId,
       action: 'LOGOUT',
       module: 'Identity',
       result: 'SUCCESS',

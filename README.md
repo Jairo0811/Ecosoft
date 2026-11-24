@@ -147,7 +147,9 @@ Ready**, no Production Ready.
 - Alcance institucional o empresarial aplicado en backend para prevenir exposición entre empresas.
 - Reportes de subastas, participantes, ofertas, adjudicaciones, PPA, proyectos, capacidad y auditoría.
 - Filtros por período, organización, tecnología y estado.
-- Exportación auditable a CSV, Excel y PDF con protección contra fórmulas maliciosas.
+- Exportación auditable a CSV, Excel (XLSX real) y PDF con acentos, protección contra fórmulas
+  maliciosas y límite explícito de 10.000 filas (nunca truncamiento silencioso).
+- Paginación de reportes en SQL Server con totales reales.
 
 ### 🛡️ Gobierno, regulación y notificaciones
 
@@ -167,18 +169,18 @@ Ready**, no Production Ready.
 
 ## 🧩 Módulos del producto
 
-| Módulo                            | Responsabilidad                                      |        Fase | Estado          |
-| --------------------------------- | ---------------------------------------------------- | ----------: | --------------- |
-| Auth, Users, Roles y Permissions  | Identidad, sesiones, RBAC y administración           |         1–2 | ✅ Implementado |
-| Organizations y Participants      | CNE, empresas y participantes autorizados            |           2 | ✅ Implementado |
-| Auctions y Calendar               | Licitaciones, reglas, cronograma y eventos auditados |           3 | ✅ Implementado |
-| Bids y Documents                  | Ofertas, versiones, confidencialidad y documentos    |           4 | ✅ Implementado |
-| Evaluations y Awards              | Matrices configurables, puntuación y adjudicación    |           5 | ✅ Implementado |
-| PPAContracts y EnergyProjects     | Contratos, versiones, estados y proyectos renovables |           6 | ✅ Implementado |
-| Reports y Analytics               | KPIs, tendencias, filtros y exportaciones            |           7 | ✅ Implementado |
-| Audit, Regulatory y Notifications | Gobierno, normativa, trazabilidad y alertas          |           8 | ✅ Implementado |
-| AI y OCR                          | Análisis consultivo, anomalías, resumen y extracción |           9 | ✅ Implementado |
-| Administration                    | Configuración operativa y catálogos                  | Transversal | ✅ Implementado |
+| Módulo                            | Responsabilidad                                                                           |        Fase | Estado          |
+| --------------------------------- | ----------------------------------------------------------------------------------------- | ----------: | --------------- |
+| Auth, Users, Roles y Permissions  | Identidad, sesiones, RBAC y administración                                                |         1–2 | ✅ Implementado |
+| Organizations y Participants      | CNE, empresas y participantes autorizados                                                 |           2 | ✅ Implementado |
+| Auctions y Calendar               | Licitaciones, reglas, cronograma y eventos auditados                                      |           3 | ✅ Implementado |
+| Bids y Documents                  | Ofertas, versiones, confidencialidad y documentos                                         |           4 | ✅ Implementado |
+| Evaluations y Awards              | Matrices configurables, puntuación y adjudicación                                         |           5 | ✅ Implementado |
+| PPAContracts y EnergyProjects     | Contratos, versiones, estados y proyectos renovables                                      |           6 | ✅ Implementado |
+| Reports y Analytics               | KPIs, tendencias, filtros y exportaciones                                                 |           7 | ✅ Implementado |
+| Audit, Regulatory y Notifications | Gobierno, normativa, trazabilidad y alertas                                               |           8 | ✅ Implementado |
+| AI y OCR                          | Análisis consultivo determinista, anomalías, resumen y extracción de texto (sin OCR real) |           9 | ✅ Implementado |
+| Administration                    | Configuración operativa y catálogos                                                       | Transversal | ✅ Implementado |
 
 ## 👥 Roles iniciales
 
@@ -258,7 +260,10 @@ permisos y, cuando corresponde, la pertenencia a la organización para prevenir 
 </p>
 
 - Servicio Python/FastAPI aislado mediante interfaces.
-- Proveedor local determinista incluido para desarrollo, pruebas y demostración verificable.
+- Proveedor local determinista incluido para desarrollo, pruebas y demostración verificable:
+  **no usa IA generativa ni realiza OCR**. Resume de forma extractiva, señala anomalías con
+  heurísticas y extrae texto solo de archivos `.txt`; la interfaz muestra estas capacidades
+  reales (`GET /api/v1/ai/capabilities`).
 - OpenAI/Azure OpenAI y Azure AI Document Intelligence quedan como adaptadores productivos
   sustituibles, sujetos a credenciales y evaluación de privacidad.
 - IA consultiva: nunca adjudica subastas, aprueba contratos ni modifica información oficial.
@@ -319,14 +324,15 @@ EcoSoft/
 ├── docs/
 │   ├── architecture/        # ADRs
 │   └── requirements/        # Alcance y supuestos del MVP
-├── docker-compose.yml       # SQL Server para desarrollo
+├── docker-compose.yml       # SQL Server y servicio IA (solo loopback) para desarrollo
 ├── CONTRIBUTING.md
 ├── LICENSE
 └── README.md
 ```
 
-`apps/ai-service` expone contratos concretos de OCR, resumen y revisión de anomalías, sin autoridad
-para modificar decisiones oficiales.
+`apps/ai-service` expone contratos de extracción de texto (operación histórica `OCR`; el proveedor
+local no hace OCR de imágenes ni PDF escaneados), resumen extractivo y revisión heurística de
+anomalías, sin autoridad para modificar decisiones oficiales.
 
 ## 🧩 Principios de ingeniería
 
@@ -387,14 +393,18 @@ npm run db:seed
 npm run dev
 ```
 
-| Servicio       | URL local                                   |
-| -------------- | ------------------------------------------- |
-| Aplicación web | `http://localhost:5173`                     |
-| API REST       | `http://localhost:4000/api/v1`              |
-| Swagger        | `http://localhost:4000/api/docs`            |
-| Liveness       | `http://localhost:4000/api/v1/health/live`  |
-| Readiness      | `http://localhost:4000/api/v1/health/ready` |
-| IA/OCR         | `http://localhost:8000`                     |
+`npm run dev` inicia la API y la web a la vez en Windows (PowerShell/CMD), Linux y macOS mediante
+`scripts/dev.mjs`, con salida prefijada por servicio; `Ctrl+C` o la salida de cualquiera de los dos
+detiene ambos procesos.
+
+| Servicio       | URL local                                        |
+| -------------- | ------------------------------------------------ |
+| Aplicación web | `http://localhost:5173`                          |
+| API REST       | `http://localhost:4000/api/v1`                   |
+| Swagger        | `http://localhost:4000/api/docs`                 |
+| Liveness       | `http://localhost:4000/api/v1/health/live`       |
+| Readiness      | `http://localhost:4000/api/v1/health/ready`      |
+| Servicio IA    | `http://127.0.0.1:8000` (interno, solo loopback) |
 
 ## 🔑 Acceso inicial de desarrollo
 
@@ -409,22 +419,23 @@ El repositorio no incluye una contraseña predeterminada. El seed se detiene si
 
 ## ⚙️ Variables de entorno
 
-| Variable                   | Uso                                        |
-| -------------------------- | ------------------------------------------ |
-| `MSSQL_SA_PASSWORD`        | Inicializa el contenedor de SQL Server     |
-| `DATABASE_URL`             | Cadena Prisma hacia SQL Server             |
-| `JWT_ACCESS_SECRET`        | Firma access tokens de corta duración      |
-| `JWT_REFRESH_SECRET`       | Firma refresh tokens rotativos             |
-| `ACCESS_TOKEN_TTL_SECONDS` | Vigencia del access token                  |
-| `REFRESH_TOKEN_TTL_DAYS`   | Vigencia máxima de la sesión renovable     |
-| `INVITATION_TTL_HOURS`     | Vigencia de invitaciones de usuario        |
-| `SEED_ADMIN_PASSWORD`      | Contraseña local del administrador inicial |
-| `WEB_ORIGIN`               | Origen permitido por CORS                  |
-| `VITE_API_URL`             | Base URL consumida por el frontend         |
-| `LOG_LEVEL`                | Nivel de logging de Pino                   |
-| `DOCUMENT_STORAGE_PATH`    | Directorio privado de documentos           |
-| `AI_SERVICE_URL`           | URL interna del servicio FastAPI           |
-| `AI_SERVICE_TIMEOUT_MS`    | Tiempo máximo para IA/OCR                  |
+| Variable                   | Uso                                                                                    |
+| -------------------------- | -------------------------------------------------------------------------------------- |
+| `MSSQL_SA_PASSWORD`        | Inicializa el contenedor de SQL Server                                                 |
+| `DATABASE_URL`             | Cadena Prisma hacia SQL Server                                                         |
+| `JWT_ACCESS_SECRET`        | Firma access tokens de corta duración                                                  |
+| `JWT_REFRESH_SECRET`       | Firma refresh tokens rotativos                                                         |
+| `ACCESS_TOKEN_TTL_SECONDS` | Vigencia del access token                                                              |
+| `REFRESH_TOKEN_TTL_DAYS`   | Vigencia máxima de la sesión renovable                                                 |
+| `INVITATION_TTL_HOURS`     | Vigencia de invitaciones de usuario                                                    |
+| `SEED_ADMIN_PASSWORD`      | Contraseña local del administrador inicial                                             |
+| `WEB_ORIGIN`               | Origen permitido por CORS                                                              |
+| `TRUST_PROXY`              | `trust proxy` de Express; `false` salvo proxy propio (saltos o subredes, nunca `true`) |
+| `VITE_API_URL`             | Base URL consumida por el frontend                                                     |
+| `LOG_LEVEL`                | Nivel de logging de Pino                                                               |
+| `DOCUMENT_STORAGE_PATH`    | Directorio privado de documentos                                                       |
+| `AI_SERVICE_URL`           | URL interna del servicio FastAPI                                                       |
+| `AI_SERVICE_TIMEOUT_MS`    | Tiempo máximo de respuesta del servicio IA                                             |
 
 Nunca almacenes secretos reales en Git. Antes de producción se requiere un gestor de secretos,
 TLS en el borde y credenciales de mínimo privilegio para base de datos.
@@ -439,8 +450,22 @@ npm run lint
 npm run typecheck
 npm test
 npm run build
+npm audit --omit=dev --audit-level=high
+
+# E2E: compila la web y la sirve con `vite preview` (bundle de producción)
+npx playwright install chromium   # solo la primera vez
 npm run test:e2e --workspace @ecosoft/web
+
+# Servicio IA (Python 3.13)
+pip install -r apps/ai-service/requirements-dev.txt
+PYTHONPATH=apps/ai-service python -m unittest discover -s apps/ai-service/tests -v
 ```
+
+Las pruebas E2E usan un doble determinista de la API con dos identidades de organizaciones
+distintas: cubren login, expiración y cambio de identidad sin fuga de caché, panel, subastas,
+ofertas y documentos, administración de usuarios, asistencia documental, permisos, accesibilidad
+con axe-core (WCAG 2.2 A/AA, modo claro y oscuro), teclado y ausencia de desbordamiento horizontal
+entre 360 y 1440 px. La autorización real se verifica contra la API y SQL Server en CI.
 
 Cada pull request ejecuta:
 
@@ -451,7 +476,9 @@ Cada pull request ejecuta:
 5. pruebas backend y frontend;
 6. build de producción;
 7. auditoría de dependencias de producción;
-8. migraciones, seed y readiness contra **SQL Server 2022 real**.
+8. migraciones, seed y readiness contra **SQL Server 2022 real**, más flujos críticos sobre la API
+   real: rotación y reutilización de refresh tokens, revocación, RBAC, IDOR entre organizaciones,
+   integridad SHA-256 y versiones concurrentes de documentos, totales de reportes y exportaciones.
 
 La CI también valida el servicio FastAPI, su health check y pruebas E2E/accesibilidad en Chromium.
 
@@ -468,9 +495,15 @@ La CI también valida el servicio FastAPI, su health check y pruebas E2E/accesib
 - Tokens de invitación y renovación almacenados exclusivamente como hash.
 - Revocación inmediata de sesiones después de suspensión o cambio de roles.
 
+- `TRUST_PROXY=false` por defecto: un cliente no puede falsificar su IP con `X-Forwarded-For`.
+- Documentos: firma real del contenido validada, persistencia atómica con compensación,
+  versiones concurrentes sin duplicados y SHA-256 verificado en cada descarga.
+- La caché del navegador se purga al cambiar de identidad; ningún usuario ve datos de otro.
+- SQL Server y el servicio IA se publican solo en `127.0.0.1` en la edición local.
+
 Pendientes antes de producción: Azure Key Vault, TLS en el borde, proveedor transaccional de
-correo, política CSP afinada, pruebas IDOR ampliadas, respaldo/restauración y revisión formal de
-privacidad.
+correo, análisis antivirus/CDR de documentos, OCR real, política CSP afinada, respaldo/restauración
+y revisión formal de privacidad. Detalle en [`docs/security.md`](docs/security.md).
 
 ---
 

@@ -54,4 +54,34 @@ describe('enterprise configuration', () => {
   it('fails fast when SAML is enabled without an entrypoint', () => {
     expect(() => loadEnterpriseConfig({ SSO_PROVIDER: 'saml' })).toThrow(/SAML_ENTRYPOINT_URL/);
   });
+
+  // Regression: `cp .env.example .env` left the API unable to start because the example file
+  // declares OIDC_ISSUER_URL=, OIDC_CLIENT_ID= and SAML_ENTRYPOINT_URL= with empty values.
+  it('treats the empty identity settings of .env.example as not configured', () => {
+    const config = loadEnterpriseConfig({
+      SSO_PROVIDER: 'local',
+      OIDC_ISSUER_URL: '',
+      OIDC_CLIENT_ID: '',
+      SAML_ENTRYPOINT_URL: '  ',
+    });
+
+    expect(config.identity).toMatchObject({
+      ssoProvider: 'local',
+      oidcIssuerUrl: undefined,
+      oidcClientId: undefined,
+      samlEntrypointUrl: undefined,
+    });
+  });
+
+  it('still fails fast when OIDC is selected and its settings are empty', () => {
+    expect(() =>
+      loadEnterpriseConfig({ SSO_PROVIDER: 'oidc', OIDC_ISSUER_URL: '', OIDC_CLIENT_ID: '' }),
+    ).toThrow(/OIDC_ISSUER_URL es obligatorio.*OIDC_CLIENT_ID es obligatorio/);
+  });
+
+  it('still rejects a malformed identity URL', () => {
+    expect(() =>
+      loadEnterpriseConfig({ SSO_PROVIDER: 'saml', SAML_ENTRYPOINT_URL: 'not-a-url' }),
+    ).toThrow(/SAML_ENTRYPOINT_URL/);
+  });
 });

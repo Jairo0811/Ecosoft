@@ -9,6 +9,8 @@ Base URL: `/api/v1`. La documentación navegable se sirve en `/api/docs`.
 - `X-Correlation-Id` aceptado y devuelto por la API.
 - errores con `{ code, message, correlationId, details? }`.
 - paginación: `page` y `pageSize`; filtros específicos por recurso.
+- cuerpos JSON demasiado grandes responden `413 PAYLOAD_TOO_LARGE` y los mal formados
+  `400 MALFORMED_REQUEST`, nunca `500`.
 
 ## Fase 1
 
@@ -24,6 +26,11 @@ Base URL: `/api/v1`. La documentación navegable se sirve en `/api/docs`.
 | GET    | `/roles`         | `users.manage`       |
 | GET    | `/organizations` | `organizations.read` |
 | GET    | `/audit`         | `audit.read`         |
+
+`/auth/refresh` rota el refresh token de forma atómica: si dos pestañas renuevan a la vez, una
+gana y la otra recibe `409 REFRESH_CONFLICT` (el cliente web reintenta una vez con la cookie
+vigente). Reutilizar un refresh token ya rotado revoca toda la familia de sesión. `/auth/logout`
+revoca la cookie aunque el access token haya expirado, pero nunca una cookie de otro usuario.
 
 ## Fase 2
 
@@ -96,6 +103,20 @@ la subasta es de solo anexado desde la aplicación.
 El backend fuerza el ámbito organizacional. Las versiones de ofertas, documentos y contratos, y
 los historiales de proyectos/PPA, son de solo anexado y están protegidos por triggers SQL Server.
 
+Documentos:
+
+- La carga valida nombre, extensión, MIME declarado y firma real del contenido antes de escribir
+  en disco; una discrepancia responde `400 DOCUMENT_CONTENT_MISMATCH` y un base64 inválido
+  `400 INVALID_DOCUMENT_CONTENT`. El límite es 5 MB.
+- Documento, primera versión y evidencia de auditoría se confirman en una sola transacción. Si la
+  transacción no llega a confirmarse, el archivo se elimina (compensación); un fallo posterior a la
+  confirmación ya no borra el archivo de un registro existente.
+- Dos versiones simultáneas del mismo documento no se duplican: una se crea y la otra recibe
+  `409 DOCUMENT_VERSION_CONFLICT`.
+- La descarga recalcula el SHA-256 y falla cerrada (`DOCUMENT_INTEGRITY_ERROR`) si no coincide;
+  devuelve `Content-Disposition` con nombre UTF-8 (RFC 5987), `X-Content-SHA256` y
+  `Cache-Control: no-store`.
+
 ## Fase 7
 
 | Método | Ruta                    | Acceso                     |
@@ -108,10 +129,19 @@ los historiales de proyectos/PPA, son de solo anexado y están protegidos por tr
 `status`, `page` y `pageSize`. Los tipos disponibles son `auctions`, `participants`, `bids`,
 `awards`, `contracts`, `projects`, `capacity` y `audit`; este último exige además `audit.read`.
 
-Las exportaciones admiten `csv`, `xls` y `pdf`, usan `Cache-Control: private, no-store` y registran
-usuario, organización, formato, cantidad de filas y `CorrelationId` en auditoría. Un usuario
-empresarial no puede ampliar su alcance mediante `organizationId`; el backend fuerza siempre su
-organización autenticada.
+La consulta pagina en SQL Server (`OFFSET/FETCH` más `COUNT` con el mismo filtro), de modo que
+`pagination.total` es el total real y no un máximo de memoria.
+
+Las exportaciones admiten `csv`, `xlsx` y `pdf` (`xls` se conserva como alias obsoleto y también
+entrega XLSX real), usan `Cache-Control: private, no-store` y registran usuario, organización,
+formato, total, filas exportadas, truncamiento y `CorrelationId` en auditoría. Cada exportación
+incluye como máximo 10.000 filas; el límite es explícito mediante `X-Report-Total`,
+`X-Report-Rows` y `X-Report-Truncated`, y el PDF/XLSX lo indican en el propio archivo. El XLSX
+protege contra inyección de fórmulas; el PDF conserva acentos, repite encabezados por página e
+incluye fecha de generación, filtros y paginación. Un usuario empresarial no puede ampliar su
+alcance mediante `organizationId`; el backend fuerza siempre su organización autenticada.
+
+El tablero solo incluye actividad reciente de auditoría para quien tiene `audit.read`.
 
 ## Fase 8
 
@@ -145,11 +175,16 @@ en noventa días. Los adaptadores de correo y tiempo real son puertos sin provee
 
 ## Fase 9
 
-| Método | Ruta             | Acceso      | Resultado                            |
-| ------ | ---------------- | ----------- | ------------------------------------ |
-| GET    | `/ai`            | `ai.use`    | análisis visibles por organización   |
-| POST   | `/ai/ocr`        | `ai.use`    | texto, fuente, proveedor y confianza |
-| POST   | `/ai/analyze`    | `ai.use`    | resumen o señales de anomalía        |
-| PATCH  | `/ai/:id/review` | `ai.review` | revisión humana con notas            |
+| Método | Ruta               | Acceso      | Resultado                            |
+| ------ | ------------------ | ----------- | ------------------------------------ |
+| GET    | `/ai`              | `ai.use`    | análisis visibles por organización   |
+| GET    | `/ai/capabilities` | `ai.use`    | proveedor, OCR/generación y formatos |
+| POST   | `/ai/ocr`          | `ai.use`    | texto, fuente, proveedor y confianza |
+| POST   | `/ai/analyze`      | `ai.use`    | resumen o señales de anomalía        |
+| PATCH  | `/ai/:id/review`   | `ai.review` | revisión humana con notas            |
 
 La API no expone una ruta que permita a la IA adjudicar, aprobar o ejecutar cambios de dominio.
+
+Con el proveedor local (`LOCAL_DETERMINISTIC`), `/ai/ocr` solo extrae texto de documentos `.txt`;
+otros formatos responden `422 TEXT_EXTRACTION_UNSUPPORTED` en lugar de simular un OCR. Entradas
+rechazadas por el servicio IA se devuelven como `422 AI_INPUT_REJECTED`.

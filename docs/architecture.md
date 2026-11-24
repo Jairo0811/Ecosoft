@@ -8,19 +8,19 @@ extracción futura. La API es la única autoridad sobre permisos y reglas del do
 
 ## Módulos
 
-| Contexto      | Responsabilidad                                           | Fase |
-| ------------- | --------------------------------------------------------- | ---: |
-| Identity      | autenticación, sesiones, roles y permisos                 |    1 |
-| Organizations | CNE, empresas y participantes autorizados                 |    2 |
-| Auctions      | licitaciones, reglas, cronograma y eventos                |    3 |
-| Bids          | oferta, versiones, documentos y hash de integridad        |    4 |
-| Evaluations   | matrices configurables, puntuaciones y revisión           |    5 |
-| Awards        | adjudicación y aprobaciones inmutables                    |    5 |
-| Contracts     | contratos PPA, anexos, renovaciones y versiones           |    6 |
-| Projects      | proyectos renovables y capacidad energética               |    6 |
-| Reporting     | indicadores, filtros y exportaciones                      |    7 |
-| Governance    | regulación, auditoría y notificaciones                    |    8 |
-| AI            | recomendaciones, OCR y análisis con humano en el circuito |    9 |
+| Contexto      | Responsabilidad                                                                                                                | Fase |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---: |
+| Identity      | autenticación, sesiones, roles y permisos                                                                                      |    1 |
+| Organizations | CNE, empresas y participantes autorizados                                                                                      |    2 |
+| Auctions      | licitaciones, reglas, cronograma y eventos                                                                                     |    3 |
+| Bids          | oferta, versiones, documentos y hash de integridad                                                                             |    4 |
+| Evaluations   | matrices configurables, puntuaciones y revisión                                                                                |    5 |
+| Awards        | adjudicación y aprobaciones inmutables                                                                                         |    5 |
+| Contracts     | contratos PPA, anexos, renovaciones y versiones                                                                                |    6 |
+| Projects      | proyectos renovables y capacidad energética                                                                                    |    6 |
+| Reporting     | indicadores, filtros y exportaciones                                                                                           |    7 |
+| Governance    | regulación, auditoría y notificaciones                                                                                         |    8 |
+| AI            | recomendaciones, extracción de texto (contrato `OCR`, sin OCR real en el proveedor local) y análisis con humano en el circuito |    9 |
 
 ## Componentes
 

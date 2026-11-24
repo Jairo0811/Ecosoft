@@ -3,7 +3,8 @@ import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { AppError } from '../../common/app-error';
 import { asyncHandler } from '../../common/async-handler';
-import { hasInstitutionalAccess } from '../../common/domain-access';
+import { hasInstitutionalAccess, organizationScopeId } from '../../common/domain-access';
+import { isUniqueConstraintViolation } from '../../common/prisma-errors';
 import { prisma } from '../../config/prisma';
 import { auditService } from '../audit/audit.service';
 import { authenticate, requirePermission, requireTrustedWebRequest } from '../auth/auth.middleware';
@@ -49,10 +50,19 @@ const select = {
   },
 } satisfies Prisma.DocumentSelect;
 
+/** ASCII fallback plus RFC 5987 UTF-8 name so accented Spanish file names survive downloads. */
+export const contentDisposition = (fileName: string): string => {
+  const fallback = fileName
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^\x20-\x7e]|["\\/;]/g, '_');
+  return `attachment; filename="${fallback}"; filename*=UTF-8''${encodeURIComponent(fileName)}`;
+};
+
 const scope = (request: Request): Prisma.DocumentWhereInput =>
   hasInstitutionalAccess(request.auth!)
     ? {}
-    : { organizationId: request.auth!.organizationId ?? '__none__' };
+    : { organizationId: organizationScopeId(request.auth!) };
 
 const getDocument = async (id: string, request: Request) => {
   const document = await prisma.document.findFirst({ where: { id, ...scope(request) }, select });
@@ -174,10 +184,11 @@ router.get(
     });
     if (!version)
       throw new AppError(404, 'DOCUMENT_VERSION_NOT_FOUND', 'La versión documental no existe.');
-    const content = await documentStorage.read(version.storageKey);
-    const safeName = version.originalFileName.replace(/[\r\n"\\/]/g, '_');
+    const content = await documentStorage.readVerified(version.storageKey, version.sha256);
     response.setHeader('Content-Type', version.mimeType);
-    response.setHeader('Content-Disposition', `attachment; filename="${safeName}"`);
+    response.setHeader('Content-Disposition', contentDisposition(version.originalFileName));
+    response.setHeader('Cache-Control', 'private, no-store');
+    response.setHeader('X-Content-Type-Options', 'nosniff');
     response.setHeader('X-Content-SHA256', version.sha256);
     response.send(content);
   }),
@@ -190,14 +201,20 @@ router.post(
   requireTrustedWebRequest,
   asyncHandler(async (request, response) => {
     const input = documentCreateSchema.parse(request.body);
+    // Validate name, declared type and real content before anything touches the disk.
+    const prepared = documentStorage.prepare(input.contentBase64, input.fileName, input.mimeType);
     const organizationId = await resolveOrganization(input.entityType, input.entityId);
     if (!organizationId)
       throw new AppError(404, 'DOCUMENT_ENTITY_NOT_FOUND', 'La entidad asociada no existe.');
     if (!hasInstitutionalAccess(request.auth!) && request.auth!.organizationId !== organizationId)
       throw new AppError(404, 'DOCUMENT_ENTITY_NOT_FOUND', 'La entidad asociada no existe.');
-    const stored = await documentStorage.save(input.contentBase64);
+
+    const stored = await documentStorage.write(prepared);
+    let committed = false;
+    let documentId: string;
     try {
-      const document = await prisma.$transaction(async (transaction) => {
+      // Document, first version and audit evidence commit atomically: either all exist or none.
+      documentId = await prisma.$transaction(async (transaction) => {
         const created = await transaction.document.create({
           data: {
             organizationId,
@@ -221,29 +238,35 @@ router.post(
             uploadedByUserId: request.auth!.id,
           },
         });
-        return created;
+        await auditService.record(
+          {
+            userId: request.auth!.id,
+            organizationId,
+            action: 'UPLOAD',
+            module: 'DOCUMENTS',
+            entity: 'Document',
+            entityId: created.id,
+            result: 'SUCCESS',
+            ...metadata(request),
+            newValues: {
+              ...input,
+              contentBase64: '[REDACTED]',
+              sha256: stored.sha256,
+              sizeBytes: stored.sizeBytes,
+            },
+          },
+          transaction,
+        );
+        return created.id;
       });
-      await auditService.record({
-        userId: request.auth!.id,
-        organizationId,
-        action: 'UPLOAD',
-        module: 'DOCUMENTS',
-        entity: 'Document',
-        entityId: document.id,
-        result: 'SUCCESS',
-        ...metadata(request),
-        newValues: {
-          ...input,
-          contentBase64: '[REDACTED]',
-          sha256: stored.sha256,
-          sizeBytes: stored.sizeBytes,
-        },
-      });
-      response.status(201).json({ data: await getDocument(document.id, request) });
-    } catch (error) {
-      await documentStorage.remove(stored.storageKey);
-      throw error;
+      committed = true;
+    } finally {
+      // Only an uncommitted write is compensated. Once committed, the record owns the file and
+      // a later failure (e.g. building the response) must never delete it.
+      if (!committed)
+        await documentStorage.discardUncommitted(stored.storageKey, request.correlationId);
     }
+    response.status(201).json({ data: await getDocument(documentId, request) });
   }),
 );
 
@@ -258,11 +281,27 @@ router.post(
     const document = await getDocument(id, request);
     if (document.status !== 'ACTIVE')
       throw new AppError(409, 'DOCUMENT_ARCHIVED', 'El documento está archivado.');
-    const stored = await documentStorage.save(input.contentBase64);
-    const versionNumber = document.currentVersionNumber + 1;
+    const prepared = documentStorage.prepare(input.contentBase64, input.fileName, input.mimeType);
+    const expectedVersion = document.currentVersionNumber;
+    const versionNumber = expectedVersion + 1;
+    const conflict = () =>
+      new AppError(
+        409,
+        'DOCUMENT_VERSION_CONFLICT',
+        'El documento fue modificado por otra operación. Actualice la vista e intente nuevamente.',
+      );
+
+    const stored = await documentStorage.write(prepared);
+    let committed = false;
     try {
-      await prisma.$transaction([
-        prisma.documentVersion.create({
+      await prisma.$transaction(async (transaction) => {
+        // Optimistic concurrency: only the request that observed the current version advances it.
+        const advanced = await transaction.document.updateMany({
+          where: { id, status: 'ACTIVE', currentVersionNumber: expectedVersion },
+          data: { currentVersionNumber: versionNumber, extractedText: null },
+        });
+        if (advanced.count !== 1) throw conflict();
+        await transaction.documentVersion.create({
           data: {
             documentId: id,
             versionNumber,
@@ -273,28 +312,32 @@ router.post(
             sha256: stored.sha256,
             uploadedByUserId: request.auth!.id,
           },
-        }),
-        prisma.document.update({
-          where: { id },
-          data: { currentVersionNumber: versionNumber, extractedText: null },
-        }),
-      ]);
-      await auditService.record({
-        userId: request.auth!.id,
-        organizationId: document.organizationId ?? undefined,
-        action: 'VERSION',
-        module: 'DOCUMENTS',
-        entity: 'Document',
-        entityId: id,
-        result: 'SUCCESS',
-        ...metadata(request),
-        newValues: { versionNumber, sha256: stored.sha256, sizeBytes: stored.sizeBytes },
+        });
+        await auditService.record(
+          {
+            userId: request.auth!.id,
+            organizationId: document.organizationId ?? undefined,
+            action: 'VERSION',
+            module: 'DOCUMENTS',
+            entity: 'Document',
+            entityId: id,
+            result: 'SUCCESS',
+            ...metadata(request),
+            newValues: { versionNumber, sha256: stored.sha256, sizeBytes: stored.sizeBytes },
+          },
+          transaction,
+        );
       });
-      response.status(201).json({ data: await getDocument(id, request) });
+      committed = true;
     } catch (error) {
-      await documentStorage.remove(stored.storageKey);
+      // The (documentId, versionNumber) unique index is the last line of defence.
+      if (isUniqueConstraintViolation(error)) throw conflict();
       throw error;
+    } finally {
+      if (!committed)
+        await documentStorage.discardUncommitted(stored.storageKey, request.correlationId);
     }
+    response.status(201).json({ data: await getDocument(id, request) });
   }),
 );
 

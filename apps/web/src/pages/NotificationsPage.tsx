@@ -18,6 +18,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 import { apiClient } from '../api/client';
 import { getApiErrorMessage } from '../api/errors';
+import { PageHeader } from '../components/PageState';
 
 interface Notification {
   id: string;
@@ -70,24 +71,22 @@ export function NotificationsPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={2}>
-        <Box>
-          <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-            Centro de notificaciones
-          </Typography>
-          <Typography color="text.secondary">
-            Alertas operativas, regulatorias y contractuales según tus permisos.
-          </Typography>
-        </Box>
-        <Button
-          variant="outlined"
-          startIcon={<DoneAllOutlined />}
-          onClick={() => markAll.mutate()}
-          disabled={!notifications.data?.unread || markAll.isPending}
-        >
-          Marcar todas como leídas
-        </Button>
-      </Stack>
+      <PageHeader
+        title="Centro de notificaciones"
+        description="Alertas operativas, regulatorias y contractuales según tus permisos."
+        actions={
+          <>
+            <Button
+              variant="outlined"
+              startIcon={<DoneAllOutlined />}
+              onClick={() => markAll.mutate()}
+              disabled={!notifications.data?.unread || markAll.isPending}
+            >
+              Marcar todas como leídas
+            </Button>
+          </>
+        }
+      />
       {error && <Alert severity="error">{getApiErrorMessage(error)}</Alert>}
       <Card sx={{ p: 2.5 }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

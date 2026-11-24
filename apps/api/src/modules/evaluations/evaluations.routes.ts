@@ -4,7 +4,7 @@ import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { AppError } from '../../common/app-error';
 import { asyncHandler } from '../../common/async-handler';
-import { hasInstitutionalAccess } from '../../common/domain-access';
+import { hasInstitutionalAccess, organizationScopeId } from '../../common/domain-access';
 import { prisma } from '../../config/prisma';
 import { auditService } from '../audit/audit.service';
 import { authenticate, requirePermission, requireTrustedWebRequest } from '../auth/auth.middleware';
@@ -239,7 +239,7 @@ router.get(
       ...(!hasInstitutionalAccess(request.auth!)
         ? {
             bid: {
-              organizationId: request.auth!.organizationId ?? '__none__',
+              organizationId: organizationScopeId(request.auth!),
               ...(query.auctionId ? { auctionId: query.auctionId } : {}),
             },
           }
@@ -344,7 +344,7 @@ router.get(
   asyncHandler(async (request, response) => {
     const where: Prisma.AwardWhereInput = hasInstitutionalAccess(request.auth!)
       ? {}
-      : { bid: { organizationId: request.auth!.organizationId ?? '__none__' } };
+      : { bid: { organizationId: organizationScopeId(request.auth!) } };
     response.json({
       data: await prisma.award.findMany({
         where,

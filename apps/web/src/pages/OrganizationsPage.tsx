@@ -35,6 +35,7 @@ import {
 import { apiClient } from '../api/client';
 import { getApiErrorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
+import { PageHeader } from '../components/PageState';
 
 interface Organization {
   id: string;
@@ -177,25 +178,23 @@ export function OrganizationsPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={2}>
-        <Box>
-          <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-            Participantes
-          </Typography>
-          <Typography color="text.secondary" mt={0.5}>
-            Registro, revisión y habilitación de organizaciones del mercado energético.
-          </Typography>
-        </Box>
-        {canManage && (
-          <Button
-            variant="contained"
-            startIcon={<AddOutlined />}
-            onClick={() => setCreateOpen(true)}
-          >
-            Nueva organización
-          </Button>
-        )}
-      </Stack>
+      <PageHeader
+        title="Participantes"
+        description="Registro, revisión y habilitación de organizaciones del mercado energético."
+        actions={
+          <>
+            {canManage && (
+              <Button
+                variant="contained"
+                startIcon={<AddOutlined />}
+                onClick={() => setCreateOpen(true)}
+              >
+                Nueva organización
+              </Button>
+            )}
+          </>
+        }
+      />
 
       <Card sx={{ p: 2.5 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>

@@ -36,4 +36,12 @@ describe('analytics access', () => {
     const requested = 'f26e2d9a-b03f-4a8b-8f25-ea0f9a8e0a8d';
     expect(analyticsOrganizationId(institutional, { organizationId: requested })).toBe(requested);
   });
+
+  it('falla cerrado para usuarios no institucionales sin organización', () => {
+    const orphan = { ...company, organizationId: null, roles: ['READ_ONLY'] };
+    const organizationId = analyticsOrganizationId(orphan, {});
+    // Never undefined (that would mean "all organizations"); always a UUID matching no row.
+    expect(organizationId).toBe('00000000-0000-0000-0000-000000000000');
+    expect(analyticsScopes(orphan, {}).bid).toMatchObject({ organizationId });
+  });
 });

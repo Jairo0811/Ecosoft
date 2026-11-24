@@ -25,6 +25,7 @@ import { useState } from 'react';
 import { apiClient } from '../api/client';
 import { getApiErrorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
+import { PageHeader } from '../components/PageState';
 
 interface Matrix {
   id: string;
@@ -183,14 +184,10 @@ export function EvaluationsPage() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-          Evaluación y adjudicación
-        </Typography>
-        <Typography color="text.secondary">
-          Matrices ponderadas, evaluación separada y decisión formal trazable.
-        </Typography>
-      </Box>
+      <PageHeader
+        title="Evaluación y adjudicación"
+        description="Matrices ponderadas, evaluación separada y decisión formal trazable."
+      />
       {error && <Alert severity="error">{getApiErrorMessage(error)}</Alert>}
       <Card>
         <Tabs value={tab} onChange={(_, value: number) => setTab(value)}>

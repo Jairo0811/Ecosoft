@@ -37,6 +37,7 @@ import { useMemo, useState } from 'react';
 import { apiClient } from '../api/client';
 import { getApiErrorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
+import { PageHeader } from '../components/PageState';
 
 interface Authority {
   id: string;
@@ -212,25 +213,23 @@ export function RegulatoryPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={2}>
-        <Box>
-          <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-            Regulación
-          </Typography>
-          <Typography color="text.secondary">
-            Normativas, resoluciones y reglamentos vinculados al dominio energético.
-          </Typography>
-        </Box>
-        {canManage && (
-          <Button
-            variant="contained"
-            startIcon={<AddOutlined />}
-            onClick={() => setCreateOpen(true)}
-          >
-            Nueva regulación
-          </Button>
-        )}
-      </Stack>
+      <PageHeader
+        title="Regulación"
+        description="Normativas, resoluciones y reglamentos vinculados al dominio energético."
+        actions={
+          <>
+            {canManage && (
+              <Button
+                variant="contained"
+                startIcon={<AddOutlined />}
+                onClick={() => setCreateOpen(true)}
+              >
+                Nueva regulación
+              </Button>
+            )}
+          </>
+        }
+      />
       {error && <Alert severity="error">{getApiErrorMessage(error)}</Alert>}
       <Card sx={{ p: 2.5 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>

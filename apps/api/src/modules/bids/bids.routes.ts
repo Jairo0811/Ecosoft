@@ -4,7 +4,11 @@ import { Router, type Request } from 'express';
 import { z } from 'zod';
 import { AppError } from '../../common/app-error';
 import { asyncHandler } from '../../common/async-handler';
-import { hasInstitutionalAccess, requireOrganization } from '../../common/domain-access';
+import {
+  hasInstitutionalAccess,
+  requireOrganization,
+  organizationScopeId,
+} from '../../common/domain-access';
 import { createSnapshot } from '../../common/snapshot';
 import { prisma } from '../../config/prisma';
 import { auditService } from '../audit/audit.service';
@@ -60,7 +64,7 @@ const bidSelect = {
 } satisfies Prisma.BidSelect;
 
 const scopeWhere = (actor: SessionUser): Prisma.BidWhereInput =>
-  hasInstitutionalAccess(actor) ? {} : { organizationId: actor.organizationId ?? '__none__' };
+  hasInstitutionalAccess(actor) ? {} : { organizationId: organizationScopeId(actor) };
 
 const hideFinancialData = (actor: SessionUser): boolean =>
   actor.roles.includes('TECHNICAL_EVALUATOR') &&

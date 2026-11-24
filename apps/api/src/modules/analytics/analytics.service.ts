@@ -9,6 +9,7 @@ const monthKey = (date: Date): string =>
 
 export const getDashboardAnalytics = async (actor: SessionUser, query: AnalyticsQuery) => {
   const scopes = analyticsScopes(actor, query);
+  const canReadAudit = actor.permissions.includes('audit.read');
   const now = new Date();
   const inSevenDays = new Date(now.getTime() + 7 * 86_400_000);
   const inNinetyDays = new Date(now.getTime() + 90 * 86_400_000);
@@ -146,8 +147,13 @@ export const getDashboardAnalytics = async (actor: SessionUser, query: Analytics
       take: 8,
       select: { id: true, title: true, type: true, startsAt: true, endsAt: true },
     }),
+    // Audit activity (who did what) is only disclosed to actors allowed to read the audit log;
+    // other dashboard users get an empty list instead of installation-wide activity.
     prisma.auditLog.findMany({
-      where: scopes.organizationId ? { organizationId: scopes.organizationId } : {},
+      where: {
+        ...(scopes.organizationId ? { organizationId: scopes.organizationId } : {}),
+        ...(canReadAudit ? {} : { id: { in: [] } }),
+      },
       orderBy: { createdAt: 'desc' },
       take: 8,
       select: {

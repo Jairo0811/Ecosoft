@@ -18,7 +18,6 @@ export function BrandLogo({ maxWidth = 420, decorative = false }: BrandLogoProps
         maxWidth,
         height: 'auto',
         objectFit: 'contain',
-        filter: 'drop-shadow(0 8px 22px rgba(0,108,255,.18))',
       }}
     />
   );

@@ -18,7 +18,7 @@ No se aceptan nuevas funcionalidades de negocio, nuevas fases del roadmap, migra
 
 1. Cree una rama desde `main` con el prefijo `fix/`, `docs/`, `chore/` o `security/`.
 2. Use Conventional Commits y mantenga cada cambio enfocado.
-3. Ejecute `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` y `npm run build` cuando el cambio afecte código o dependencias.
+3. Ejecute `npm run format:check`, `npm run lint`, `npm run typecheck`, `npm test` y `npm run build` cuando el cambio afecte código o dependencias; si afecta a la web, también `npm run test:e2e --workspace @ecosoft/web`, y si cambia dependencias, `npm audit --omit=dev --audit-level=high`.
 4. No incluya secretos, datos reales de empresas ni documentos regulatorios confidenciales.
 5. Abra un pull request con contexto, evidencia de pruebas y riesgos conocidos.
 

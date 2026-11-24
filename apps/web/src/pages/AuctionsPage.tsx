@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useDeferredValue, useMemo, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Alert,
@@ -6,7 +6,6 @@ import {
   Button,
   Card,
   Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -21,6 +20,7 @@ import {
   TableCell,
   TableContainer,
   TableHead,
+  TablePagination,
   TableRow,
   TextField,
   Typography,
@@ -30,6 +30,16 @@ import { auctionStatuses, type AuctionStatus } from '@ecosoft/shared';
 import { apiClient } from '../api/client';
 import { getApiErrorMessage } from '../api/errors';
 import { useAuth } from '../auth/AuthContext';
+import { ConfirmDialog } from '../components/ConfirmDialog';
+import { useNotify } from '../components/Feedback';
+import { EmptyState, ErrorState, LoadingState, PageHeader } from '../components/PageState';
+import {
+  formatDateTime,
+  formatNumber,
+  formatTechnology,
+  fromDateTimeLocalInput,
+  viewerTimeZoneLabel,
+} from '../utils/format';
 
 interface Organization {
   id: string;
@@ -87,6 +97,31 @@ const statusLabels: Record<AuctionStatus, string> = {
   CANCELADA: 'Cancelada',
   FINALIZADA: 'Finalizada',
 };
+/** Action verbs for each target state (buttons say what happens, not the resulting state). */
+const transitionLabels: Record<AuctionStatus, string> = {
+  BORRADOR: 'Volver a borrador',
+  PROGRAMADA: 'Programar',
+  PUBLICADA: 'Publicar',
+  ABIERTA: 'Abrir recepción',
+  CERRADA: 'Cerrar recepción',
+  EN_EVALUACION: 'Iniciar evaluación',
+  ADJUDICADA: 'Marcar adjudicada',
+  CANCELADA: 'Cancelar subasta',
+  FINALIZADA: 'Finalizar',
+};
+/** Past participle for the success toast, matching the action verb. */
+const transitionDone: Record<AuctionStatus, string> = {
+  BORRADOR: 'devuelta a borrador',
+  PROGRAMADA: 'programada',
+  PUBLICADA: 'publicada',
+  ABIERTA: 'abierta para recibir ofertas',
+  CERRADA: 'cerrada a nuevas ofertas',
+  EN_EVALUACION: 'en evaluación',
+  ADJUDICADA: 'marcada como adjudicada',
+  CANCELADA: 'cancelada',
+  FINALIZADA: 'finalizada',
+};
+/** Mirrors apps/api auction-state.ts; the API remains the authority on transitions. */
 const nextStatuses: Partial<Record<AuctionStatus, AuctionStatus[]>> = {
   BORRADOR: ['PROGRAMADA', 'PUBLICADA', 'CANCELADA'],
   PROGRAMADA: ['PUBLICADA', 'CANCELADA'],
@@ -134,9 +169,22 @@ export function AuctionsPage() {
   const [requirements, setRequirements] = useState<Requirement[]>([emptyRequirement]);
   const [participantsOpen, setParticipantsOpen] = useState(false);
   const [participantIds, setParticipantIds] = useState<string[]>([]);
+  const [transition, setTransition] = useState<{ auction: Auction; next: AuctionStatus } | null>(
+    null,
+  );
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+  const notify = useNotify();
+  // Typing does not fire one request per keystroke; the list updates with the settled value.
+  const search = useDeferredValue(q.trim());
   const params = useMemo(
-    () => ({ ...(q ? { q } : {}), ...(status ? { status } : {}) }),
-    [q, status],
+    () => ({
+      ...(search ? { q: search } : {}),
+      ...(status ? { status } : {}),
+      page: page + 1,
+      pageSize,
+    }),
+    [search, status, page, pageSize],
   );
 
   const auctionsQuery = useQuery({
@@ -179,16 +227,14 @@ export function AuctionsPage() {
         ...form,
         capacityMw: Number(form.capacityMw),
         maximumPrice: form.maximumPrice ? Number(form.maximumPrice) : undefined,
-        openAt: new Date(form.openAt).toISOString(),
-        closeAt: new Date(form.closeAt).toISOString(),
-        evaluationStartAt: form.evaluationStartAt
-          ? new Date(form.evaluationStartAt).toISOString()
-          : undefined,
-        awardPlannedAt: form.awardPlannedAt
-          ? new Date(form.awardPlannedAt).toISOString()
-          : undefined,
+        // datetime-local values are the viewer's wall clock; the API stores UTC instants.
+        openAt: fromDateTimeLocalInput(form.openAt),
+        closeAt: fromDateTimeLocalInput(form.closeAt),
+        evaluationStartAt: fromDateTimeLocalInput(form.evaluationStartAt),
+        awardPlannedAt: fromDateTimeLocalInput(form.awardPlannedAt),
       }),
     onSuccess: async () => {
+      notify(`Borrador ${form.code} creado.`);
       setCreateOpen(false);
       setForm(emptyForm);
       await refresh();
@@ -217,22 +263,27 @@ export function AuctionsPage() {
     },
   });
   const statusMutation = useMutation({
-    mutationFn: ({ auction, next }: { auction: Auction; next: AuctionStatus }) => {
-      const reason =
-        next === 'CANCELADA'
-          ? window.prompt('Indique la justificación de la cancelación (mínimo 10 caracteres):')
-          : undefined;
-      if (next === 'CANCELADA' && !reason)
-        throw new Error('La cancelación requiere una justificación.');
-      return apiClient.patch(`/auctions/${auction.id}/status`, { status: next, reason });
+    mutationFn: ({
+      auction,
+      next,
+      reason,
+    }: {
+      auction: Auction;
+      next: AuctionStatus;
+      reason?: string | undefined;
+    }) =>
+      apiClient.patch(`/auctions/${auction.id}/status`, {
+        status: next,
+        ...(reason ? { reason } : {}),
+      }),
+    onSuccess: async (_response, { auction, next }) => {
+      setTransition(null);
+      notify(`Subasta ${auction.code} ${transitionDone[next]}.`);
+      await refresh();
     },
-    onSuccess: refresh,
   });
   const mutationError =
-    createMutation.error ||
-    requirementsMutation.error ||
-    participantsMutation.error ||
-    statusMutation.error;
+    createMutation.error || requirementsMutation.error || participantsMutation.error;
 
   const openRequirements = (auction: Auction) => {
     setSelected(auction);
@@ -248,6 +299,33 @@ export function AuctionsPage() {
     );
     setParticipantsOpen(true);
   };
+  /** Mirrors auctions.schemas.ts so problems show inline before the request is sent. */
+  const createErrors: Partial<Record<keyof typeof emptyForm, string>> = {};
+  if (form.code && !/^[A-Z0-9-]{4,40}$/.test(form.code))
+    createErrors.code = 'De 4 a 40 caracteres: letras, números y guiones.';
+  if (form.title && form.title.trim().length < 5) createErrors.title = 'Mínimo 5 caracteres.';
+  if (form.capacityMw && !(Number(form.capacityMw) > 0))
+    createErrors.capacityMw = 'Debe ser mayor que cero.';
+  if (form.maximumPrice && !(Number(form.maximumPrice) > 0))
+    createErrors.maximumPrice = 'Debe ser mayor que cero.';
+  const instant = (value: string) => {
+    const iso = fromDateTimeLocalInput(value);
+    return iso ? new Date(iso).getTime() : undefined;
+  };
+  const [openTime, closeTime, evaluationTime, awardTime] = [
+    instant(form.openAt),
+    instant(form.closeAt),
+    instant(form.evaluationStartAt),
+    instant(form.awardPlannedAt),
+  ];
+  if (openTime && closeTime && closeTime <= openTime)
+    createErrors.closeAt = 'Debe ser posterior a la apertura.';
+  if (closeTime && evaluationTime && evaluationTime < closeTime)
+    createErrors.evaluationStartAt = 'No puede comenzar antes del cierre.';
+  if (evaluationTime && awardTime && awardTime < evaluationTime)
+    createErrors.awardPlannedAt = 'Debe ser posterior al inicio de evaluación.';
+  const zoneLabel = viewerTimeZoneLabel();
+
   const regulatoryOrganizations =
     organizationsQuery.data?.filter((item) => item.type === 'REGULATORY_AUTHORITY') ?? [];
   const participantOrganizations =
@@ -255,32 +333,31 @@ export function AuctionsPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" gap={2}>
-        <Box>
-          <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-            Subastas energéticas
-          </Typography>
-          <Typography color="text.secondary" mt={0.5}>
-            Convocatorias, capacidad, cronograma, requisitos y participantes autorizados.
-          </Typography>
-        </Box>
-        {canCreate && (
-          <Button
-            variant="contained"
-            startIcon={<AddOutlined />}
-            onClick={() => setCreateOpen(true)}
-          >
-            Nueva subasta
-          </Button>
-        )}
-      </Stack>
+      <PageHeader
+        title="Subastas energéticas"
+        description="Convocatorias, capacidad, cronograma, requisitos y participantes autorizados."
+        actions={
+          canCreate && (
+            <Button
+              variant="contained"
+              startIcon={<AddOutlined />}
+              onClick={() => setCreateOpen(true)}
+            >
+              Nueva subasta
+            </Button>
+          )
+        }
+      />
       {mutationError && <Alert severity="error">{getApiErrorMessage(mutationError)}</Alert>}
       <Card sx={{ p: 2.5 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
           <TextField
             label="Buscar"
             value={q}
-            onChange={(event) => setQ(event.target.value)}
+            onChange={(event) => {
+              setQ(event.target.value);
+              setPage(0);
+            }}
             placeholder="Código o título"
             slotProps={{
               input: { startAdornment: <SearchOutlined color="action" sx={{ mr: 1 }} /> },
@@ -288,11 +365,15 @@ export function AuctionsPage() {
             fullWidth
           />
           <FormControl sx={{ minWidth: 210 }}>
-            <InputLabel>Estado</InputLabel>
+            <InputLabel id="auction-select-1">Estado</InputLabel>
             <Select
+              labelId="auction-select-1"
               value={status}
               label="Estado"
-              onChange={(event) => setStatus(event.target.value)}
+              onChange={(event) => {
+                setStatus(event.target.value);
+                setPage(0);
+              }}
             >
               <MenuItem value="">Todos</MenuItem>
               {auctionStatuses.map((item) => (
@@ -306,14 +387,31 @@ export function AuctionsPage() {
       </Card>
       <Card>
         {auctionsQuery.isLoading ? (
-          <Box display="grid" sx={{ placeItems: 'center' }} minHeight={280}>
-            <CircularProgress />
+          <Box p={2}>
+            <LoadingState rows={5} label="Cargando subastas" />
           </Box>
         ) : auctionsQuery.isError ? (
-          <Alert severity="error">{getApiErrorMessage(auctionsQuery.error)}</Alert>
+          <Box p={2}>
+            <ErrorState error={auctionsQuery.error} onRetry={() => void auctionsQuery.refetch()} />
+          </Box>
+        ) : auctionsQuery.data?.data.length === 0 ? (
+          <Box p={2}>
+            <EmptyState
+              title={
+                q || status ? 'Ninguna subasta coincide con los filtros' : 'Aún no hay subastas'
+              }
+              description={
+                q || status
+                  ? 'Pruebe con otro código, título o estado.'
+                  : canCreate
+                    ? 'Cree la primera convocatoria con «Nueva subasta».'
+                    : 'Las convocatorias publicadas aparecerán aquí.'
+              }
+            />
+          </Box>
         ) : (
           <TableContainer>
-            <Table>
+            <Table sx={{ minWidth: 860 }} aria-label="Subastas">
               <TableHead>
                 <TableRow>
                   <TableCell>Proceso</TableCell>
@@ -329,9 +427,13 @@ export function AuctionsPage() {
                   <TableRow key={auction.id} hover>
                     <TableCell>
                       <Stack direction="row" spacing={1.5} alignItems="center">
-                        <GavelOutlined color="primary" />
+                        <GavelOutlined
+                          color="primary"
+                          sx={{ display: { xs: 'none', sm: 'block' } }}
+                          aria-hidden
+                        />
                         <Box>
-                          <Typography fontWeight={750}>{auction.title}</Typography>
+                          <Typography fontWeight={600}>{auction.title}</Typography>
                           <Typography variant="caption" color="text.secondary">
                             {auction.code} ·{' '}
                             {auction.managingOrganization.commercialName ||
@@ -340,22 +442,14 @@ export function AuctionsPage() {
                         </Box>
                       </Stack>
                     </TableCell>
-                    <TableCell>{auction.renewableTechnologyCode}</TableCell>
-                    <TableCell>{Number(auction.capacityMw).toLocaleString('es-DO')} MW</TableCell>
-                    <TableCell>
-                      <Typography variant="body2">
-                        Abre{' '}
-                        {new Intl.DateTimeFormat('es-DO', {
-                          dateStyle: 'medium',
-                          timeStyle: 'short',
-                        }).format(new Date(auction.openAt))}
-                      </Typography>
+                    <TableCell>{formatTechnology(auction.renewableTechnologyCode)}</TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                      {formatNumber(auction.capacityMw)} MW
+                    </TableCell>
+                    <TableCell sx={{ whiteSpace: 'nowrap' }}>
+                      <Typography variant="body2">Abre {formatDateTime(auction.openAt)}</Typography>
                       <Typography variant="caption" color="text.secondary">
-                        Cierra{' '}
-                        {new Intl.DateTimeFormat('es-DO', {
-                          dateStyle: 'medium',
-                          timeStyle: 'short',
-                        }).format(new Date(auction.closeAt))}
+                        Cierra {formatDateTime(auction.closeAt)}
                       </Typography>
                     </TableCell>
                     <TableCell>
@@ -395,25 +489,34 @@ export function AuctionsPage() {
                             <Button
                               key={next}
                               size="small"
+                              variant={next === 'CANCELADA' ? 'text' : 'outlined'}
                               color={next === 'CANCELADA' ? 'error' : 'primary'}
-                              onClick={() => statusMutation.mutate({ auction, next })}
+                              onClick={() => {
+                                statusMutation.reset();
+                                setTransition({ auction, next });
+                              }}
                             >
-                              {statusLabels[next]}
+                              {transitionLabels[next]}
                             </Button>
                           ))}
                       </Stack>
                     </TableCell>
                   </TableRow>
                 ))}
-                {auctionsQuery.data?.data.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6}>
-                      No hay subastas que coincidan con los filtros.
-                    </TableCell>
-                  </TableRow>
-                )}
               </TableBody>
             </Table>
+            <TablePagination
+              component="div"
+              count={auctionsQuery.data?.pagination.total ?? 0}
+              page={page}
+              rowsPerPage={pageSize}
+              rowsPerPageOptions={[10, 20, 50]}
+              onPageChange={(_event, next) => setPage(next)}
+              onRowsPerPageChange={(event) => {
+                setPageSize(Number(event.target.value));
+                setPage(0);
+              }}
+            />
           </TableContainer>
         )}
       </Card>
@@ -427,6 +530,8 @@ export function AuctionsPage() {
                 label="Código"
                 value={form.code}
                 onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
+                error={Boolean(createErrors.code)}
+                helperText={createErrors.code ?? 'Ejemplo: SUB-2027-001'}
                 fullWidth
                 required
               />
@@ -434,6 +539,8 @@ export function AuctionsPage() {
                 label="Título"
                 value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
+                error={Boolean(createErrors.title)}
+                helperText={createErrors.title}
                 fullWidth
                 required
               />
@@ -448,8 +555,9 @@ export function AuctionsPage() {
             />
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <FormControl fullWidth required>
-                <InputLabel>Autoridad administradora</InputLabel>
+                <InputLabel id="auction-select-2">Autoridad administradora</InputLabel>
                 <Select
+                  labelId="auction-select-2"
                   value={form.managingOrganizationId}
                   label="Autoridad administradora"
                   onChange={(e) => setForm({ ...form, managingOrganizationId: e.target.value })}
@@ -462,8 +570,9 @@ export function AuctionsPage() {
                 </Select>
               </FormControl>
               <FormControl fullWidth required>
-                <InputLabel>Tecnología</InputLabel>
+                <InputLabel id="auction-select-3">Tecnología</InputLabel>
                 <Select
+                  labelId="auction-select-3"
                   value={form.renewableTechnologyCode}
                   label="Tecnología"
                   onChange={(e) => setForm({ ...form, renewableTechnologyCode: e.target.value })}
@@ -482,6 +591,8 @@ export function AuctionsPage() {
                 type="number"
                 value={form.capacityMw}
                 onChange={(e) => setForm({ ...form, capacityMw: e.target.value })}
+                error={Boolean(createErrors.capacityMw)}
+                helperText={createErrors.capacityMw}
                 fullWidth
                 required
               />
@@ -490,12 +601,14 @@ export function AuctionsPage() {
                 type="number"
                 value={form.maximumPrice}
                 onChange={(e) => setForm({ ...form, maximumPrice: e.target.value })}
+                error={Boolean(createErrors.maximumPrice)}
+                helperText={createErrors.maximumPrice ?? 'Opcional, por MWh'}
                 fullWidth
-                required
               />
               <FormControl sx={{ minWidth: 150 }}>
-                <InputLabel>Moneda</InputLabel>
+                <InputLabel id="auction-select-4">Moneda</InputLabel>
                 <Select
+                  labelId="auction-select-4"
                   value={form.currencyCode}
                   label="Moneda"
                   onChange={(e) => setForm({ ...form, currencyCode: e.target.value })}
@@ -524,6 +637,8 @@ export function AuctionsPage() {
                     type="datetime-local"
                     value={form[field]}
                     onChange={(e) => setForm({ ...form, [field]: e.target.value })}
+                    error={Boolean(createErrors[field])}
+                    helperText={createErrors[field] ?? `Hora local (${zoneLabel})`}
                     slotProps={{ inputLabel: { shrink: true } }}
                     fullWidth
                     required={field === 'openAt' || field === 'closeAt'}
@@ -544,13 +659,13 @@ export function AuctionsPage() {
               !form.managingOrganizationId ||
               !form.renewableTechnologyCode ||
               !form.capacityMw ||
-              !form.maximumPrice ||
               !form.openAt ||
-              !form.closeAt
+              !form.closeAt ||
+              Object.keys(createErrors).length > 0
             }
             onClick={() => createMutation.mutate()}
           >
-            Crear borrador
+            {createMutation.isPending ? 'Creando…' : 'Crear borrador'}
           </Button>
         </DialogActions>
       </Dialog>
@@ -591,8 +706,9 @@ export function AuctionsPage() {
                     fullWidth
                   />
                   <FormControl sx={{ minWidth: 160 }}>
-                    <InputLabel>Categoría</InputLabel>
+                    <InputLabel id="auction-select-5">Categoría</InputLabel>
                     <Select
+                      labelId="auction-select-5"
                       value={item.category}
                       label="Categoría"
                       onChange={(e) =>
@@ -660,8 +776,9 @@ export function AuctionsPage() {
         <DialogTitle>Participantes habilitados · {selected?.code}</DialogTitle>
         <DialogContent>
           <FormControl fullWidth sx={{ mt: 1 }}>
-            <InputLabel>Organizaciones</InputLabel>
+            <InputLabel id="auction-select-6">Organizaciones</InputLabel>
             <Select
+              labelId="auction-select-6"
               multiple
               value={participantIds}
               label="Organizaciones"
@@ -686,6 +803,57 @@ export function AuctionsPage() {
           </Button>
         </DialogActions>
       </Dialog>
+      <ConfirmDialog
+        open={Boolean(transition)}
+        title={
+          transition?.next === 'CANCELADA'
+            ? `Cancelar la subasta ${transition.auction.code}`
+            : `${transition ? transitionLabels[transition.next] : ''}: ${transition?.auction.code ?? ''}`
+        }
+        description={
+          transition?.next === 'CANCELADA'
+            ? 'La cancelación es definitiva: la subasta no podrá reabrirse y los participantes verán el motivo.'
+            : 'Confirme el cambio de estado. Quedará registrado en la auditoría.'
+        }
+        summary={
+          transition && (
+            <Box
+              component="dl"
+              sx={{
+                m: 0,
+                display: 'grid',
+                gridTemplateColumns: 'auto 1fr',
+                columnGap: 2,
+                rowGap: 0.75,
+                '& dt': { color: 'text.secondary' },
+                '& dd': { m: 0, fontWeight: 500 },
+              }}
+            >
+              <dt>Subasta</dt>
+              <dd>{transition.auction.title}</dd>
+              <dt>Estado</dt>
+              <dd>
+                {statusLabels[transition.auction.status]} → {statusLabels[transition.next]}
+              </dd>
+              <dt>Capacidad</dt>
+              <dd>{formatNumber(transition.auction.capacityMw)} MW</dd>
+              <dt>Cierre</dt>
+              <dd>{formatDateTime(transition.auction.closeAt)}</dd>
+            </Box>
+          )
+        }
+        confirmLabel={transition ? transitionLabels[transition.next] : 'Confirmar'}
+        destructive={transition?.next === 'CANCELADA'}
+        reason={
+          transition?.next === 'CANCELADA'
+            ? { label: 'Justificación de la cancelación', minLength: 10 }
+            : undefined
+        }
+        pending={statusMutation.isPending}
+        error={statusMutation.error}
+        onConfirm={(reason) => transition && statusMutation.mutate({ ...transition, reason })}
+        onClose={() => setTransition(null)}
+      />
     </Stack>
   );
 }

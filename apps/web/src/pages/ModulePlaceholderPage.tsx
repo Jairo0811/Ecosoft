@@ -4,7 +4,7 @@ import { ConstructionOutlined } from '@mui/icons-material';
 export function ModulePlaceholderPage({ title, phase }: { title: string; phase: number }) {
   return (
     <Box>
-      <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }} mb={0.5}>
+      <Typography variant="h3" component="h1" fontSize={{ xs: 30, sm: 38 }} mb={0.5}>
         {title}
       </Typography>
       <Typography color="text.secondary" mb={3}>

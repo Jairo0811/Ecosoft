@@ -1,3 +1,4 @@
+import type { Prisma } from '@prisma/client';
 import type { SessionUser } from '@ecosoft/shared';
 import { AppError } from '../../common/app-error';
 import { prisma } from '../../config/prisma';
@@ -9,7 +10,18 @@ export interface ReportData {
   title: string;
   columns: string[];
   rows: ReportRow[];
+  /** Rows matching the filters in the database (not only the rows in this window). */
+  total: number;
 }
+
+/** Row window applied in SQL Server (OFFSET/FETCH) instead of paginating in memory. */
+export interface ReportWindow {
+  skip: number;
+  take: number;
+}
+
+/** Hard ceiling for a single export; larger result sets are exported truncated and flagged. */
+export const EXPORT_ROW_LIMIT = 10_000;
 
 const iso = (value: Date | null): string => value?.toISOString() ?? '';
 const number = (value: unknown): number => (value == null ? 0 : Number(value));
@@ -18,29 +30,39 @@ export const getReport = async (
   type: ReportType,
   actor: SessionUser,
   query: ReportQuery,
+  window: ReportWindow,
 ): Promise<ReportData> => {
   const scopes = analyticsScopes(actor, query);
-  const limit = 10_000;
+  const { skip, take } = window;
   switch (type) {
     case 'auctions': {
-      const data = await prisma.auction.findMany({
-        where: { ...scopes.auction, ...(query.status ? { status: query.status } : {}) },
-        orderBy: { openAt: 'desc' },
-        take: limit,
-        select: {
-          code: true,
-          title: true,
-          status: true,
-          renewableTechnologyCode: true,
-          capacityMw: true,
-          maximumPrice: true,
-          currencyCode: true,
-          openAt: true,
-          closeAt: true,
-          _count: { select: { participants: true, bids: true, awards: true } },
-        },
-      });
+      const where: Prisma.AuctionWhereInput = {
+        ...scopes.auction,
+        ...(query.status ? { status: query.status } : {}),
+      };
+      const [total, data] = await Promise.all([
+        prisma.auction.count({ where }),
+        prisma.auction.findMany({
+          where,
+          orderBy: { openAt: 'desc' },
+          skip,
+          take,
+          select: {
+            code: true,
+            title: true,
+            status: true,
+            renewableTechnologyCode: true,
+            capacityMw: true,
+            maximumPrice: true,
+            currencyCode: true,
+            openAt: true,
+            closeAt: true,
+            _count: { select: { participants: true, bids: true, awards: true } },
+          },
+        }),
+      ]);
       return {
+        total,
         title: 'Reporte de subastas',
         columns: [
           'Código',
@@ -73,25 +95,31 @@ export const getReport = async (
       };
     }
     case 'participants': {
-      const data = await prisma.organization.findMany({
-        where: {
-          ...(scopes.organizationId ? { id: scopes.organizationId } : {}),
-          ...(query.status ? { status: query.status } : {}),
-          auctionParticipations: { some: { auction: scopes.auction } },
-        },
-        orderBy: { legalName: 'asc' },
-        take: limit,
-        select: {
-          rnc: true,
-          legalName: true,
-          commercialName: true,
-          type: true,
-          status: true,
-          createdAt: true,
-          _count: { select: { auctionParticipations: true, bids: true, ppaContracts: true } },
-        },
-      });
+      const where: Prisma.OrganizationWhereInput = {
+        ...(scopes.organizationId ? { id: scopes.organizationId } : {}),
+        ...(query.status ? { status: query.status } : {}),
+        auctionParticipations: { some: { auction: scopes.auction } },
+      };
+      const [total, data] = await Promise.all([
+        prisma.organization.count({ where }),
+        prisma.organization.findMany({
+          where,
+          orderBy: { legalName: 'asc' },
+          skip,
+          take,
+          select: {
+            rnc: true,
+            legalName: true,
+            commercialName: true,
+            type: true,
+            status: true,
+            createdAt: true,
+            _count: { select: { auctionParticipations: true, bids: true, ppaContracts: true } },
+          },
+        }),
+      ]);
       return {
+        total,
         title: 'Reporte de participantes',
         columns: [
           'RNC',
@@ -118,24 +146,33 @@ export const getReport = async (
       };
     }
     case 'bids': {
-      const data = await prisma.bid.findMany({
-        where: { ...scopes.bid, ...(query.status ? { status: query.status } : {}) },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        select: {
-          auction: { select: { code: true } },
-          organization: { select: { legalName: true } },
-          projectName: true,
-          renewableTechnologyCode: true,
-          status: true,
-          offeredPowerMw: true,
-          estimatedEnergyMwh: true,
-          offeredPrice: true,
-          currencyCode: true,
-          submittedAt: true,
-        },
-      });
+      const where: Prisma.BidWhereInput = {
+        ...scopes.bid,
+        ...(query.status ? { status: query.status } : {}),
+      };
+      const [total, data] = await Promise.all([
+        prisma.bid.count({ where }),
+        prisma.bid.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take,
+          select: {
+            auction: { select: { code: true } },
+            organization: { select: { legalName: true } },
+            projectName: true,
+            renewableTechnologyCode: true,
+            status: true,
+            offeredPowerMw: true,
+            estimatedEnergyMwh: true,
+            offeredPrice: true,
+            currencyCode: true,
+            submittedAt: true,
+          },
+        }),
+      ]);
       return {
+        total,
         title: 'Reporte de ofertas',
         columns: [
           'Subasta',
@@ -164,25 +201,31 @@ export const getReport = async (
       };
     }
     case 'awards': {
-      const data = await prisma.award.findMany({
-        where: {
-          bid: scopes.bid,
-          ...(query.status ? { status: query.status } : {}),
-          ...(query.from || query.to ? { approvedAt: { gte: query.from, lte: query.to } } : {}),
-        },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        select: {
-          resolutionNumber: true,
-          status: true,
-          awardedPrice: true,
-          awardedCapacityMw: true,
-          approvedAt: true,
-          auction: { select: { code: true, currencyCode: true } },
-          bid: { select: { projectName: true, organization: { select: { legalName: true } } } },
-        },
-      });
+      const where: Prisma.AwardWhereInput = {
+        bid: scopes.bid,
+        ...(query.status ? { status: query.status } : {}),
+        ...(query.from || query.to ? { approvedAt: { gte: query.from, lte: query.to } } : {}),
+      };
+      const [total, data] = await Promise.all([
+        prisma.award.count({ where }),
+        prisma.award.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take,
+          select: {
+            resolutionNumber: true,
+            status: true,
+            awardedPrice: true,
+            awardedCapacityMw: true,
+            approvedAt: true,
+            auction: { select: { code: true, currencyCode: true } },
+            bid: { select: { projectName: true, organization: { select: { legalName: true } } } },
+          },
+        }),
+      ]);
       return {
+        total,
         title: 'Reporte de adjudicaciones',
         columns: [
           'Resolución',
@@ -209,24 +252,33 @@ export const getReport = async (
       };
     }
     case 'contracts': {
-      const data = await prisma.pPAContract.findMany({
-        where: { ...scopes.contract, ...(query.status ? { status: query.status } : {}) },
-        orderBy: { endDate: 'asc' },
-        take: limit,
-        select: {
-          contractNumber: true,
-          status: true,
-          startDate: true,
-          endDate: true,
-          price: true,
-          currencyCode: true,
-          capacityMw: true,
-          committedEnergyMwh: true,
-          organization: { select: { legalName: true } },
-          project: { select: { name: true, renewableTechnologyCode: true } },
-        },
-      });
+      const where: Prisma.PPAContractWhereInput = {
+        ...scopes.contract,
+        ...(query.status ? { status: query.status } : {}),
+      };
+      const [total, data] = await Promise.all([
+        prisma.pPAContract.count({ where }),
+        prisma.pPAContract.findMany({
+          where,
+          orderBy: { endDate: 'asc' },
+          skip,
+          take,
+          select: {
+            contractNumber: true,
+            status: true,
+            startDate: true,
+            endDate: true,
+            price: true,
+            currencyCode: true,
+            capacityMw: true,
+            committedEnergyMwh: true,
+            organization: { select: { legalName: true } },
+            project: { select: { name: true, renewableTechnologyCode: true } },
+          },
+        }),
+      ]);
       return {
+        total,
         title: 'Reporte de contratos PPA',
         columns: [
           'Contrato',
@@ -257,23 +309,32 @@ export const getReport = async (
       };
     }
     case 'projects': {
-      const data = await prisma.energyProject.findMany({
-        where: { ...scopes.project, ...(query.status ? { status: query.status } : {}) },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        select: {
-          name: true,
-          renewableTechnologyCode: true,
-          province: true,
-          municipality: true,
-          installedCapacityMw: true,
-          contractedCapacityMw: true,
-          status: true,
-          actualOperationDate: true,
-          organization: { select: { legalName: true } },
-        },
-      });
+      const where: Prisma.EnergyProjectWhereInput = {
+        ...scopes.project,
+        ...(query.status ? { status: query.status } : {}),
+      };
+      const [total, data] = await Promise.all([
+        prisma.energyProject.count({ where }),
+        prisma.energyProject.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take,
+          select: {
+            name: true,
+            renewableTechnologyCode: true,
+            province: true,
+            municipality: true,
+            installedCapacityMw: true,
+            contractedCapacityMw: true,
+            status: true,
+            actualOperationDate: true,
+            organization: { select: { legalName: true } },
+          },
+        }),
+      ]);
       return {
+        total,
         title: 'Reporte de proyectos energéticos',
         columns: [
           'Proyecto',
@@ -330,25 +391,28 @@ export const getReport = async (
         ...awards.map((item) => item.bid.renewableTechnologyCode),
         ...projects.map((item) => item.renewableTechnologyCode),
       ]);
+      // Aggregated rows (one per technology): the set is small, so it is windowed in memory.
+      const rows = [...technologies].sort().map((technology) => ({
+        Tecnología: technology,
+        'MW licitados': number(
+          auctions.find((item) => item.renewableTechnologyCode === technology)?._sum.capacityMw,
+        ),
+        'MW ofertados': number(
+          bids.find((item) => item.renewableTechnologyCode === technology)?._sum.offeredPowerMw,
+        ),
+        'MW adjudicados': awards
+          .filter((item) => item.bid.renewableTechnologyCode === technology)
+          .reduce((sum, item) => sum + number(item.awardedCapacityMw), 0),
+        'MW operativos': number(
+          projects.find((item) => item.renewableTechnologyCode === technology)?._sum
+            .installedCapacityMw,
+        ),
+      }));
       return {
         title: 'Reporte de capacidad energética',
         columns: ['Tecnología', 'MW licitados', 'MW ofertados', 'MW adjudicados', 'MW operativos'],
-        rows: [...technologies].sort().map((technology) => ({
-          Tecnología: technology,
-          'MW licitados': number(
-            auctions.find((item) => item.renewableTechnologyCode === technology)?._sum.capacityMw,
-          ),
-          'MW ofertados': number(
-            bids.find((item) => item.renewableTechnologyCode === technology)?._sum.offeredPowerMw,
-          ),
-          'MW adjudicados': awards
-            .filter((item) => item.bid.renewableTechnologyCode === technology)
-            .reduce((sum, item) => sum + number(item.awardedCapacityMw), 0),
-          'MW operativos': number(
-            projects.find((item) => item.renewableTechnologyCode === technology)?._sum
-              .installedCapacityMw,
-          ),
-        })),
+        rows: rows.slice(skip, skip + take),
+        total: rows.length,
       };
     }
     case 'audit': {
@@ -359,26 +423,32 @@ export const getReport = async (
           'No tiene acceso al reporte de auditoría.',
         );
       }
-      const data = await prisma.auditLog.findMany({
-        where: {
-          ...(scopes.organizationId ? { organizationId: scopes.organizationId } : {}),
-          ...(query.from || query.to ? { createdAt: { gte: query.from, lte: query.to } } : {}),
-          ...(query.status ? { result: query.status } : {}),
-        },
-        orderBy: { createdAt: 'desc' },
-        take: limit,
-        select: {
-          createdAt: true,
-          action: true,
-          module: true,
-          entity: true,
-          entityId: true,
-          result: true,
-          correlationId: true,
-          user: { select: { email: true } },
-        },
-      });
+      const where: Prisma.AuditLogWhereInput = {
+        ...(scopes.organizationId ? { organizationId: scopes.organizationId } : {}),
+        ...(query.from || query.to ? { createdAt: { gte: query.from, lte: query.to } } : {}),
+        ...(query.status ? { result: query.status } : {}),
+      };
+      const [total, data] = await Promise.all([
+        prisma.auditLog.count({ where }),
+        prisma.auditLog.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          skip,
+          take,
+          select: {
+            createdAt: true,
+            action: true,
+            module: true,
+            entity: true,
+            entityId: true,
+            result: true,
+            correlationId: true,
+            user: { select: { email: true } },
+          },
+        }),
+      ]);
       return {
+        total,
         title: 'Reporte de auditoría',
         columns: [
           'Fecha UTC',

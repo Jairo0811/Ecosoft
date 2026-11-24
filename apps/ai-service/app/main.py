@@ -1,15 +1,23 @@
 from fastapi import FastAPI, HTTPException
 
-from .providers import extract_text, review_anomalies, summarize
+from .providers import CAPABILITIES, extract_text, review_anomalies, summarize
 from .schemas import AnalysisResponse, AnalyzeRequest, OCRRequest
 
 
-app = FastAPI(title="EcoSoft AI Service", version="1.0.0")
+# Internal service: only the EcoSoft API calls it (no authentication of its own), so the
+# interactive docs are disabled and docker-compose publishes it on loopback only.
+app = FastAPI(title="EcoSoft AI Service", version="1.1.0", docs_url=None, redoc_url=None, openapi_url=None)
 
 
 @app.get("/health")
 def health() -> dict[str, str]:
     return {"status": "ok"}
+
+
+@app.get("/v1/capabilities")
+def capabilities() -> dict[str, object]:
+    """What the configured provider really does, so clients never promise OCR or generation."""
+    return CAPABILITIES
 
 
 @app.post("/v1/analyze", response_model=AnalysisResponse)

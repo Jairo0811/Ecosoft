@@ -28,6 +28,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useMemo, useState } from 'react';
 import { apiClient } from '../api/client';
 import { getApiErrorMessage } from '../api/errors';
+import { PageHeader } from '../components/PageState';
 
 interface AuditEvent {
   id: string;
@@ -84,14 +85,10 @@ export function AuditPage() {
 
   return (
     <Stack spacing={3}>
-      <Box>
-        <Typography variant="h3" fontSize={{ xs: 30, sm: 38 }}>
-          Auditoría y trazabilidad
-        </Typography>
-        <Typography color="text.secondary">
-          Evidencia inmutable de accesos sensibles, decisiones y cambios realizados en EcoSoft.
-        </Typography>
-      </Box>
+      <PageHeader
+        title="Auditoría y trazabilidad"
+        description="Evidencia inmutable de accesos sensibles, decisiones y cambios realizados en EcoSoft."
+      />
       <Card sx={{ p: 2.5 }}>
         <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
           <TextField
