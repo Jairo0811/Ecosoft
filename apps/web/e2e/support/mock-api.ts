@@ -435,6 +435,31 @@ const documentsSeed = () => [
       },
     ],
   },
+  {
+    id: 'd1000000-0000-4000-8000-000000000002',
+    organizationId: ORG_SOLAR,
+    entityType: 'BID',
+    entityId: 'b1000000-0000-4000-8000-000000000001',
+    documentType: 'ACTA',
+    title: 'Acta de visita técnica — Baní II',
+    confidentiality: 'PRIVATE',
+    status: 'ACTIVE',
+    currentVersionNumber: 1,
+    createdAt: iso(-3),
+    updatedAt: iso(-3),
+    createdBy: { firstName: 'Bruno', lastName: 'Peña', email: 'bruno.pena@solarcaribe.do' },
+    versions: [
+      {
+        id: 'v-acta-1',
+        versionNumber: 1,
+        originalFileName: 'acta-visita.txt',
+        mimeType: 'text/plain',
+        sizeBytes: 2_048,
+        sha256: 'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9',
+        createdAt: iso(-3),
+      },
+    ],
+  },
 ];
 
 const usersSeed = () => [
@@ -505,6 +530,9 @@ export class MockApi {
   bids = bidsSeed();
   documents = documentsSeed();
   users = usersSeed();
+  /** AI analyses and which documents already have extracted text (as in ai.routes.ts). */
+  analyses: Record<string, unknown>[] = [];
+  extractedDocuments = new Set<string>();
   invitations = invitationsSeed();
   dashboard: Record<UserKey, ReturnType<typeof dashboardFor>> = {
     A: dashboardFor('A'),
@@ -572,6 +600,9 @@ export class MockApi {
         },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
+    // Same envelope as the API's error handler: { code, message, correlationId }.
+    const apiError = (status: number, code: string, message: string) =>
+      json(status, { code, message, correlationId: '00000000-mock-4000-8000-000000000000' });
     let body: unknown;
     try {
       body = request.postDataJSON();
@@ -841,25 +872,119 @@ export class MockApi {
     const userStatusMatch = /^\/users\/([^/]+)\/status$/.exec(path);
     if (userStatusMatch && method === 'PATCH') {
       const target = scoped(this.users).find((item) => item.id === userStatusMatch[1]);
-      if (!target)
-        return json(404, { error: { code: 'NOT_FOUND', message: 'Recurso no encontrado' } });
+      if (!target) return apiError(404, 'NOT_FOUND', 'Recurso no encontrado.');
       target.status = (body as { status: string }).status;
       return json(200, { data: target });
     }
     const unlockMatch = /^\/users\/([^/]+)\/unlock$/.exec(path);
     if (unlockMatch && method === 'PATCH') {
       const target = scoped(this.users).find((item) => item.id === unlockMatch[1]);
-      if (!target)
-        return json(404, { error: { code: 'NOT_FOUND', message: 'Recurso no encontrado' } });
+      if (!target) return apiError(404, 'NOT_FOUND', 'Recurso no encontrado.');
       target.lockedUntil = null;
       return json(200, { data: target });
     }
     const revokeMatch = /^\/users\/invitations\/([^/]+)\/revoke$/.exec(path);
     if (revokeMatch && method === 'PATCH') {
       const target = scoped(this.invitations).find((item) => item.id === revokeMatch[1]);
-      if (!target)
-        return json(404, { error: { code: 'NOT_FOUND', message: 'Recurso no encontrado' } });
+      if (!target) return apiError(404, 'NOT_FOUND', 'Recurso no encontrado.');
       target.status = 'REVOKED';
+      return json(200, { data: target });
+    }
+
+    // AI assistance, following ai.routes.ts with the LOCAL_DETERMINISTIC provider.
+    if (path === '/ai/capabilities') {
+      return json(200, {
+        data: {
+          provider: 'LOCAL_DETERMINISTIC',
+          processing: 'deterministic',
+          generativeAi: false,
+          ocr: false,
+          operations: {
+            SUMMARY: 'Resumen extractivo: primeras oraciones del texto, sin generación.',
+            ANOMALY_REVIEW: 'Señales heurísticas por palabras clave y montos repetidos.',
+            TEXT_EXTRACTION: 'Decodificación de texto UTF-8 de archivos textuales.',
+          },
+          textExtractionMimeTypes: ['text/plain'],
+          unsupported: [
+            'OCR de imágenes (PNG/JPEG)',
+            'PDF escaneados o PDF con texto',
+            'DOCX/XLSX',
+          ],
+          humanReviewRequired: true,
+        },
+      });
+    }
+    if (path === '/ai' && method === 'GET') return list(scoped(this.analyses));
+    if ((path === '/ai/ocr' || path === '/ai/analyze') && method === 'POST') {
+      const input = body as { documentId: string; operation?: string };
+      const target = scoped(this.documents).find((item) => item.id === input.documentId);
+      if (!target)
+        return apiError(404, 'DOCUMENT_NOT_FOUND', 'El documento no existe o no está disponible.');
+      const ocr = path === '/ai/ocr';
+      if (ocr && target.versions[0]?.mimeType !== 'text/plain')
+        return apiError(
+          422,
+          'TEXT_EXTRACTION_UNSUPPORTED',
+          'El proveedor configurado solo extrae texto de documentos .txt; no realiza OCR.',
+        );
+      if (!ocr && !this.extractedDocuments.has(target.id))
+        return apiError(409, 'OCR_REQUIRED', 'Primero debe extraer el texto del documento.');
+      if (ocr) this.extractedDocuments.add(target.id);
+      const operation = ocr ? 'OCR' : (input.operation ?? 'SUMMARY');
+      const analysis = {
+        id: `ai000000-0000-4000-8000-00000000000${this.analyses.length + 1}`,
+        organizationId: target.organizationId,
+        operation,
+        provider: 'LOCAL_DETERMINISTIC',
+        confidence: ocr ? '0.99' : '0.55',
+        reviewDecision: null,
+        reviewNotes: null,
+        reviewedAt: null,
+        createdAt: new Date().toISOString(),
+        requestedBy: { firstName: identity === 'A' ? 'Ana' : 'Bruno', lastName: 'Prueba' },
+        reviewedBy: null,
+        document: { title: target.title, documentType: target.documentType },
+        result:
+          operation === 'OCR'
+            ? {
+                text: 'Visita técnica al parque. Se verificó el punto de interconexión.',
+                notice: 'Extracción de texto UTF-8; no es OCR.',
+              }
+            : operation === 'SUMMARY'
+              ? {
+                  summary: 'Visita técnica al parque. Se verificó el punto de interconexión.',
+                  notice: 'Resumen extractivo; requiere revisión humana.',
+                }
+              : {
+                  signals: ['Monto repetido: 1,250,000'],
+                  total_signals: 1,
+                  truncated: false,
+                  notice: 'Señales heurísticas; no constituyen una decisión regulatoria.',
+                },
+      };
+      this.analyses.unshift(analysis);
+      return json(201, { data: analysis });
+    }
+    const aiReviewMatch = /^\/ai\/([^/]+)\/review$/.exec(path);
+    if (aiReviewMatch && method === 'PATCH') {
+      const target = scoped(this.analyses as { id: string; organizationId?: string }[]).find(
+        (item) => item.id === aiReviewMatch[1],
+      ) as Record<string, unknown> | undefined;
+      if (!target)
+        return apiError(
+          404,
+          'AI_ANALYSIS_NOT_FOUND',
+          'El análisis no existe o no está disponible.',
+        );
+      if (target.reviewDecision)
+        return apiError(409, 'AI_ANALYSIS_REVIEWED', 'El análisis ya fue revisado.');
+      const input = body as { decision: string; notes: string };
+      Object.assign(target, {
+        reviewDecision: input.decision,
+        reviewNotes: input.notes,
+        reviewedAt: new Date().toISOString(),
+        reviewedBy: { firstName: 'Ana', lastName: 'Martínez' },
+      });
       return json(200, { data: target });
     }
 

@@ -107,6 +107,34 @@ router.get(
   }),
 );
 
+/**
+ * Real capabilities of the configured provider, so the interface never promises OCR or
+ * generative AI that is not there. Text extraction formats are the intersection of what the
+ * provider decodes and what this API forwards to it (TEXT_EXTRACTION_MIME_TYPES).
+ */
+router.get(
+  '/capabilities',
+  authenticate,
+  requirePermission(permissions.aiUse),
+  asyncHandler(async (_request, response) => {
+    const capabilities = await aiClient.capabilities();
+    response.json({
+      data: {
+        provider: capabilities.provider,
+        processing: capabilities.processing,
+        generativeAi: capabilities.generative_ai,
+        ocr: capabilities.ocr,
+        operations: capabilities.operations,
+        textExtractionMimeTypes: capabilities.text_extraction_mime_types.filter((mimeType) =>
+          TEXT_EXTRACTION_MIME_TYPES.has(mimeType),
+        ),
+        unsupported: capabilities.unsupported,
+        humanReviewRequired: capabilities.human_review_required,
+      },
+    });
+  }),
+);
+
 router.post(
   '/analyze',
   authenticate,

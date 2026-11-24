@@ -65,6 +65,14 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(page.getByRole('dialog')).toBeVisible();
       expect(await audit(page)).toEqual([]);
     });
+
+    test('asistencia documental', async ({ page }) => {
+      await loginAs(page, 'A');
+      await expect(page).not.toHaveURL(/\/login/);
+      await page.goto('/ia');
+      await expect(page.getByText('Procesamiento determinista')).toBeVisible();
+      expect(await audit(page)).toEqual([]);
+    });
   });
 }
 
