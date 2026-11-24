@@ -15,6 +15,14 @@ const audit = async (page: Page) => {
   }));
 };
 
+// MUI dialogs fade in. Auditing while the container is still translucent makes axe measure
+// blended colours (e.g. a red button at half opacity) and report a contrast failure that a
+// user never sees once the dialog has opened, so wait for the enter transition to finish.
+const openedDialog = async (page: Page) => {
+  await expect(page.getByRole('dialog')).toBeVisible();
+  await expect(page.locator('.MuiDialog-container')).toHaveCSS('opacity', '1');
+};
+
 for (const scheme of ['light', 'dark'] as const) {
   test.describe(`accesibilidad (${scheme})`, () => {
     test.beforeEach(async ({ page }) => {
@@ -44,14 +52,14 @@ for (const scheme of ['light', 'dark'] as const) {
       expect(await audit(page)).toEqual([]);
 
       await page.getByRole('button', { name: 'Cancelar subasta' }).first().click();
-      await expect(page.getByRole('dialog')).toBeVisible();
+      await openedDialog(page);
       expect(await audit(page)).toEqual([]);
       await page.keyboard.press('Escape');
 
       await page.goto('/ofertas');
       await page.getByRole('tab', { name: 'Documentos' }).click();
       await page.getByRole('button', { name: 'Cargar documento' }).click();
-      await expect(page.getByRole('dialog')).toBeVisible();
+      await openedDialog(page);
       expect(await audit(page)).toEqual([]);
     });
 
@@ -62,7 +70,7 @@ for (const scheme of ['light', 'dark'] as const) {
       await expect(page.getByText('luis.reyes@cne.gob.do')).toBeVisible();
       expect(await audit(page)).toEqual([]);
       await page.getByRole('button', { name: 'Suspender' }).first().click();
-      await expect(page.getByRole('dialog')).toBeVisible();
+      await openedDialog(page);
       expect(await audit(page)).toEqual([]);
     });
 
