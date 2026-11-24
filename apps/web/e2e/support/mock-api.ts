@@ -8,7 +8,7 @@ import type { Page, Route } from '@playwright/test';
  */
 
 const API = 'http://localhost:4000/api/v1';
-const ORIGIN = 'http://127.0.0.1:5173';
+const ORIGIN = 'http://127.0.0.1:4173';
 
 export type UserKey = 'A' | 'B';
 
@@ -16,18 +16,56 @@ const ORG_CNE = '0b6f5c8e-1d2a-4c3b-9e8f-111111111111';
 const ORG_SOLAR = '0b6f5c8e-1d2a-4c3b-9e8f-222222222222';
 
 const permissionsA = [
-  'users.manage', 'organizations.read', 'organizations.manage', 'organizations.approve',
-  'catalogs.read', 'catalogs.manage', 'auctions.read', 'auctions.create', 'auctions.update',
-  'auctions.publish', 'bids.read', 'documents.read', 'documents.manage', 'evaluations.read',
-  'evaluations.manage', 'awards.read', 'awards.manage', 'projects.read', 'projects.manage',
-  'contracts.read', 'contracts.create', 'ai.use', 'ai.review', 'reports.read', 'reports.export',
-  'analytics.read', 'audit.read', 'regulatory.read', 'regulatory.manage', 'notifications.read',
+  'users.manage',
+  'organizations.read',
+  'organizations.manage',
+  'organizations.approve',
+  'catalogs.read',
+  'catalogs.manage',
+  'auctions.read',
+  'auctions.create',
+  'auctions.update',
+  'auctions.publish',
+  'bids.read',
+  'documents.read',
+  'documents.manage',
+  'evaluations.read',
+  'evaluations.manage',
+  'awards.read',
+  'awards.manage',
+  'projects.read',
+  'projects.manage',
+  'contracts.read',
+  'contracts.create',
+  'ai.use',
+  'ai.review',
+  'reports.read',
+  'reports.export',
+  'analytics.read',
+  'audit.read',
+  'regulatory.read',
+  'regulatory.manage',
+  'notifications.read',
 ];
 const permissionsB = [
-  'users.manage', 'organizations.read', 'catalogs.read', 'auctions.read', 'bids.read',
-  'bids.submit', 'documents.read', 'documents.manage', 'evaluations.read', 'awards.read',
-  'projects.read', 'projects.manage', 'contracts.read', 'ai.use', 'reports.read',
-  'analytics.read', 'regulatory.read', 'notifications.read',
+  'users.manage',
+  'organizations.read',
+  'catalogs.read',
+  'auctions.read',
+  'bids.read',
+  'bids.submit',
+  'documents.read',
+  'documents.manage',
+  'evaluations.read',
+  'awards.read',
+  'projects.read',
+  'projects.manage',
+  'contracts.read',
+  'ai.use',
+  'reports.read',
+  'analytics.read',
+  'regulatory.read',
+  'notifications.read',
 ];
 
 export const identities = {
@@ -78,12 +116,38 @@ const auctionsSeed = () => [
     closeAt: iso(5),
     evaluationStartAt: null,
     awardPlannedAt: null,
-    managingOrganization: { id: ORG_CNE, legalName: 'Comisión Nacional de Energía', commercialName: 'CNE', type: 'REGULATORY_AUTHORITY' },
+    managingOrganization: {
+      id: ORG_CNE,
+      legalName: 'Comisión Nacional de Energía',
+      commercialName: 'CNE',
+      type: 'REGULATORY_AUTHORITY',
+    },
     requirements: [
-      { code: 'GARANTIA', title: 'Garantía de seriedad de oferta', category: 'FINANCIERO', isMandatory: true, sortOrder: 10 },
-      { code: 'ESTUDIO_TECNICO', title: 'Estudio técnico de interconexión', category: 'TECNICO', isMandatory: true, sortOrder: 20 },
+      {
+        code: 'GARANTIA',
+        title: 'Garantía de seriedad de oferta',
+        category: 'FINANCIERO',
+        isMandatory: true,
+        sortOrder: 10,
+      },
+      {
+        code: 'ESTUDIO_TECNICO',
+        title: 'Estudio técnico de interconexión',
+        category: 'TECNICO',
+        isMandatory: true,
+        sortOrder: 20,
+      },
     ],
-    participants: [{ status: 'HABILITADO', organization: { id: ORG_SOLAR, legalName: 'Solar Caribe S.R.L.', commercialName: 'Solar Caribe' } }],
+    participants: [
+      {
+        status: 'HABILITADO',
+        organization: {
+          id: ORG_SOLAR,
+          legalName: 'Solar Caribe S.R.L.',
+          commercialName: 'Solar Caribe',
+        },
+      },
+    ],
     _count: { requirements: 2, participants: 1, events: 2 },
   },
   {
@@ -100,7 +164,12 @@ const auctionsSeed = () => [
     closeAt: iso(40),
     evaluationStartAt: null,
     awardPlannedAt: null,
-    managingOrganization: { id: ORG_CNE, legalName: 'Comisión Nacional de Energía', commercialName: 'CNE', type: 'REGULATORY_AUTHORITY' },
+    managingOrganization: {
+      id: ORG_CNE,
+      legalName: 'Comisión Nacional de Energía',
+      commercialName: 'CNE',
+      type: 'REGULATORY_AUTHORITY',
+    },
     requirements: [],
     participants: [],
     _count: { requirements: 0, participants: 0, events: 0 },
@@ -119,7 +188,12 @@ const auctionsSeed = () => [
     closeAt: iso(-20),
     evaluationStartAt: iso(-18),
     awardPlannedAt: iso(15),
-    managingOrganization: { id: ORG_CNE, legalName: 'Comisión Nacional de Energía', commercialName: 'CNE', type: 'REGULATORY_AUTHORITY' },
+    managingOrganization: {
+      id: ORG_CNE,
+      legalName: 'Comisión Nacional de Energía',
+      commercialName: 'CNE',
+      type: 'REGULATORY_AUTHORITY',
+    },
     requirements: [],
     participants: [],
     _count: { requirements: 0, participants: 0, events: 1 },
@@ -131,10 +205,20 @@ const dashboardFor = (key: UserKey) =>
     ? {
         filters: { from: null, to: null, organizationId: null, technology: null },
         kpis: {
-          activeAuctions: 2, pendingAuctions: 1, participantOrganizations: 7, bidsReceived: 18,
-          contracts: 12, activeContracts: 9, auctionedMw: 275.5, offeredMw: 412.75, awardedMw: 160,
-          operationalMw: 96.4, operationalContractedMw: 80, operationalProjects: 4,
-          approvedAwards: 5, expiringContracts: 2,
+          activeAuctions: 2,
+          pendingAuctions: 1,
+          participantOrganizations: 7,
+          bidsReceived: 18,
+          contracts: 12,
+          activeContracts: 9,
+          auctionedMw: 275.5,
+          offeredMw: 412.75,
+          awardedMw: 160,
+          operationalMw: 96.4,
+          operationalContractedMw: 80,
+          operationalProjects: 4,
+          approvedAwards: 5,
+          expiringContracts: 2,
         },
         capacityByTechnology: [
           { technology: 'SOLAR', installedMw: 64.4, contractedMw: 55 },
@@ -150,30 +234,105 @@ const dashboardFor = (key: UserKey) =>
         ],
         averageAwardPriceByCurrency: [{ currency: 'USD', price: 74.2 }],
         contractedValueByCurrency: [{ currency: 'USD', value: 12_500_000, contracts: 9 }],
-        trend: ['2025-12', '2026-01', '2026-02', '2026-03', '2026-04', '2026-05', '2026-06', '2026-07', '2026-08', '2026-09', '2026-10', '2026-11'].map(
-          (month, index) => ({ month, auctionedMw: [0, 40, 0, 35.5, 0, 0, 150, 0, 0, 90, 0, 0][index] ?? 0, awardedMw: [0, 0, 30, 0, 40, 0, 0, 60, 30, 0, 0, 0][index] ?? 0 }),
-        ),
+        trend: [
+          '2025-12',
+          '2026-01',
+          '2026-02',
+          '2026-03',
+          '2026-04',
+          '2026-05',
+          '2026-06',
+          '2026-07',
+          '2026-08',
+          '2026-09',
+          '2026-10',
+          '2026-11',
+        ].map((month, index) => ({
+          month,
+          auctionedMw: [0, 40, 0, 35.5, 0, 0, 150, 0, 0, 90, 0, 0][index] ?? 0,
+          awardedMw: [0, 0, 30, 0, 40, 0, 0, 60, 30, 0, 0, 0][index] ?? 0,
+        })),
         upcomingEvents: [
-          { id: 'e1', title: 'Cierre de recepción SUB-2026-001', type: 'CIERRE', startsAt: iso(5), endsAt: null },
-          { id: 'e2', title: 'Apertura SUB-2026-002', type: 'APERTURA', startsAt: iso(12), endsAt: null },
+          {
+            id: 'e1',
+            title: 'Cierre de recepción SUB-2026-001',
+            type: 'CIERRE',
+            startsAt: iso(5),
+            endsAt: null,
+          },
+          {
+            id: 'e2',
+            title: 'Apertura SUB-2026-002',
+            type: 'APERTURA',
+            startsAt: iso(12),
+            endsAt: null,
+          },
         ],
         alerts: {
-          closingAuctions: [{ id: 'a1000000-0000-4000-8000-000000000001', code: 'SUB-2026-001', title: 'Subasta solar región norte', closeAt: iso(5) }],
-          expiringContracts: [{ id: 'c1', contractNumber: 'PPA-2016-004', endDate: iso(45), organization: { legalName: 'Hidro Jimenoa S.A.', commercialName: null } }],
+          closingAuctions: [
+            {
+              id: 'a1000000-0000-4000-8000-000000000001',
+              code: 'SUB-2026-001',
+              title: 'Subasta solar región norte',
+              closeAt: iso(5),
+            },
+          ],
+          expiringContracts: [
+            {
+              id: 'c1',
+              contractNumber: 'PPA-2016-004',
+              endDate: iso(45),
+              organization: { legalName: 'Hidro Jimenoa S.A.', commercialName: null },
+            },
+          ],
         },
         recentActivity: [
-          { id: 'r1', action: 'STATUS_CHANGE', module: 'AUCTIONS', entity: 'Auction', result: 'SUCCESS', createdAt: iso(-0.05), user: { firstName: 'Ana', lastName: 'Martínez' } },
-          { id: 'r2', action: 'UPLOAD', module: 'DOCUMENTS', entity: 'Document', result: 'SUCCESS', createdAt: iso(-0.3), user: { firstName: 'Bruno', lastName: 'Peña' } },
-          { id: 'r3', action: 'LOGIN', module: 'Identity', entity: null, result: 'DENIED', createdAt: iso(-1), user: null },
+          {
+            id: 'r1',
+            action: 'STATUS_CHANGE',
+            module: 'AUCTIONS',
+            entity: 'Auction',
+            result: 'SUCCESS',
+            createdAt: iso(-0.05),
+            user: { firstName: 'Ana', lastName: 'Martínez' },
+          },
+          {
+            id: 'r2',
+            action: 'UPLOAD',
+            module: 'DOCUMENTS',
+            entity: 'Document',
+            result: 'SUCCESS',
+            createdAt: iso(-0.3),
+            user: { firstName: 'Bruno', lastName: 'Peña' },
+          },
+          {
+            id: 'r3',
+            action: 'LOGIN',
+            module: 'Identity',
+            entity: null,
+            result: 'DENIED',
+            createdAt: iso(-1),
+            user: null,
+          },
         ],
       }
     : {
         filters: { from: null, to: null, organizationId: ORG_SOLAR, technology: null },
         kpis: {
-          activeAuctions: 1, pendingAuctions: 0, participantOrganizations: 1, bidsReceived: 2,
-          contracts: 1, activeContracts: 1, auctionedMw: 150, offeredMw: 60, awardedMw: 0,
-          operationalMw: 0, operationalContractedMw: 0, operationalProjects: 0,
-          approvedAwards: 0, expiringContracts: 0,
+          activeAuctions: 1,
+          pendingAuctions: 0,
+          participantOrganizations: 1,
+          bidsReceived: 2,
+          contracts: 1,
+          activeContracts: 1,
+          auctionedMw: 150,
+          offeredMw: 60,
+          awardedMw: 0,
+          operationalMw: 0,
+          operationalContractedMw: 0,
+          operationalProjects: 0,
+          approvedAwards: 0,
+          expiringContracts: 0,
         },
         capacityByTechnology: [{ technology: 'SOLAR', installedMw: 25, contractedMw: 0 }],
         projectsByProvince: [],
@@ -200,8 +359,18 @@ const bidsSeed = () => [
     currencyCode: 'USD',
     validUntil: iso(60),
     submittedAt: null,
-    auction: { id: 'a1000000-0000-4000-8000-000000000001', code: 'SUB-2026-001', title: 'Subasta solar región norte', status: 'ABIERTA', closeAt: iso(5) },
-    organization: { id: ORG_SOLAR, legalName: 'Solar Caribe S.R.L.', commercialName: 'Solar Caribe' },
+    auction: {
+      id: 'a1000000-0000-4000-8000-000000000001',
+      code: 'SUB-2026-001',
+      title: 'Subasta solar región norte',
+      status: 'ABIERTA',
+      closeAt: iso(5),
+    },
+    organization: {
+      id: ORG_SOLAR,
+      legalName: 'Solar Caribe S.R.L.',
+      commercialName: 'Solar Caribe',
+    },
   },
   {
     id: 'b1000000-0000-4000-8000-000000000002',
@@ -216,8 +385,18 @@ const bidsSeed = () => [
     currencyCode: 'USD',
     validUntil: iso(60),
     submittedAt: iso(-2),
-    auction: { id: 'a1000000-0000-4000-8000-000000000001', code: 'SUB-2026-001', title: 'Subasta solar región norte', status: 'ABIERTA', closeAt: iso(5) },
-    organization: { id: ORG_SOLAR, legalName: 'Solar Caribe S.R.L.', commercialName: 'Solar Caribe' },
+    auction: {
+      id: 'a1000000-0000-4000-8000-000000000001',
+      code: 'SUB-2026-001',
+      title: 'Subasta solar región norte',
+      status: 'ABIERTA',
+      closeAt: iso(5),
+    },
+    organization: {
+      id: ORG_SOLAR,
+      legalName: 'Solar Caribe S.R.L.',
+      commercialName: 'Solar Caribe',
+    },
   },
 ];
 
@@ -236,9 +415,67 @@ const documentsSeed = () => [
     updatedAt: iso(-1),
     createdBy: { firstName: 'Bruno', lastName: 'Peña', email: 'bruno.pena@solarcaribe.do' },
     versions: [
-      { id: 'v2', versionNumber: 2, originalFileName: 'garantía-baní-ii.pdf', mimeType: 'application/pdf', sizeBytes: 182_340, sha256: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08', createdAt: iso(-1) },
-      { id: 'v1', versionNumber: 1, originalFileName: 'garantia.pdf', mimeType: 'application/pdf', sizeBytes: 150_002, sha256: '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae', createdAt: iso(-4) },
+      {
+        id: 'v2',
+        versionNumber: 2,
+        originalFileName: 'garantía-baní-ii.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 182_340,
+        sha256: '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08',
+        createdAt: iso(-1),
+      },
+      {
+        id: 'v1',
+        versionNumber: 1,
+        originalFileName: 'garantia.pdf',
+        mimeType: 'application/pdf',
+        sizeBytes: 150_002,
+        sha256: '2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae',
+        createdAt: iso(-4),
+      },
     ],
+  },
+];
+
+const usersSeed = () => [
+  {
+    id: 'u1000000-0000-4000-8000-000000000001',
+    organizationId: ORG_CNE,
+    email: 'luis.reyes@cne.gob.do',
+    firstName: 'Luis',
+    lastName: 'Reyes',
+    status: 'ACTIVE',
+    lockedUntil: null as string | null,
+    lastLoginAt: '2026-10-30T14:00:00.000Z',
+    organization: { id: ORG_CNE, legalName: 'Comisión Nacional de Energía', commercialName: 'CNE' },
+    roles: [{ role: { id: 'r-cne', code: 'CNE_ANALYST', name: 'Analista CNE' } }],
+  },
+  {
+    id: 'u1000000-0000-4000-8000-000000000002',
+    organizationId: ORG_SOLAR,
+    email: 'carla.diaz@solarcaribe.do',
+    firstName: 'Carla',
+    lastName: 'Díaz',
+    status: 'ACTIVE',
+    lockedUntil: '2026-11-24T15:00:00.000Z' as string | null,
+    lastLoginAt: null as string | null,
+    organization: {
+      id: ORG_SOLAR,
+      legalName: 'Solar Caribe S.R.L.',
+      commercialName: 'Solar Caribe',
+    },
+    roles: [{ role: { id: 'r-co', code: 'COMPANY_USER', name: 'Usuario de empresa' } }],
+  },
+];
+
+const invitationsSeed = () => [
+  {
+    id: 'i1000000-0000-4000-8000-000000000001',
+    organizationId: ORG_SOLAR,
+    email: 'diego.santos@solarcaribe.do',
+    status: 'PENDING',
+    expiresAt: '2026-12-01T16:00:00.000Z',
+    user: { firstName: 'Diego', lastName: 'Santos' },
   },
 ];
 
@@ -248,7 +485,10 @@ interface RecordedRequest {
   identity: UserKey | null;
 }
 
-type Handler = (route: Route, context: { body: unknown; identity: UserKey | null; url: URL }) => Promise<void> | void;
+type Handler = (
+  route: Route,
+  context: { body: unknown; identity: UserKey | null; url: URL },
+) => Promise<void> | void;
 
 export class MockApi {
   readonly requests: RecordedRequest[] = [];
@@ -264,7 +504,12 @@ export class MockApi {
   auctions = auctionsSeed();
   bids = bidsSeed();
   documents = documentsSeed();
-  dashboard: Record<UserKey, ReturnType<typeof dashboardFor>> = { A: dashboardFor('A'), B: dashboardFor('B') };
+  users = usersSeed();
+  invitations = invitationsSeed();
+  dashboard: Record<UserKey, ReturnType<typeof dashboardFor>> = {
+    A: dashboardFor('A'),
+    B: dashboardFor('B'),
+  };
 
   /** Every request whose path matches answers with this status until cleared. */
   fail(pattern: RegExp, status: number, code = 'MOCK_FAILURE') {
@@ -305,7 +550,8 @@ export class MockApi {
       'Access-Control-Allow-Credentials': 'true',
       'Access-Control-Allow-Headers': 'Authorization, Content-Type, X-Requested-With',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE',
-      'Access-Control-Expose-Headers': 'Content-Disposition, X-Content-SHA256, X-Report-Total, X-Report-Rows, X-Report-Truncated',
+      'Access-Control-Expose-Headers':
+        'Content-Disposition, X-Content-SHA256, X-Report-Total, X-Report-Rows, X-Report-Truncated',
     };
     if (method === 'OPTIONS') return route.fulfill({ status: 204, headers: cors });
 
@@ -319,7 +565,11 @@ export class MockApi {
     const json = (status: number, body?: unknown, headers: Record<string, string> = {}) =>
       route.fulfill({
         status,
-        headers: { ...cors, ...headers, ...(body === undefined ? {} : { 'Content-Type': 'application/json' }) },
+        headers: {
+          ...cors,
+          ...headers,
+          ...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+        },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       });
     let body: unknown;
@@ -333,37 +583,60 @@ export class MockApi {
     if (path === '/auth/login' && method === 'POST') {
       const { email, password } = (body ?? {}) as { email?: string; password?: string };
       const key = (Object.keys(identities) as UserKey[]).find(
-        (candidate) => identities[candidate].email === email && identities[candidate].password === password,
+        (candidate) =>
+          identities[candidate].email === email && identities[candidate].password === password,
       );
-      if (!key) return json(401, { code: 'INVALID_CREDENTIALS', message: 'Correo o contraseña incorrectos.' });
+      if (!key)
+        return json(401, {
+          code: 'INVALID_CREDENTIALS',
+          message: 'Correo o contraseña incorrectos.',
+        });
       this.refreshCookie = key;
       return json(200, { accessToken: this.issue(key), user: identities[key].user });
     }
     if (path === '/auth/refresh' && method === 'POST') {
       if (this.refreshFails || !this.refreshCookie) {
         this.refreshCookie = null;
-        return json(401, { code: 'INVALID_REFRESH_TOKEN', message: 'La sesión no es válida o expiró.' });
+        return json(401, {
+          code: 'INVALID_REFRESH_TOKEN',
+          message: 'La sesión no es válida o expiró.',
+        });
       }
-      return json(200, { accessToken: this.issue(this.refreshCookie), user: identities[this.refreshCookie].user });
+      return json(200, {
+        accessToken: this.issue(this.refreshCookie),
+        user: identities[this.refreshCookie].user,
+      });
     }
     if (path === '/auth/logout' && method === 'POST') {
       this.refreshCookie = null;
       return json(204);
     }
-    if (path.startsWith('/auth/invitations')) return json(404, { code: 'INVITATION_NOT_FOUND', message: 'La invitación no existe o expiró.' });
+    if (path.startsWith('/auth/invitations'))
+      return json(404, {
+        code: 'INVITATION_NOT_FOUND',
+        message: 'La invitación no existe o expiró.',
+      });
 
     if (!identity) {
-      return json(401, { code: token ? 'TOKEN_EXPIRED' : 'AUTHENTICATION_REQUIRED', message: 'La sesión expiró.' });
+      return json(401, {
+        code: token ? 'TOKEN_EXPIRED' : 'AUTHENTICATION_REQUIRED',
+        message: 'La sesión expiró.',
+      });
     }
     const failure = this.failures.find((item) => item.pattern.test(path));
     if (failure) {
       return json(failure.status, {
         code: failure.code,
-        message: failure.status === 403 ? 'No tiene permisos para esta operación.' : 'Ocurrió un error interno.',
+        message:
+          failure.status === 403
+            ? 'No tiene permisos para esta operación.'
+            : 'Ocurrió un error interno.',
         correlationId: '00000000-mock-4000-8000-000000000000',
       });
     }
-    const override = this.overrides.find((item) => item.method === method && item.pattern.test(path));
+    const override = this.overrides.find(
+      (item) => item.method === method && item.pattern.test(path),
+    );
     if (override) return override.handler(route, { body, identity, url });
 
     const user = identities[identity].user;
@@ -372,13 +645,21 @@ export class MockApi {
     const list = <T>(items: T[]) =>
       json(200, {
         data: items.slice((page - 1) * pageSize, page * pageSize),
-        pagination: { page, pageSize, total: items.length, totalPages: Math.max(1, Math.ceil(items.length / pageSize)) },
+        pagination: {
+          page,
+          pageSize,
+          total: items.length,
+          totalPages: Math.max(1, Math.ceil(items.length / pageSize)),
+        },
       });
     const scoped = <T extends { organizationId?: string }>(items: T[]) =>
-      user.permissions.includes('audit.read') ? items : items.filter((item) => item.organizationId === user.organizationId);
+      user.permissions.includes('audit.read')
+        ? items
+        : items.filter((item) => item.organizationId === user.organizationId);
 
     if (path === '/auth/me') return json(200, { user });
-    if (path === '/notifications/unread-count') return json(200, { data: { unread: identity === 'A' ? 3 : 1 } });
+    if (path === '/notifications/unread-count')
+      return json(200, { data: { unread: identity === 'A' ? 3 : 1 } });
     if (path === '/analytics/dashboard') return json(200, { data: this.dashboard[identity] });
 
     if (path === '/auctions' && method === 'GET') {
@@ -395,7 +676,8 @@ export class MockApi {
     const auctionMatch = /^\/auctions\/([^/]+)(\/status)?$/.exec(path);
     if (auctionMatch) {
       const auction = this.auctions.find((item) => item.id === auctionMatch[1]);
-      if (!auction) return json(404, { code: 'AUCTION_NOT_FOUND', message: 'La subasta no existe.' });
+      if (!auction)
+        return json(404, { code: 'AUCTION_NOT_FOUND', message: 'La subasta no existe.' });
       if (auctionMatch[2] && method === 'PATCH') {
         const { status } = body as { status: string; reason?: string };
         auction.status = status;
@@ -417,7 +699,13 @@ export class MockApi {
         projectName: String(input.projectName),
         offeredPowerMw: String(input.offeredPowerMw),
         status: 'BORRADOR',
-        auction: { id: auction.id, code: auction.code, title: auction.title, status: auction.status, closeAt: auction.closeAt },
+        auction: {
+          id: auction.id,
+          code: auction.code,
+          title: auction.title,
+          status: auction.status,
+          closeAt: auction.closeAt,
+        },
       };
       this.bids.unshift(created);
       return json(201, { data: created });
@@ -440,7 +728,9 @@ export class MockApi {
         documentType: input.documentType ?? 'OTRO',
         entityType: input.entityType ?? 'BID',
         currentVersionNumber: 1,
-        versions: [{ ...documentsSeed()[0]!.versions[1]!, originalFileName: input.fileName ?? 'archivo' }],
+        versions: [
+          { ...documentsSeed()[0]!.versions[1]!, originalFileName: input.fileName ?? 'archivo' },
+        ],
       };
       this.documents.unshift(created);
       return json(201, { data: created });
@@ -448,7 +738,8 @@ export class MockApi {
     const versionMatch = /^\/documents\/([^/]+)\/versions$/.exec(path);
     if (versionMatch && method === 'POST') {
       const document = this.documents.find((item) => item.id === versionMatch[1]);
-      if (!document) return json(404, { code: 'DOCUMENT_NOT_FOUND', message: 'El documento no existe.' });
+      if (!document)
+        return json(404, { code: 'DOCUMENT_NOT_FOUND', message: 'El documento no existe.' });
       document.currentVersionNumber += 1;
       return json(201, { data: document });
     }
@@ -470,18 +761,116 @@ export class MockApi {
     if (path === '/projects') {
       return list(
         scoped([
-          { id: 'p1000000-0000-4000-8000-000000000001', organizationId: ORG_SOLAR, name: 'Parque solar Baní II', province: 'Peravia', renewableTechnologyCode: 'SOLAR' },
+          {
+            id: 'p1000000-0000-4000-8000-000000000001',
+            organizationId: ORG_SOLAR,
+            organization: { legalName: 'Solar Caribe S.R.L.', commercialName: 'Solar Caribe' },
+            name: 'Parque solar Baní II',
+            province: 'Peravia',
+            renewableTechnologyCode: 'SOLAR',
+          },
         ]),
       );
+    }
+    if (path === '/organizations') {
+      return list([
+        {
+          id: ORG_CNE,
+          legalName: 'Comisión Nacional de Energía',
+          commercialName: 'CNE',
+          type: 'REGULATORY_AUTHORITY',
+          status: 'APPROVED',
+          rnc: '401000001',
+          _count: { users: 4 },
+        },
+        {
+          id: ORG_SOLAR,
+          legalName: 'Solar Caribe S.R.L.',
+          commercialName: 'Solar Caribe',
+          type: 'GENERATION_COMPANY',
+          status: 'APPROVED',
+          rnc: '131000002',
+          _count: { users: 2 },
+        },
+      ]);
+    }
+    if (path === '/auctions' && method === 'POST') {
+      const input = body as Record<string, string>;
+      const created = {
+        ...auctionsSeed()[1]!,
+        id: 'a1000000-0000-4000-8000-000000000099',
+        code: input.code ?? 'NUEVA',
+        title: input.title ?? '',
+        status: 'BORRADOR',
+      };
+      this.auctions.unshift(created);
+      return json(201, { data: created });
     }
     if (path === '/catalogs') {
       const type = url.searchParams.get('type');
       return json(200, {
         data:
           type === 'CURRENCY'
-            ? [{ id: 'cur-usd', code: 'USD', name: 'Dólar estadounidense' }, { id: 'cur-dop', code: 'DOP', name: 'Peso dominicano' }]
-            : [{ id: 'tech-solar', code: 'SOLAR', name: 'Solar fotovoltaica' }, { id: 'tech-wind', code: 'WIND', name: 'Eólica' }],
+            ? [
+                { id: 'cur-usd', code: 'USD', name: 'Dólar estadounidense' },
+                { id: 'cur-dop', code: 'DOP', name: 'Peso dominicano' },
+              ]
+            : [
+                { id: 'tech-solar', code: 'SOLAR', name: 'Solar fotovoltaica' },
+                { id: 'tech-wind', code: 'WIND', name: 'Eólica' },
+              ],
         pagination: { page: 1, pageSize: 100, total: 2, totalPages: 1 },
+      });
+    }
+    // Users and invitations, scoped like users.routes.ts (company admins: own organization).
+    if (path === '/users' && method === 'GET') {
+      const status = url.searchParams.get('status');
+      return list(scoped(this.users).filter((item) => !status || item.status === status));
+    }
+    if (path === '/users/invitations' && method === 'GET') {
+      return list(scoped(this.invitations).filter((item) => item.status === 'PENDING'));
+    }
+    if (path === '/roles') {
+      return json(200, {
+        data: [
+          { id: 'r-cne', code: 'CNE_ANALYST', name: 'Analista CNE' },
+          { id: 'r-co', code: 'COMPANY_USER', name: 'Usuario de empresa' },
+        ],
+      });
+    }
+    const userStatusMatch = /^\/users\/([^/]+)\/status$/.exec(path);
+    if (userStatusMatch && method === 'PATCH') {
+      const target = scoped(this.users).find((item) => item.id === userStatusMatch[1]);
+      if (!target)
+        return json(404, { error: { code: 'NOT_FOUND', message: 'Recurso no encontrado' } });
+      target.status = (body as { status: string }).status;
+      return json(200, { data: target });
+    }
+    const unlockMatch = /^\/users\/([^/]+)\/unlock$/.exec(path);
+    if (unlockMatch && method === 'PATCH') {
+      const target = scoped(this.users).find((item) => item.id === unlockMatch[1]);
+      if (!target)
+        return json(404, { error: { code: 'NOT_FOUND', message: 'Recurso no encontrado' } });
+      target.lockedUntil = null;
+      return json(200, { data: target });
+    }
+    const revokeMatch = /^\/users\/invitations\/([^/]+)\/revoke$/.exec(path);
+    if (revokeMatch && method === 'PATCH') {
+      const target = scoped(this.invitations).find((item) => item.id === revokeMatch[1]);
+      if (!target)
+        return json(404, { error: { code: 'NOT_FOUND', message: 'Recurso no encontrado' } });
+      target.status = 'REVOKED';
+      return json(200, { data: target });
+    }
+
+    const reportMatch = /^\/reports\/([a-z-]+)$/.exec(path);
+    if (reportMatch && method === 'GET') {
+      // Same envelope as reports.routes.ts: rows, column order, title and SQL-side pagination.
+      return json(200, {
+        data: [],
+        columns: ['Código', 'Título', 'Estado'],
+        title: 'Reporte de subastas',
+        pagination: { page, pageSize, total: 0, totalPages: 1 },
       });
     }
     // Any other list endpoint: an empty, well-formed page.
@@ -489,8 +878,14 @@ export class MockApi {
   }
 }
 
-export const loginAs = async (page: Page, key: UserKey) => {
-  await page.goto('/login');
+/**
+ * Signs in through the login form. By default it loads /login first (a full page load, which
+ * also discards the in-memory query cache). Pass `{ inPlace: true }` to use the login form
+ * already on screen — e.g. right after logging out — so the SPA, and its cache, survive; that
+ * is the only way to observe cross-identity cache leaks.
+ */
+export const loginAs = async (page: Page, key: UserKey, options: { inPlace?: boolean } = {}) => {
+  if (!options.inPlace) await page.goto('/login');
   await page.getByLabel('Correo electrónico').fill(identities[key].email);
   await page.getByLabel('Contraseña', { exact: true }).fill(identities[key].password);
   await page.getByRole('button', { name: 'Iniciar sesión' }).click();
